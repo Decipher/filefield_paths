@@ -1,7 +1,0 @@
-; $Id$
-name = FileField Paths
-description = Adds extra functionality to FileFields Path settings.
-dependencies[] = filefield
-dependencies[] = token
-package = CCK
-core = 6.x
