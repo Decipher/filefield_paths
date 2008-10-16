@@ -215,10 +215,7 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
           $depth = sizeof($paths);
 
           for ($count = 0; $count < $depth; $count++) {
-            if (sizeof(file_scan_directory(file_directory_path() .'/'. implode('/', $paths), '.*')) == 0) {
-              // Directory is empty, delete it.
-              @rmdir(file_directory_path() .'/'. implode('/', $paths));
-
+            if (@rmdir(file_directory_path() .'/'. implode('/', $paths)) === TRUE) {
               array_pop($paths);
             }
             else {
