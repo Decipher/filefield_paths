@@ -1,5 +1,5 @@
 ; $Id$
 name = FileField Paths
 description = Adds extra functionality to FileFields Path settings.
-dependencies = filefield token
+dependencies = token
 package = CCK
