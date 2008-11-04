@@ -351,15 +351,17 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
 
       // Cleanup temporary paths
-      foreach ($ffp['#settings'] as $field) {
-        $paths = explode('/', $field['filepath']['value']);
+      if ($ffp['#settings']) {
+        foreach ($ffp['#settings'] as $field) {
+          $paths = explode('/', $field['filepath']['value']);
 
-        while ($paths) {
-          if (@rmdir(file_directory_path() .'/'. implode('/', $paths)) === TRUE) {
-            array_pop($paths);
-            continue;
+          while ($paths) {
+            if (@rmdir(file_directory_path() .'/'. implode('/', $paths)) === TRUE) {
+              array_pop($paths);
+              continue;
+            }
+            break;
           }
-          break;
         }
       }
 
@@ -384,7 +386,7 @@ function filefield_paths_process_file(&$file, $settings, &$node, &$update) {
   }
 
   // Finalize files if necessary
-  if ($file['filepath']['new'] != $file['field']['filepath'] || $file['filename']['new'] != $file['field']['filename']) {
+  if (dirname($file['filepath']['new']) != dirname($file['field']['filepath']) || $file['filename']['new'] != $file['field']['filename']) {
     if (filefield_paths_file_move($file)) {
 
       // Fix reference to old paths in Body and Teaser
