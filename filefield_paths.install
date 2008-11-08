@@ -2,6 +2,10 @@
 // $Id$
 
 /**
+ * @file
+ */
+
+/**
  * Implementation of hook_install().
  */
 function filefield_paths_install() {
@@ -117,7 +121,7 @@ function filefield_paths_update_5100() {
 
       $result = db_query(
         "INSERT INTO {filefield_paths} (type, field, filename, filepath) VALUES ('%s', '%s', '%s', '%s')",
-        $type, $field, serialize($field_data['file_name']), serialize($field_data['file_path']), true
+        $type, $field, serialize($field_data['file_name']), serialize($field_data['file_path']), TRUE
       );
 
       $ret[] = array('success' => $result !== FALSE, 'query' => check_plain("

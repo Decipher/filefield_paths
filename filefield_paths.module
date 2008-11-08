@@ -299,6 +299,11 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
         }
       }
 
+      // Check if and files need to be processed
+      if (!is_array($ffp['#types'])) {
+        break;
+      }
+
       // Load fields settings
       foreach ($ffp['#types'] as $field => $temp) {
         $result = db_fetch_object(
