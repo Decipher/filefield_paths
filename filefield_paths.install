@@ -16,19 +16,23 @@ function filefield_paths_install() {
         type varchar(32) NOT NULL default '',
         field varchar(32) NOT NULL default '',
         filename mediumtext NOT NULL,
-        filepath mediumtext NOT NULL
+        filepath mediumtext NOT NULL,
+        filealias mediumtext NOT NULL
       ) /*!40100 DEFAULT CHARACTER SET utf8 */");
       break;
 
     case 'pgsql':
-      db_query("CREATE TABLE {node_field} (
+      db_query("CREATE TABLE {filefield_paths} (
         type varchar(32) NOT NULL default '',
         field varchar(32) NOT NULL default '',
         filename text NOT NULL,
-        filepath text NOT NULL
+        filepath text NOT NULL,
+        filealias text NOT NULL
       )");
       break;
   }
+
+  variable_set('filefield_paths_schema_version', 5101);
 }
 
 /**
@@ -45,6 +49,8 @@ function filefield_paths_uninstall() {
       db_query('DROP TABLE {filefiled_paths}');
       break;
   }
+
+  variable_del('filefield_paths_schema_version');
 }
 
 /**
@@ -65,7 +71,7 @@ function filefield_paths_update_5100() {
       break;
 
     case 'pgsql':
-      $ret[] = update_sql("CREATE TABLE {node_field} (
+      $ret[] = update_sql("CREATE TABLE {filefield_paths} (
         type varchar(32) NOT NULL default '',
         field varchar(32) NOT NULL default '',
         filename text NOT NULL,
@@ -134,5 +140,23 @@ function filefield_paths_update_5100() {
   $ret[] = update_sql("DELETE FROM {variable} WHERE name LIKE 'filefield_paths_%'");
   cache_clear_all('variables', 'cache');
 
+  return $ret;
+}
+
+function filefield_paths_update_5101() {
+  $ret = array();
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      $ret[] = update_sql("ALTER TABLE {filefield_paths} ADD COLUMN filealias mediumtext NOT NULL");
+      break;
+
+    case 'pgsql':
+      db_add_column($ret, 'filefield_paths', 'filealias', 'text', array('not null' => TRUE, 'default' => ''));
+      break;
+  }
+
+  variable_set('filefield_paths_schema_version', 5101);
   return $ret;
 }
