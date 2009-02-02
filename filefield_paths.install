@@ -16,8 +16,7 @@ function filefield_paths_install() {
         type varchar(32) NOT NULL default '',
         field varchar(32) NOT NULL default '',
         filename mediumtext NOT NULL,
-        filepath mediumtext NOT NULL,
-        filealias mediumtext NOT NULL
+        filepath mediumtext NOT NULL
       ) /*!40100 DEFAULT CHARACTER SET utf8 */");
       break;
 
@@ -26,8 +25,7 @@ function filefield_paths_install() {
         type varchar(32) NOT NULL default '',
         field varchar(32) NOT NULL default '',
         filename text NOT NULL,
-        filepath text NOT NULL,
-        filealias text NOT NULL
+        filepath text NOT NULL
       )");
       break;
   }
@@ -42,11 +40,11 @@ function filefield_paths_uninstall() {
   switch ($GLOBALS['db_type']) {
     case 'mysql':
     case 'mysqli':
-      db_query("DROP TABLE IF EXISTS {filefiled_paths}");
+      db_query("DROP TABLE IF EXISTS {filefield_paths}");
       break;
 
     case 'pgsql':
-      db_query('DROP TABLE {filefiled_paths}');
+      db_query('DROP TABLE {filefield_paths}');
       break;
   }
 
@@ -144,19 +142,6 @@ function filefield_paths_update_5100() {
 }
 
 function filefield_paths_update_5101() {
-  $ret = array();
-
-  switch ($GLOBALS['db_type']) {
-    case 'mysql':
-    case 'mysqli':
-      $ret[] = update_sql("ALTER TABLE {filefield_paths} ADD COLUMN filealias mediumtext NOT NULL");
-      break;
-
-    case 'pgsql':
-      db_add_column($ret, 'filefield_paths', 'filealias', 'text', array('not null' => TRUE, 'default' => ''));
-      break;
-  }
-
   variable_set('filefield_paths_schema_version', 5101);
-  return $ret;
+  return array();
 }

@@ -1,0 +1,98 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_menu().
+ */
+function file_aliases_menu($may_cache) {
+  if (!$may_cache) {
+    $items[] = array(
+      'path' => 'filefield_paths/alias/'. arg(2),
+      'callback' => 'file_aliases_load_fid',
+      'callback arguments' => array(arg(2)),
+      'access' => TRUE,
+      'type' => MENU_CALLBACK,
+    );
+  }
+
+  return $items;
+}
+
+function file_aliases_filefield_paths_field_settings() {
+  return array(
+    'file_alias' => array(
+      'title' => 'File alias',
+      'sql' => 'filealias',
+
+      'data' => array('display' => 'file_alias_display'),
+
+      'form' => array(
+        'file_alias' => array(
+          '#type' => 'textfield',
+          '#title' => t('File alias'),
+          '#default_value' => '',
+        ),
+
+        'file_alias_display' => array(
+          '#type' => 'checkbox',
+          '#title' => t('Display alias'),
+          '#description' => t('If checked, the file alias will be displayed instead of the file') .'.',
+          '#default_value' => 0,
+          '#weight' => 3
+        ),
+      ),
+    )
+  );
+}
+
+function file_aliases_filefield_paths_process_file($file, $settings, $node) {
+  $file['filealias'] = filefield_paths_process_string($settings['filealias']['value'], 'node', $node, $settings['filealias']);
+  $file['filealias'] = filefield_paths_process_string($file['filealias'], 'field', array(0 => $file['field']), $settings['filealias']);
+
+  path_set_alias('filefield_paths/alias/'. $file['field']['fid'], $file['filealias']);
+}
+
+function file_aliases_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
+  switch ($op) {
+    case 'view':
+      if (($ffp = filefield_paths_get_fields($node, $op)) == FALSE) {
+        break;
+      }
+
+      foreach ($ffp['#files'] as &$file) {
+        // Convert Upload.module file to Array
+        if ($file['module'] == 'upload') {
+          $file['field'] = (array) $file['field'];
+        }
+
+        if ($ffp['#settings'][$file['name']]['filealias']['display'] == TRUE) {
+          $filefield_paths_alias = 'filefield_paths/alias/'. $file['field']['fid'];
+          if (($alias = drupal_get_path_alias($filefield_paths_alias)) != $filefield_paths_alias) {
+            $file['name'] = $file['name'] == 'upload' ? 'files' : $file['name'];
+
+            $node->content[$file['name']]['#value'] = str_replace($file['field']['filepath'], $alias, $node->content[$file['name']]['#value']);
+            $node->content[$file['name']]['#value'] = str_replace($file['field']['description'], array_pop(explode('/', $alias)), $node->content[$file['name']]['#value']);
+          }
+        }
+
+        // Convert Upload.module file back to Object
+        if ($file['module'] == 'upload') {
+          $file['field'] = (object) $file['field'];
+        }
+      }
+      break;
+
+  }
+}
+
+function file_aliases_load_fid($fid) {
+  if ($_SERVER[REQUEST_URI] == '/filefield_paths/alias/'. $fid) {
+    drupal_not_found();
+    exit;
+  }
+
+  $result = db_fetch_object(db_query("SELECT filemime, filepath FROM {files} WHERE fid = %d", $fid));
+
+  header('Content-Type: '. $result->filemime);
+  readfile($result->filepath);
+}

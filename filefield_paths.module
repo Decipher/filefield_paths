@@ -7,20 +7,28 @@
  */
 
 /**
- * Implementation of hook_menu().
+ * Implementation of hook_filefield_paths_field().
  */
-function filefield_paths_menu($may_cache) {
-  if (!$may_cache) {
-    $items[] = array(
-      'path' => 'filefield_paths/alias/'. arg(2),
-      'callback' => 'filefield_paths_file_alias',
-      'callback arguments' => array(arg(2)),
-      'access' => TRUE,
-      'type' => MENU_CALLBACK,
-    );
-  }
+function filefield_paths_filefield_paths_field_settings() {
+  return array(
+    'file_path' => array(
+      'title' => 'File path',
+      'sql' => 'filepath',
+    ),
 
-  return $items;
+    'file_name' => array(
+      'title' => 'File name',
+      'sql' => 'filename',
+
+      'form' => array(
+        'file_name' => array(
+          '#type' => 'textfield',
+          '#title' => t('File name'),
+          '#default_value' => '[filefield_paths-name].[filefield_paths-ext]',
+        )
+      ),
+    )
+  );
 }
 
 /**
@@ -41,7 +49,7 @@ function filefield_paths_form_alter($form_id, &$form) {
     // Create path settings fieldset
     $ffp['form_path'] = array(
       '#type' => 'fieldset',
-      '#title' => 'Path settings',
+      '#title' => t('Path settings'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE
     );
@@ -86,142 +94,102 @@ function filefield_paths_form_alter($form_id, &$form) {
   }
 
   if (isset($ffp['show']) && $ffp['show'] == TRUE) {
+    $fields = module_invoke_all('filefield_paths_field_settings');
+
     $result = db_fetch_object(
-      db_query("SELECT filename, filepath, filealias FROM {filefield_paths} WHERE type = '%s' AND field = '%s'",
-      $ffp['type'], $ffp['name'])
+      db_query("SELECT * FROM {filefield_paths} WHERE type = '%s' AND field = '%s'", $ffp['type'], $ffp['name'])
     );
-
     if (!empty($result)) {
-      $settings = array(
-        'file_path' => unserialize($result->filepath),
-        'file_name' => unserialize($result->filename),
-        'file_alias' => unserialize($result->filealias)
-      );
+      foreach ($fields as &$field) {
+        $field['settings'] = unserialize($result->$field['sql']);
+      }
+      unset($field);
     }
 
-    // Create file name field
-    $ffp['form_path']['file_name'] = array(
-      '#type' => 'textfield',
-      '#title' => t('File name'),
-      '#default_value' => isset($settings['file_name']['value'])
-        ? $settings['file_name']['value']
-        : '[filefield_paths-name].[filefield_paths-ext]'
-      ,
-      '#weight' => 2
-    );
+    $count = 0;
+    foreach ($fields as $name => $field) {
+      $count++;
 
-    if (module_exists('path')) {
-      // Create file alias field
-      $ffp['form_path']['file_alias'] = array(
-        '#type' => 'textfield',
-        '#title' => t('File alias'),
-        '#default_value' => isset($settings['file_alias']['value'])
-          ? $settings['file_alias']['value']
-          : ''
-        ,
-        '#weight' => 5
-      );
+      if (isset($field['form']) && is_array($field['form'])) {
+        $keys = array_keys($field['form']);
+        for ($i = 1; $i < count($field['form']); $i++) {
+          $field['form'][$keys[$i]]['#weight'] = ($count - 1) * 3 + 2 + $i;
+        }
+        unset($keys);
 
-      $ffp['form_path']['file_alias_display'] = array(
-        '#type' => 'checkbox',
-        '#title' => t('Display alias'),
-        '#description' => 'If checked, the file alias will be displayed instead of the file.',
-        '#default_value' => isset($settings['file_alias']['display'])
-          ? $settings['file_alias']['display']
-          : 0
-        ,
-        '#weight' => 8
-      );
-    }
-
-    $fields = array(
-      'file_path' => array(
-        'title' => 'File path',
-        'display' => TRUE,
-        'default' => $ffp['file_path_default'],
-        'weight' => 0
-      ),
-      'file_name' => array(
-        'title' => 'File name',
-        'display' => TRUE,
-        'default' => '[filefield_paths-name].[filefield_paths-ext]',
-        'weight' => 3
-      ),
-      'file_alias' => array(
-        'title' => 'File alias',
-        'display' => module_exists('path'),
-        'default' => '',
-        'weight' => 6
-      )
-    );
-
-    foreach ($fields as $field => $data) {
-      if (!$data['display']) {
-        continue;
+        $ffp['form_path'] = array_merge($ffp['form_path'], $field['form']);
       }
 
+      $ffp['form_path'][$name]['#weight'] = ($count - 1) * 3;
+
       // Set defualt value for patterns
-      $ffp['form_path'][$field]['#default_value'] = isset($settings[$field]['value'])
-        ? $settings[$field]['value']
-        : $data['default'];
+      if (isset($field['settings']['value'])) {
+        $ffp['form_path'][$name]['#default_value'] = $field['settings']['value'];
+
+        if (isset($field['data'])) {
+          foreach ($field['data'] as $key => $value) {
+            $ffp['form_path'][$value]['#default_value'] = $field['settings'][$key];
+          }
+        }
+      }
 
       // Replacement patterns for field
-      $ffp['form_path'][$field .'_tokens'] = array(
+      $ffp['form_path'][$name .'_tokens'] = array(
         '#type' => 'fieldset',
-        '#title' => t('!title replacement patterns', array('!title' => $data['title'])),
+        '#title' => t('!title replacement patterns', array('!title' => $field['title'])),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
         '#description' => theme('token_help', 'field') . theme('token_help', 'node'),
-        '#weight' => $data['weight']
+        '#weight' => ($count - 1) * 3 + 1,
       );
 
-      $ffp['form_path'][$field .'_cleanup'] = array(
+      $ffp['form_path'][$name .'_cleanup'] = array(
         '#type' => 'fieldset',
-        '#title' => t('!title cleanup settings', array('!title' => $data['title'])),
+        '#title' => t('!title cleanup settings', array('!title' => $field['title'])),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
-        '#weight' => $data['weight'] + 1
+        '#weight' => ($count - 1) * 3 + 2
       );
 
       // Cleanup field with Pathauto module
-      $ffp['form_path'][$field .'_cleanup'][$field .'_pathauto'] = array(
+      $ffp['form_path'][$name .'_cleanup'][$name .'_pathauto'] = array(
         '#type' => 'checkbox',
         '#title' => t('Cleanup using Pathauto') .'.',
-        '#default_value' => isset($settings[$field]['pathauto'])
-          ? $settings[$field]['pathauto']
+        '#default_value' => isset($field['settings']['pathauto'])
+          ? $field['settings']['pathauto']
           : 0
         ,
-        '#description' => t('Cleanup !title using !url', array('!title' => $data['title'], '!url' => l(t('Pathauto settings'), 'admin/build/path/pathauto'))),
+        '#description' => t('Cleanup !title using !url', array('!title' => $field['title'], '!url' => l(t('Pathauto settings'), 'admin/build/path/pathauto'))),
       );
       if (!module_exists('pathauto')) {
-        $ffp['form_path'][$field .'_cleanup'][$field .'_pathauto']['#disabled'] = TRUE;
-        $ffp['form_path'][$field .'_cleanup'][$field .'_pathauto']['#default_value'] = 0;
+        $ffp['form_path'][$name .'_cleanup'][$name .'_pathauto']['#disabled'] = TRUE;
+        $ffp['form_path'][$name .'_cleanup'][$name .'_pathauto']['#default_value'] = 0;
       }
 
       // Convert field to lower case
-      $ffp['form_path'][$field .'_cleanup'][$field .'_tolower'] = array(
+      $ffp['form_path'][$name .'_cleanup'][$name .'_tolower'] = array(
         '#type' => 'checkbox',
         '#title' => t('Convert to lower case') .'.',
-        '#default_value' => isset($settings[$field]['tolower'])
-          ? $settings[$field]['tolower']
+        '#default_value' => isset($field['settings']['tolower'])
+          ? $field['settings']['tolower']
           : 0
         ,
-        '#description' => 'Convert '. $data['title'] .' to lower case.'
+        '#description' => t('Convert !title to lower case', array('!title' => $field['title'])) .'.'
       );
 
       // Transliterate field with Transliteration module
-      $ffp['form_path'][$field .'_cleanup'][$field .'_transliterate'] = array(
+      $ffp['form_path'][$name .'_cleanup'][$name .'_transliterate'] = array(
         '#type' => 'checkbox',
         '#title' => t('Transliterate') .'.',
-        '#default_value' => isset($settings[$field]['transliterate'])
-          ? $settings[$field]['transliterate']
+        '#default_value' => isset($field['settings']['transliterate'])
+          ? $field['settings']['transliterate']
           : 0
         ,
-        '#description' => 'Transliterate '. $data['title'] .'.'
+        '#description' => t('Transliterate !title', array('!title' => $field['title'])) .'.'
       );
       if (!module_exists('transliteration')) {
-        $ffp['form_path'][$field .'_cleanup'][$field .'_transliterate']['#disabled'] = TRUE;
-        $ffp['form_path'][$field .'_cleanup'][$field .'_transliterate']['#default_value'] = 0;
+        $ffp['form_path'][$name .'_cleanup'][$name .'_transliterate']['#disabled'] = TRUE;
+        $ffp['form_path'][$name .'_cleanup'][$name .'_transliterate']['#default_value'] = 0;
       }
 
     }
@@ -251,55 +219,45 @@ function filefield_paths_form_submit($form, $form_values) {
     );
   }
 
-  $settings = array(
-    'filename' => array(
-      'value' => $form_values['file_name'],
-      'tolower' => $form_values['file_name_tolower'],
-      'pathauto' => $form_values['file_name_pathauto'],
-      'transliterate' => $form_values['file_name_transliterate']
-    ),
-    'filepath' => array(
-      'value' => $form_values['file_path'],
-      'tolower' => $form_values['file_path_tolower'],
-      'pathauto' => $form_values['file_path_pathauto'],
-      'transliterate' => $form_values['file_path_transliterate']
-    )
-  );
-
-  if (module_exists('path')) {
-    $settings['filealias'] = array(
-      'value' => $form_values['file_alias'],
-      'tolower' => $form_values['file_alias_tolower'],
-      'pathauto' => $form_values['file_alias_pathauto'],
-      'transliterate' => $form_values['file_alias_transliterate'],
-      'display' => $form_values['file_alias_display'],
+  $fields = module_invoke_all('filefield_paths_field_settings');
+  foreach ($fields as $name => &$field) {
+    $field['settings'] = array(
+      'value' => $form_values[$name],
+      'tolower' => $form_values[$name .'_tolower'],
+      'pathauto' => $form_values[$name .'_pathauto'],
+      'transliterate' => $form_values[$name .'_transliterate']
     );
+
+    if (isset($field['data'])) {
+      foreach ($field['data'] as $key => $value) {
+        $field['settings'][$key] = $form_values[$value];
+      }
+    }
+
+    $cols[] = $field['sql'];
+    $vals[] = "'%s'";
+    $data[] = serialize($field['settings']);
   }
 
   $result = db_fetch_object(
-    db_query("SELECT filename, filepath, filealias FROM {filefield_paths} ".
-    "WHERE type = '%s' AND field = '%s'", $ffp['type'], $ffp['name'])
+    db_query("SELECT * FROM {filefield_paths} WHERE type = '%s' AND field = '%s'", $ffp['type'], $ffp['name'])
   );
 
   if (!empty($result)) {
-    if (!isset($settings['filealias'])) {
-      $settings['filealias'] = unserialize($result->filealias);
+    foreach ($cols as &$col) {
+      $col .= " = '%s'";
     }
 
     db_query(
-      "UPDATE {filefield_paths} SET filename = '%s', filepath = '%s', filealias = '%s' WHERE type = '%s' AND field = '%s'",
-      serialize($settings['filename']), serialize($settings['filepath']), serialize($settings['filealias']), $ffp['type'], $ffp['name']
+      "UPDATE {filefield_paths} SET ". implode(', ', $cols) ." WHERE type = '%s' AND field = '%s'",
+      array_merge($data, array($ffp['type'], $ffp['name']))
     );
   }
 
   else {
-    if (!isset($settings['filealias'])) {
-      $settings['filealias'] = array();
-    }
-
     db_query(
-      "INSERT INTO {filefield_paths} (type, field, filename, filepath, filealias) VALUES ('%s', '%s', '%s', '%s', '%s')",
-      $ffp['type'], $ffp['name'], serialize($settings['filename']), serialize($settings['filepath']), serialize($settings['filealias'])
+      "INSERT INTO {filefield_paths} (type, field, ". implode(', ', $cols) .") VALUES ('%s', '%s', ". implode(', ', $vals) .")",
+      array_merge(array($ffp['type'], $ffp['name']), $data)
     );
   }
 }
@@ -394,41 +352,13 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
 
       break;
-
-    case 'view':
-      if (($ffp = filefield_paths_get_fields($node, $op)) == FALSE) {
-        break;
-      }
-
-      foreach ($ffp['#files'] as &$file) {
-        // Convert Upload.module file to Array
-        if ($file['module'] == 'upload') {
-          $file['field'] = (array) $file['field'];
-        }
-
-        if (isset($ffp['#settings'][$file['name']]['filealias']['display']) && $ffp['#settings'][$file['name']]['filealias']['display'] == TRUE) {
-          $filefield_paths_alias = 'filefield_paths/alias/'. $file['field']['fid'];
-          if (($alias = drupal_get_path_alias($filefield_paths_alias)) != $filefield_paths_alias) {
-            $file['name'] = $file['name'] == 'upload' ? 'files' : $file['name'];
-
-            $node->content[$file['name']]['#value'] = str_replace($file['field']['filepath'], $alias, $node->content[$file['name']]['#value']);
-            $node->content[$file['name']]['#value'] = str_replace($file['field']['description'], array_pop(explode('/', $alias)), $node->content[$file['name']]['#value']);
-          }
-        }
-
-        // Convert Upload.module file back to Object
-        if ($file['module'] == 'upload') {
-          $file['field'] = (object) $file['field'];
-        }
-      }
-
-      break;
   }
 }
 
 function filefield_paths_get_fields($node, $op) {
   // Check for FileField.module files
   $content_type = content_types($node->type);
+  $ffp = array();
 
   foreach ($content_type['fields'] as $field) {
     if (preg_match('/\bfile\b|\bimage\b/', $field['type']) && is_array($node->$field['field_name'])) {
@@ -449,7 +379,7 @@ function filefield_paths_get_fields($node, $op) {
   }
 
   // Check for Upload.module files
-  if ($node->files) {
+  if (isset($node->files)) {
     foreach ($node->files as &$file) {
       if (is_object($file) == TRUE || $op == 'view') {
         $ffp['#files'][] = array(
@@ -463,22 +393,22 @@ function filefield_paths_get_fields($node, $op) {
     }
   }
 
-  if (!is_array($ffp['#types'])) {
+  if (isset($ffp['#types']) && !is_array($ffp['#types'])) {
     return FALSE;
   }
 
+  $fields = module_invoke_all('filefield_paths_field_settings');
+
   // Load fields settings
-  foreach ($ffp['#types'] as $field => $temp) {
+  foreach ($ffp['#types'] as $name => $temp) {
     $result = db_fetch_object(
-      db_query("SELECT filename, filepath, filealias FROM {filefield_paths} WHERE type = '%s' AND field = '%s'", $node->type, $field)
+      db_query("SELECT * FROM {filefield_paths} WHERE type = '%s' AND field = '%s'", $node->type, $name)
     );
 
     if (!empty($result)) {
-      $ffp['#settings'][$field] = array(
-        'filepath' => unserialize($result->filepath),
-        'filename' => unserialize($result->filename),
-        'filealias' => unserialize($result->filealias)
-      );
+      foreach ($fields as $field) {
+        $ffp['#settings'][$name][$field['sql']] = unserialize($result->$field['sql']);
+      }
     }
   }
 
@@ -523,13 +453,7 @@ function filefield_paths_process_file(&$file, $settings, &$node, &$update) {
     }
   }
 
-  if (module_exists('path')) {
-    // Process filealias
-    $file['filealias'] = filefield_paths_process_string($settings['filealias']['value'], 'node', $node, $settings['filealias']);
-    $file['filealias'] = filefield_paths_process_string($file['filealias'], 'field', array(0 => $file['field']), $settings['filealias']);
-
-    path_set_alias('filefield_paths/alias/'. $file['field']['fid'], $file['filealias']);
-  }
+  module_invoke_all('filefield_paths_process_file', $file, $settings, $node);
 }
 
 /**
@@ -618,16 +542,4 @@ function filefield_paths_file_move(&$file, $replace = FILE_EXISTS_RENAME) {
   db_query('UPDATE {files} SET filename = "%s", filepath = "%s" WHERE fid = %d', $file['filename']['new'], $file['field']['filepath'], $file['field']['fid']);
 
   return TRUE;
-}
-
-function filefield_paths_file_alias($fid) {
-  if ($_SERVER[REQUEST_URI] == '/filefield_paths/alias/'. $fid) {
-    drupal_not_found();
-    exit;
-  }
-
-  $result = db_fetch_object(db_query("SELECT filemime, filepath FROM {files} WHERE fid = %d", $fid));
-
-  header('Content-Type: '. $result->filemime);
-  readfile($result->filepath);
 }
