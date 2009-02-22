@@ -493,14 +493,19 @@ function filefield_paths_process_file(&$file, $settings, &$node, &$update) {
 
       // Fix reference to old paths in Body and Teaser
       // @TODO: allow for CCK fields
-      $body = str_replace($file['filepath']['old'],  $file['filepath']['new'], $node->body);
-      $teaser = str_replace($file['filepath']['old'],  $file['filepath']['new'], $node->teaser);
+      if (isset($node->body)) {
+        $body = str_replace($file['filepath']['old'],  $file['filepath']['new'], $node->body);
+        $body = str_replace(drupal_urlencode($file['filepath']['old']),  $file['filepath']['new'], $body);
 
-      if ($body != $node->body || $teaser != $node->teaser) {
-        $node->body = $body;
-        $node->teaser = $teaser;
+        $teaser = str_replace($file['filepath']['old'],  $file['filepath']['new'], $node->teaser);
+        $teaser = str_replace(drupal_urlencode($file['filepath']['old']),  $file['filepath']['new'], $teaser);
 
-        $update = TRUE;
+        if ($body != $node->body || $teaser != $node->teaser) {
+          $node->body = $body;
+          $node->teaser = $teaser;
+
+          $update = TRUE;
+        }
       }
 
       // Store new filename in file Array
