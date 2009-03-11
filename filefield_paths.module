@@ -239,7 +239,9 @@ function filefield_paths_form_submit($form, $form_values) {
   $fields = module_invoke_all('filefield_paths_field_settings');
   foreach ($fields as $name => &$field) {
     $field['settings'] = array(
-      'value' => $form_values[$name],
+      'value' => isset($form_values[$name])
+        ? $form_values[$name]
+        : $form_values['image_path'],
       'tolower' => $form_values[$name .'_tolower'],
       'pathauto' => $form_values[$name .'_pathauto'],
       'transliterate' => $form_values[$name .'_transliterate']
@@ -298,12 +300,14 @@ function filefield_paths_retroactive($form, $form_values) {
       elseif ($form == '_content_admin_field') {
         $content_type = content_types($node->type);
 
-        foreach ($node->$form_values['field_name'] as &$file) {
-          if (empty($file['filepath'])) {
-            continue;
-          }
+        if (isset($node->$form_values['field_name'])) {
+          foreach ($node->$form_values['field_name'] as &$file) {
+            if (empty($file['filepath'])) {
+              continue;
+            }
 
-          $file['data']['process'] = TRUE;
+            $file['data']['process'] = TRUE;
+          }
         }
       }
 
@@ -415,7 +419,7 @@ function filefield_paths_get_fields($node, $op = NULL) {
     $content_type = content_types($node->type);
 
     foreach ($content_type['fields'] as $field) {
-      if (preg_match('/\bfile\b|\bimage\b/', $field['type']) && is_array($node->$field['field_name'])) {
+      if (preg_match('/\bfile\b|\bimage\b/', $field['type']) && isset($node->$field['field_name']) && is_array($node->$field['field_name'])) {
 
         foreach ($node->$field['field_name'] as &$file) {
           if ((!empty($file['filepath']) && !empty($file['data']['process'])) || $op == 'view') {
@@ -562,7 +566,12 @@ function filefield_paths_process_string($value, $type, $object, $settings) {
   if (module_exists('transliteration') && $settings['transliterate']) {
     $value = transliteration_get($value);
     if ($type == 'field') {
-      $value = transliteration_clean_filename($value);
+      $paths = explode('/', $value);
+      foreach ($paths as &$path) {
+        $path = transliteration_clean_filename($path);
+      }
+
+      $value = implode('/', $paths);
     }
   }
 
