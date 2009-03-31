@@ -1,5 +1,0 @@
-; $Id$
-name = FileField Paths - Aliases
-description = Adds file aliases to FileFields and Uploads.
-dependencies = filefield_paths path
-package = CCK
