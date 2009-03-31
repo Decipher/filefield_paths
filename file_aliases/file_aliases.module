@@ -18,6 +18,9 @@ function file_aliases_menu($may_cache) {
   return $items;
 }
 
+/**
+ * Implementation of hook_filefield_paths_field_settings().
+ */
 function file_aliases_filefield_paths_field_settings() {
   return array(
     'file_alias' => array(
@@ -45,13 +48,21 @@ function file_aliases_filefield_paths_field_settings() {
   );
 }
 
-function file_aliases_filefield_paths_process_file($file, $settings, $node) {
-  $file['filealias'] = filefield_paths_process_string($settings['filealias']['value'], 'node', $node, $settings['filealias']);
-  $file['filealias'] = filefield_paths_process_string($file['filealias'], 'field', array(0 => $file['field']), $settings['filealias']);
+/**
+ * Implementation of hook_filefield_paths_process_file().
+ */
+function file_aliases_filefield_paths_process_file($new, $file, $settings, $node, $update) {
+  if ($new) {
+    $file['filealias'] = filefield_paths_process_string($settings['filealias']['value'], 'node', $node, $settings['filealias']);
+    $file['filealias'] = filefield_paths_process_string($file['filealias'], 'field', array(0 => $file['field']), $settings['filealias']);
 
-  path_set_alias('filefield_paths/alias/'. $file['field']['fid'], $file['filealias']);
+    path_set_alias('filefield_paths/alias/'. $file['field']['fid'], $file['filealias']);
+  }
 }
 
+/**
+ * Implementation of hook_nodeapi().
+ */
 function file_aliases_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
   switch ($op) {
     case 'view':
@@ -86,7 +97,7 @@ function file_aliases_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 }
 
 function file_aliases_load_fid($fid) {
-  if ($_SERVER[REQUEST_URI] == '/filefield_paths/alias/'. $fid) {
+  if ($_SERVER['REQUEST_URI'] == '/filefield_paths/alias/'. $fid) {
     drupal_not_found();
     exit;
   }

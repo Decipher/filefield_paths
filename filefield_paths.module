@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_filefield_paths_field().
+ * Implementation of hook_filefield_paths_field_settings().
  */
 function filefield_paths_filefield_paths_field_settings() {
   return array(
@@ -353,7 +353,9 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 
     case 'insert':
     case 'update':
-      $update = FALSE;
+      $update = new stdClass;
+      $update->node = FALSE;
+      $update->cck = FALSE;
 
       if (($ffp = filefield_paths_get_fields($node)) == FALSE) {
         break;
@@ -366,7 +368,7 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
           $file['field'] = (array) $file['field'];
         }
 
-        filefield_paths_process_file($file, $ffp['#settings'][$file['name']], $node, $update);
+        module_invoke_all('filefield_paths_process_file', $file['new'], $file, $ffp['#settings'][$file['name']], $node, $update);
 
         // Convert Upload.module file back to Object
         if ($file['module'] == 'upload') {
@@ -375,7 +377,7 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
 
       // Re-write node entry if required
-      if ($update == TRUE) {
+      if ($update->node == TRUE) {
         $arr = array();
         foreach ($node_table_types as $key => $value) {
           $arr[] = $key .' = '. $value;
@@ -396,6 +398,11 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 
         db_query($node_query, $node_table_values);
         db_query($revisions_query, $revisions_table_values);
+      }
+
+      // Re-write cck fields if required
+      if ($update->cck == TRUE) {
+        content_update($node);
       }
 
       // Cleanup temporary paths
@@ -428,15 +435,15 @@ function filefield_paths_get_fields($node, $op = NULL) {
       if (preg_match('/\bfile\b|\bimage\b/', $field['type']) && isset($node->$field['field_name']) && is_array($node->$field['field_name'])) {
 
         foreach ($node->$field['field_name'] as &$file) {
-          if ((!empty($file['filepath']) && !empty($file['data']['process'])) || $op == 'view') {
-            $ffp['#files'][] = array(
-              'field' => &$file,
-              'module' => $field['type'],
-              'name' => $field['field_name']
-            );
+          $ffp['#files'][] = array(
+            'field' => &$file,
+            'module' => $field['type'],
+            'name' => $field['field_name'],
+            'widget' => $field['widget']['type'],
+            'new' => (!empty($file['filepath']) && !empty($file['data']['process'])) ? TRUE : FALSE
+          );
 
-            $ffp['#types'][$field['field_name']] = TRUE;
-          }
+          $ffp['#types'][$field['field_name']] = TRUE;
         }
 
       }
@@ -446,15 +453,14 @@ function filefield_paths_get_fields($node, $op = NULL) {
   // Check for Upload.module files
   if (isset($node->files)) {
     foreach ($node->files as &$file) {
-      if (is_object($file) == TRUE || $op == 'view') {
-        $ffp['#files'][] = array(
-          'field' => &$file,
-          'module' => 'upload',
-          'name' => 'upload'
-        );
+      $ffp['#files'][] = array(
+        'field' => &$file,
+        'module' => 'upload',
+        'name' => 'upload',
+        'new' => is_object($file)
+      );
 
-        $ffp['#types']['upload'] = TRUE;
-      }
+      $ffp['#types']['upload'] = TRUE;
     }
   }
 
@@ -480,52 +486,54 @@ function filefield_paths_get_fields($node, $op = NULL) {
   return $ffp;
 }
 
-function filefield_paths_process_file(&$file, $settings, &$node, &$update) {
+/**
+ * Implementation of hook_filefield_paths_process_file().
+ */
+function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &$node, &$update) {
+  if ($new) {
+    // Process filepath
+    $file['filepath']['old'] = $file['field']['filepath'];
+    $file['filepath']['new'] = filefield_paths_process_string(file_directory_path() .'/'. $settings['filepath']['value'] .'/'. $file['field']['filename'], 'node', $node, $settings['filepath']);
+    $file['filepath']['new'] = filefield_paths_process_string($file['filepath']['new'], 'field', array(0 => $file['field']), $settings['filepath']);
 
-  // Process filepath
-  $file['filepath']['old'] = $file['field']['filepath'];
-  $file['filepath']['new'] = filefield_paths_process_string(file_directory_path() .'/'. $settings['filepath']['value'] .'/'. $file['field']['filename'], 'node', $node, $settings['filepath']);
-  $file['filepath']['new'] = filefield_paths_process_string($file['filepath']['new'], 'field', array(0 => $file['field']), $settings['filepath']);
+    // Process filename
+    $file['filename']['old'] = $file['field']['filename'];
+    if (($file['filename']['new'] = $settings['filename']['value']) != '') {
+      $file['filename']['new'] = filefield_paths_process_string($file['filename']['new'], 'node', $node, $settings['filename']);
+      $file['filename']['new'] = filefield_paths_process_string($file['filename']['new'], 'field', array(0 => $file['field']), $settings['filename']);
+    }
+    else {
+      $file['filename']['new'] = $file['field']['filename'];
+    }
 
-  // Process filename
-  $file['filename']['old'] = $file['field']['filename'];
-  if (($file['filename']['new'] = $settings['filename']['value']) != '') {
-    $file['filename']['new'] = filefield_paths_process_string($file['filename']['new'], 'node', $node, $settings['filename']);
-    $file['filename']['new'] = filefield_paths_process_string($file['filename']['new'], 'field', array(0 => $file['field']), $settings['filename']);
-  }
-  else {
-    $file['filename']['new'] = $file['field']['filename'];
-  }
+    // Finalize files if necessary
+    if (dirname($file['filepath']['new']) != dirname($file['field']['filepath']) || $file['filename']['new'] != $file['field']['filename']) {
+      if (filefield_paths_file_move($file)) {
 
-  // Finalize files if necessary
-  if (dirname($file['filepath']['new']) != dirname($file['field']['filepath']) || $file['filename']['new'] != $file['field']['filename']) {
-    if (filefield_paths_file_move($file)) {
+        // Fix reference to old paths in Body and Teaser
+        // @TODO: allow for CCK fields
+        if (isset($node->body)) {
+          $file['filepath']['new'] = str_replace($file['filename']['old'], $file['filename']['new'], $file['filepath']['new']);
 
-      // Fix reference to old paths in Body and Teaser
-      // @TODO: allow for CCK fields
-      if (isset($node->body)) {
-        $file['filepath']['new'] = str_replace($file['filename']['old'], $file['filename']['new'], $file['filepath']['new']);
+          $body = str_replace($file['filepath']['old'], $file['filepath']['new'], $node->body);
+          $body = str_replace(drupal_urlencode($file['filepath']['old']), $file['filepath']['new'], $body);
 
-        $body = str_replace($file['filepath']['old'], $file['filepath']['new'], $node->body);
-        $body = str_replace(drupal_urlencode($file['filepath']['old']), $file['filepath']['new'], $body);
+          $teaser = str_replace($file['filepath']['old'], $file['filepath']['new'], $node->teaser);
+          $teaser = str_replace(drupal_urlencode($file['filepath']['old']), $file['filepath']['new'], $teaser);
 
-        $teaser = str_replace($file['filepath']['old'], $file['filepath']['new'], $node->teaser);
-        $teaser = str_replace(drupal_urlencode($file['filepath']['old']), $file['filepath']['new'], $teaser);
+          if ($body != $node->body || $teaser != $node->teaser) {
+            $node->body = $body;
+            $node->teaser = $teaser;
 
-        if ($body != $node->body || $teaser != $node->teaser) {
-          $node->body = $body;
-          $node->teaser = $teaser;
-
-          $update = TRUE;
+            $update->node = TRUE;
+          }
         }
-      }
 
-      // Store new filename in file Array
-      $file['field']['filename'] = $file['filename']['new'];
+        // Store new filename in file Array
+        $file['field']['filename'] = $file['filename']['new'];
+      }
     }
   }
-
-  module_invoke_all('filefield_paths_process_file', $file, $settings, $node);
 }
 
 if (!module_exists('filefield_token')) {
