@@ -24,7 +24,7 @@ function filefield_paths_filefield_paths_field_settings() {
         'file_name' => array(
           '#type' => 'textfield',
           '#title' => t('File name'),
-          '#default_value' => '[filefield_paths-name].[filefield_paths-ext]',
+          '#default_value' => '[filefield-onlyname].[filefield-extension]',
         )
       ),
     )
@@ -66,6 +66,7 @@ function filefield_paths_form_alter($form_id, &$form) {
     unset($form['widget'][$filepath]);
 
     $form['widget']['description']['#weight'] = 10;
+    $form['widget']['path_settings']['#attributes'] = array('id' => 'fieldset-path_settings');
   }
 
   // Set variables for Upload.module
@@ -135,22 +136,15 @@ function filefield_paths_form_alter($form_id, &$form) {
         }
       }
 
-      // Replacement patterns for field
-      $ffp['form_path'][$name .'_tokens'] = array(
-        '#type' => 'fieldset',
-        '#title' => t('!title replacement patterns', array('!title' => $field['title'])),
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#description' => theme('token_help', 'field') . theme('token_help', 'node'),
-        '#weight' => ($count - 1) * 3 + 1,
-      );
-
       $ffp['form_path'][$name .'_cleanup'] = array(
         '#type' => 'fieldset',
         '#title' => t('!title cleanup settings', array('!title' => $field['title'])),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
-        '#weight' => ($count - 1) * 3 + 2
+        '#weight' => ($count - 1) * 3 + 1,
+        '#attributes' => array(
+          'class' => $name .' cleanup'
+        )
       );
 
       // Cleanup field with Pathauto module
@@ -194,6 +188,18 @@ function filefield_paths_form_alter($form_id, &$form) {
         $ffp['form_path'][$name .'_cleanup'][$name .'_transliterate']['#default_value'] = 0;
       }
 
+      // Replacement patterns for field
+      $ffp['form_path'][$name .'_tokens'] = array(
+        '#type' => 'fieldset',
+        '#title' => t('!title replacement patterns', array('!title' => $field['title'])),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#description' => theme('token_help', 'field') . theme('token_help', 'node'),
+        '#weight' => ($count - 1) * 3 + 2,
+        '#attributes' => array(
+          'class' => $name .' tokens'
+        )
+      );
     }
 
     $ffp['form_path']['retroactive'] = array(
@@ -201,7 +207,7 @@ function filefield_paths_form_alter($form_id, &$form) {
       '#title' => t('Retroactive change'),
       '#description' => t('Move and rename previously uploaded files') .'.'.
         '<br /> <strong style="color: #FF0000;">'. t('Warning') .':</strong> '.
-        t('This feature may break your site and should only be used on deevelopmental servers for testing purposes') .'.',
+        t('This feature may break your site and should only be used on developmental servers for testing purposes') .'.',
       '#weight' => 10
     );
 
@@ -522,27 +528,29 @@ function filefield_paths_process_file(&$file, $settings, &$node, &$update) {
   module_invoke_all('filefield_paths_process_file', $file, $settings, $node);
 }
 
+if (!module_exists('filefield_token')) {
 /**
  * Implementation of hook_token_list().
  */
-function filefield_paths_token_list($type = 'all') {
-  if ($type == 'field' || $type == 'all') {
-    $tokens = array();
-    $tokens['file']['filefield_paths-name'] = t("File name");
-    $tokens['file']['filefield_paths-ext'] = t("File extension");
-    return $tokens;
+  function filefield_paths_token_list($type = 'all') {
+    if ($type == 'field' || $type == 'all') {
+      $tokens = array();
+      $tokens['file']['filefield-onlyname'] = t("File name");
+      $tokens['file']['filefield-extension'] = t("File extension");
+      return $tokens;
+    }
   }
-}
 
 /**
  * Implementation of hook_token_values().
  */
-function filefield_paths_token_values($type, $object = NULL) {
-  if ($type == 'field') {
-    $item = pathinfo($object[0]['filename']);
-    $tokens['filefield_paths-name'] = $item['filename'];
-    $tokens['filefield_paths-ext'] = $item['extension'];
-    return $tokens;
+  function filefield_paths_token_values($type, $object = NULL) {
+    if ($type == 'field') {
+      $item = pathinfo($object[0]['filename']);
+      $tokens['filefield-onlyname'] = $item['filename'];
+      $tokens['filefield-extension'] = $item['extension'];
+      return $tokens;
+    }
   }
 }
 

@@ -145,3 +145,28 @@ function filefield_paths_update_5101() {
   variable_set('filefield_paths_schema_version', 5101);
   return array();
 }
+
+function filefield_paths_update_5102() {
+  variable_set('filefield_paths_schema_version', 5102);
+  $fields = module_invoke_all('filefield_paths_field_settings');
+  $result = db_query("SELECT * FROM {filefield_paths}");
+
+  while ($data = db_fetch_object($result)) {
+    foreach ($fields as $field) {
+      $cols[] = $field['sql'] ." = '%s'";
+
+      $val = unserialize($data->$field['sql']);
+      $val = str_replace('[filefield_paths-name]', '[filefield-onlyname]', $val);
+      $val = str_replace('[filefield_paths-ext]', '[filefield-extension]', $val);
+
+      $vals[] = serialize($val);
+    }
+
+    db_query(
+      "UPDATE {filefield_paths} SET ". implode(', ', $cols) ." WHERE type = '%s' AND field = '%s'",
+      array_merge($vals, array($data->type, $data->field))
+    );
+  }
+
+  return array();
+}
