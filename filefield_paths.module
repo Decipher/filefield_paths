@@ -207,7 +207,7 @@ function filefield_paths_form_alter($form_id, &$form) {
       '#title' => t('Retroactive change'),
       '#description' => t('Move and rename previously uploaded files') .'.'.
         '<br /> <strong style="color: #FF0000;">'. t('Warning') .':</strong> '.
-        t('This feature may break your site and should only be used on developmental servers for testing purposes') .'.',
+        t('This feature may should only be used on developmental servers or with extreme caution') .'.',
       '#weight' => 10
     );
 
