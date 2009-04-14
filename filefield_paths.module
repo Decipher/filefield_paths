@@ -620,7 +620,7 @@ function filefield_paths_file_move(&$file, $replace = FILE_EXISTS_RENAME) {
     return FALSE;
   }
 
-  db_query('UPDATE {files} SET filename = "%s", filepath = "%s" WHERE fid = %d', $file['filename']['new'], $file['field']['filepath'], $file['field']['fid']);
+  db_query("UPDATE {files} SET filename = '%s', filepath = '%s' WHERE fid = %d", $file['filename']['new'], $file['field']['filepath'], $file['field']['fid']);
 
   return TRUE;
 }
