@@ -31,6 +31,30 @@ function filefield_paths_filefield_paths_field_settings() {
   );
 }
 
+function theme_filefield_paths_token_help($prefix = '[', $suffix = ']') {
+  token_include();
+  $full_list = array_merge(filefield_paths_token_list(), token_get_list('node'));
+  if (function_exists('filefield_token_list')) {
+    $temp_tokens = filefield_token_list();
+    $full_list['file'] = array_merge($temp_tokens['file'], $full_list['file']);
+  }
+  
+  $headers = array(t('Token'), t('Replacement value'));
+  $rows = array();
+  foreach ($full_list as $key => $category) {
+    $rows[] = array(array('data' => drupal_ucfirst($key) .' '. t('tokens'), 'class' => 'region', 'colspan' => 2));
+    foreach ($category as $token => $description) {
+      $row = array();
+      $row[] = $prefix . $token . $suffix;
+      $row[] = $description;
+      $rows[] = $row;
+    }
+  }
+
+  $output = theme('table', $headers, $rows, array('class' => 'description'));
+  return $output;
+}
+
 /**
  * Implementation of hook_form_alter().
  */
@@ -194,7 +218,7 @@ function filefield_paths_form_alter($form_id, &$form) {
         '#title' => t('!title replacement patterns', array('!title' => $field['title'])),
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
-        '#description' => theme('token_help', 'field') . theme('token_help', 'node'),
+        '#description' => theme('filefield_paths_token_help'),
         '#weight' => ($count - 1) * 3 + 2,
         '#attributes' => array(
           'class' => $name .' tokens'
@@ -207,7 +231,7 @@ function filefield_paths_form_alter($form_id, &$form) {
       '#title' => t('Retroactive change'),
       '#description' => t('Move and rename previously uploaded files') .'.'.
         '<br /> <strong style="color: #FF0000;">'. t('Warning') .':</strong> '.
-        t('This feature may should only be used on developmental servers or with extreme caution') .'.',
+        t('This feature should only be used on developmental servers or with extreme caution') .'.',
       '#weight' => 10
     );
 
@@ -567,16 +591,9 @@ if (!module_exists('filefield_token')) {
  */
 function filefield_paths_process_string($value, $type, $object, $settings) {
 
-  // Process string tokens via Pathauto module
-  if (module_exists('pathauto') && $settings['pathauto']) {
-    $placeholders = pathauto_get_placeholders($type, $object);
-    $value = str_replace($placeholders['tokens'], $placeholders['values'], $value);
-  }
-
-  // Process string tokens via Token module
-  else {
-    $value = token_replace($value, $type, $object);
-  }
+  // Process string tokens
+  $placeholders = _filefield_paths_get_values($type, $object, (module_exists('pathauto') && $settings['pathauto']));
+  $value = str_replace($placeholders['tokens'], $placeholders['values'], $value);
 
   // Transliterate string
   if (module_exists('transliteration') && $settings['transliterate']) {
@@ -598,6 +615,32 @@ function filefield_paths_process_string($value, $type, $object, $settings) {
   }
 
   return $value;
+}
+
+function _filefield_paths_get_values($type, $object, $pathauto = FALSE) {
+  switch ($type) {
+    case 'node':
+      $full = token_get_values($type, $object, TRUE);
+      break;
+
+    case 'field':
+      $all = filefield_paths_token_values($type, $object);
+      if (function_exists('filefield_paths_token_values')) {
+        $all = array_merge(filefield_paths_token_values($type, $object), $all);
+      }
+
+      $full = new stdClass();
+      $full->tokens = array_keys($all);
+      $full->values = array_values($all);
+      break;
+  }
+
+  $full->tokens = token_prepare_tokens($full->tokens);
+  if ($pathauto) {
+    $full->values = pathauto_clean_token_values($full);
+  }
+
+  return array('tokens' => $full->tokens, 'values' => $full->values);
 }
 
 /**
