@@ -576,8 +576,10 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
 function filefield_paths_token_list($type = 'all') {
   if ($type == 'field' || $type == 'all') {
     $tokens = array();
-    $tokens['file']['filefield-onlyname'] = t("File name");
+    $tokens['file']['filefield-onlyname'] = t("File name without extension");
     $tokens['file']['filefield-extension'] = t("File extension");
+    $tokens['file']['filefield-onlyname-original'] = t("File name without extension - original");
+    $tokens['file']['filefield-extension-original'] = t("File extension - original");
     return $tokens;
   }
 }
@@ -588,8 +590,16 @@ function filefield_paths_token_list($type = 'all') {
 function filefield_paths_token_values($type, $object = NULL) {
   if ($type == 'field') {
     $item = pathinfo($object[0]['filename']);
+    $tokens = array();
     $tokens['filefield-onlyname'] = $item['filename'];
     $tokens['filefield-extension'] = $item['extension'];
+    // Original filename
+    $orig = $item;
+    if (isset($object[0]['origname'])) {
+      $orig = pathinfo($object[0]['origname']);
+    }
+    $tokens['filefield-onlyname-original'] = $orig['filename'];
+    $tokens['filefield-extension-original'] = $orig['extension'];
     return $tokens;
   }
 }
@@ -633,8 +643,8 @@ function _filefield_paths_get_values($type, $object, $pathauto = FALSE) {
 
     case 'field':
       $all = filefield_paths_token_values($type, $object);
-      if (function_exists('filefield_paths_token_values')) {
-        $all = array_merge(filefield_paths_token_values($type, $object), $all);
+      if (function_exists('filefield_token_values')) {
+        $all = array_merge(filefield_token_values($type, $object), $all);
       }
 
       $full = new stdClass();
@@ -671,7 +681,23 @@ function filefield_paths_file_move(&$file, $replace = FILE_EXISTS_RENAME) {
     return FALSE;
   }
 
-  db_query("UPDATE {files} SET filename = '%s', filepath = '%s' WHERE fid = %d", $file['filename']['new'], $file['field']['filepath'], $file['field']['fid']);
+  $result = db_fetch_object(db_query("SELECT origname FROM {files} WHERE fid = %d", $file['field']['fid']));
+
+  // Set 'origname' and update 'filename'.
+  if (empty($result->origname)) {
+    db_query(
+      "UPDATE {files} SET filename = '%s', filepath = '%s', origname = '%s' WHERE fid = %d",
+      $file['filename']['new'], $file['field']['filepath'], $file['filename']['old'], $file['field']['fid']
+    );
+  }
+
+  // Update 'filename'.
+  else {
+    db_query(
+      "UPDATE {files} SET filename = '%s', filepath = '%s' WHERE fid = %d",
+      $file['filename']['new'], $file['field']['filepath'], $file['field']['fid']
+    );
+  }
 
   return TRUE;
 }

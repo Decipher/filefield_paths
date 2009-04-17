@@ -18,6 +18,8 @@ function filefield_paths_install() {
         filename mediumtext NOT NULL,
         filepath mediumtext NOT NULL
       ) /*!40100 DEFAULT CHARACTER SET utf8 */");
+
+      db_query("ALTER TABLE {files} ADD COLUMN origname varchar(255) NOT NULL default ''");
       break;
 
     case 'pgsql':
@@ -27,10 +29,17 @@ function filefield_paths_install() {
         filename text NOT NULL,
         filepath text NOT NULL
       )");
+
+      db_add_column($ret = array(), 'files', 'origname', 'varchar(255)', array('not null' => TRUE, 'default' => ''));
       break;
   }
 
-  variable_set('filefield_paths_schema_version', 5101);
+  $result = db_query("SELECT fid, filename FROM {files}");
+  while ($file = db_fetch_object($result)) {
+    db_query("UPDATE {files} SET origname = '%s' WHERE fid = %d", $file->filename, $file->fid);
+  }
+
+  variable_set('filefield_paths_schema_version', 5103);
 }
 
 /**
@@ -47,6 +56,8 @@ function filefield_paths_uninstall() {
       db_query('DROP TABLE {filefield_paths}');
       break;
   }
+
+  db_query("ALTER TABLE {files} DROP origname");
 
   variable_del('filefield_paths_schema_version');
 }
@@ -166,6 +177,28 @@ function filefield_paths_update_5102() {
       "UPDATE {filefield_paths} SET ". implode(', ', $cols) ." WHERE type = '%s' AND field = '%s'",
       array_merge($vals, array($data->type, $data->field))
     );
+  }
+
+  return array();
+}
+
+function filefield_paths_update_5103() {
+  variable_set('filefield_paths_schema_version', 5103);
+
+  switch ($GLOBALS['db_type']) {
+    case 'mysql':
+    case 'mysqli':
+      db_query("ALTER TABLE {files} ADD COLUMN origname varchar(255) NOT NULL default ''");
+      break;
+
+    case 'pgsql':
+      db_add_column($ret = array(), 'files', 'origname', 'varchar(255)', array('not null' => TRUE, 'default' => ''));
+      break;
+  }
+
+  $result = db_query("SELECT fid, filename FROM {files}");
+  while ($file = db_fetch_object($result)) {
+    db_query("UPDATE {files} SET origname = '%s' WHERE fid = %d", $file->filename, $file->fid);
   }
 
   return array();
