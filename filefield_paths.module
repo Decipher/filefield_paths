@@ -24,7 +24,7 @@ function filefield_paths_filefield_paths_field_settings() {
         'file_name' => array(
           '#type' => 'textfield',
           '#title' => t('File name'),
-          '#default_value' => '[filefield-onlyname].[filefield-extension]',
+          '#default_value' => '[filefield-onlyname-original].[filefield-extension-original]',
         )
       ),
     )
@@ -595,7 +595,7 @@ function filefield_paths_token_values($type, $object = NULL) {
     $tokens['filefield-extension'] = $item['extension'];
     // Original filename
     $orig = $item;
-    if (isset($object[0]['origname'])) {
+    if (!empty($object[0]['origname'])) {
       $orig = pathinfo($object[0]['origname']);
     }
     $tokens['filefield-onlyname-original'] = $orig['filename'];
