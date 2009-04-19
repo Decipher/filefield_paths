@@ -607,7 +607,7 @@ function filefield_paths_token_values($type, $object = NULL) {
 /**
  * Process and cleanup strings.
  */
-function filefield_paths_process_string($value, $type, $object, $settings) {
+function filefield_paths_process_string($value, $type, $object, $settings = array()) {
 
   // Process string tokens
   $placeholders = _filefield_paths_get_values($type, $object, (module_exists('pathauto') && $settings['pathauto']));
