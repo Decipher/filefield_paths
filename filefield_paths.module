@@ -437,7 +437,9 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
       }
 
       // Re-write cck fields
-      content_update($node);
+      if (module_exists('content')) {
+        content_update($node);
+      }
 
       // Cleanup temporary paths
       if ($ffp['#settings']) {
