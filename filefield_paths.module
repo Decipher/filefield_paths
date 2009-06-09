@@ -508,11 +508,11 @@ function filefield_paths_token_values($type, $object = NULL) {
 function filefield_paths_process_string($value, $type, $object, $settings = array()) {
 
   // Process string tokens.
-  $placeholders = _filefield_paths_get_values($type, $object, (module_exists('pathauto') && $settings['pathauto']));
+  $placeholders = _filefield_paths_get_values($type, $object, (module_exists('pathauto') && isset($settings['pathauto']) && $settings['pathauto']));
   $value = str_replace($placeholders['tokens'], $placeholders['values'], $value);
 
   // Transliterate string.
-  if (module_exists('transliteration') && $settings['transliterate']) {
+  if (module_exists('transliteration') && isset($settings['transliterate']) && $$settings['transliterate']) {
     $value = transliteration_get($value);
     if ($type == 'field') {
       $paths = explode('/', $value);
@@ -525,7 +525,7 @@ function filefield_paths_process_string($value, $type, $object, $settings = arra
   }
 
   // Convert string to lower case.
-  if ($settings['tolower'] || ($settings['pathauto'] && variable_get('pathauto_case', 0))) {
+  if ((isset($settings['tolower']) && $settings['tolower']) || (isset($settings['pathauto']) && $settings['pathauto'] && variable_get('pathauto_case', 0))) {
     // Convert string to lower case
     $value = drupal_strtolower($value);
   }
