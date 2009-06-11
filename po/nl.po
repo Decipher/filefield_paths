@@ -1,0 +1,150 @@
+# $Id$
+#
+# Dutch translation of Drupal (general)
+# Copyright YEAR NAME <EMAIL@ADDRESS>
+# Generated from files:
+#  filefield_paths.module,v 1.1.2.28 2009/05/26 10:29:15 deciphered
+#  filefield_paths.info,v 1.1.2.4 2008/11/03 09:32:04 deciphered
+#  comment_upload.inc,v 1.1.4.2 2009/05/26 10:29:15 deciphered
+#  upload.inc,v 1.1.4.2 2009/05/26 10:29:15 deciphered
+#  filefield.inc,v 1.1.4.3 2009/06/09 23:04:46 deciphered
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"POT-Creation-Date: 2009-06-04 16:35+0200\n"
+"PO-Revision-Date: 2009-06-11 18:59+0100\n"
+"Last-Translator: L.B. Cohn <libeco@libeco.nl>\n"
+"Language-Team: Dutch <EMAIL@ADDRESS>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: filefield_paths.module:26
+msgid "File name"
+msgstr "Bestandsnaam"
+
+#: filefield_paths.module:42
+msgid "Token"
+msgstr "Patroon voor vervanging"
+
+#: filefield_paths.module:42
+msgid "Replacement value"
+msgstr "Vervangende waarde"
+
+#: filefield_paths.module:45
+msgid "tokens"
+msgstr "patronen voor vervanging"
+
+#: filefield_paths.module:126
+msgid "!title cleanup settings"
+msgstr "!title schoonmaakinstellingen"
+
+#: filefield_paths.module:138
+msgid "Cleanup using Pathauto"
+msgstr "Maak schoon met Pathauto"
+
+#: filefield_paths.module:143
+msgid "Cleanup !title using !url"
+msgstr "Maak !title schoon met !url"
+
+#: filefield_paths.module:143
+msgid "Pathauto settings"
+msgstr "Pathautoinstellingen"
+
+#: filefield_paths.module:153
+msgid "Convert to lower case"
+msgstr "Converteer naar kleine letters"
+
+#: filefield_paths.module:158
+msgid "Convert !title to lower case"
+msgstr "Converteer !title naar kleine letters"
+
+#: filefield_paths.module:164
+msgid "Transliterate"
+msgstr "Vertaal"
+
+#: filefield_paths.module:169
+msgid "Transliterate !title"
+msgstr "Vertaal !title"
+
+#: filefield_paths.module:179
+msgid "!title replacement patterns"
+msgstr "!title patronen voor vervanging"
+
+#: filefield_paths.module:193
+msgid "Retroactive update"
+msgstr "Retroactieve update"
+
+#: filefield_paths.module:194
+msgid "Move and rename previously uploaded files"
+msgstr "Verplaats en hernoem eerder geuploade bestanden"
+
+#: filefield_paths.module:195
+msgid "Warning"
+msgstr "Waarschuwing"
+
+#: filefield_paths.module:196
+msgid "This feature should only be used on developmental servers or with extreme caution"
+msgstr "Deze mogelijkheid moet alleen worden gebruikt op testservers of met extreme voorzichtigheid."
+
+#: filefield_paths.module:477
+msgid "File name without extension"
+msgstr "Bestandsnaam zonder extensie"
+
+#: filefield_paths.module:478
+msgid "File extension"
+msgstr "Bestandsextensie"
+
+#: filefield_paths.module:479
+msgid "File name without extension - original"
+msgstr "Bestandsnaam zonder extensie - origineel"
+
+#: filefield_paths.module:480
+msgid "File extension - original"
+msgstr "Bestandsextensie - origineel"
+
+#: filefield_paths.module:585
+msgid "FileField Paths failed to create directory (%d)."
+msgstr "Bestandveldpaden kon de map (%d) niet maken."
+
+#: filefield_paths.module:591
+msgid "FileField Paths failed to move file (%o) to (%n)."
+msgstr "Bestandsveldpaden kon het bestand (%o) niet verplaatsen naar (%n)."
+
+#: filefield_paths.info:0
+msgid "FileField Paths"
+msgstr "Bestandsveldpaden"
+
+#: filefield_paths.info:0
+msgid "Adds extra functionality to FileFields Path settings."
+msgstr "Voegt extra functionaliteit toe aan Bestandveldpadeninstellingen."
+
+#: filefield_paths.info:0
+msgid "CCK"
+msgstr "CCK"
+
+#: modules/comment_upload.inc:23
+msgid "Comment Upload Path settings"
+msgstr "Reactie Uploadpadinstellingen"
+
+#: modules/comment_upload.inc:31
+#: modules/upload.inc:31
+msgid "File path"
+msgstr "Bestandspad"
+
+#: modules/comment_upload.inc:32
+#: modules/filefield.inc:30
+#: modules/upload.inc:32
+msgid "Optional subdirectory within the \"%dir\" directory where files will be stored. Do not include trailing slash."
+msgstr "Optionele submap binnen de \"%dir\"-map waar bestanden worden opgeslagen. Gebruik geen / na het pad."
+
+#: modules/filefield.inc:24
+msgid "FileField Path settings"
+msgstr "Bestandsveldpadinstellingen"
+
+#: modules/upload.inc:23
+msgid "Upload Path settings"
+msgstr "Uploadpadinstellingen"
+

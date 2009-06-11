@@ -5,6 +5,7 @@ module and the FileField module by adding the ability to use node tokens in
 destination paths and filenames.
 
 FileField Paths was written and is maintained by Stuart Clark (deciphered).
+- http://stuar.tc/lark
 
 
 Features
@@ -34,6 +35,33 @@ Recommended Modules
 * File Aliases      - http://drupal.org/project/file_aliases
 * Pathauto          - http://drupal.org/project/pathauto
 * Transliteration   - http://drupal.org/project/transliteration
+
+
+Usage/Configuration
+--------------------------
+
+Once installed, FileField Paths needs to be configured for each file type you
+wish to use.
+
+* FileField/ImageField module
+
+  Settings can be found on the fields configuration page in 'Widget settings >
+  FileField Path settings'.
+  http://[www.yoursite.com/path/to/drupal]/admin/content/types/[node-type]/fields/[field-name] 
+
+
+* Upload module
+
+  Settings can be found on the content types configuration page in 'Workflow >
+  Upload Path settings'.
+  http://[www.yoursite.com/path/to/drupal]/admin/content/types/[node-type]
+
+
+* Comment Upload module
+
+  Settings can be found on the content types configuration page in 'Workflow >
+  Comment Upload Path settings'.
+  http://[www.yoursite.com/path/to/drupal]/admin/content/types/[node-type]
 
 
 Frequently Asked Questions

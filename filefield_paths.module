@@ -553,7 +553,20 @@ function _filefield_paths_get_values($type, $object, $pathauto = FALSE) {
 
   $full->tokens = token_prepare_tokens($full->tokens);
   if ($pathauto) {
-    $full->values = pathauto_clean_token_values($full);
+    $temp = clone $full;
+
+    // Strip square brackets from tokens for Pathauto.
+    foreach ($temp->tokens as &$token) {
+      $token = trim($token, "[]");
+    }
+
+    $full->values = pathauto_clean_token_values($temp);
+  }
+
+  // Temporary fix: Remove double slashes from token values.
+  // TODO: Remove when #420856 is committed to Pathauto.
+  foreach ($full->values as &$value) {
+    $value = str_replace('//', '/', $value);
   }
 
   return array('tokens' => $full->tokens, 'values' => $full->values);
