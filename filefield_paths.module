@@ -279,7 +279,7 @@ function filefield_paths_update($field_name = NULL, $field_module, $type_name) {
 
   // Invoke hook_filefield_paths_update().
   if (function_exists($function = $module .'_filefield_paths_update')) {
-    $function($field_name, $type_name);
+    $function($field_name, str_replace('-', '_', $type_name));
   }
 }
 
@@ -443,7 +443,7 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
       if (filefield_paths_file_move($file)) {
 
         // Fix reference to old paths in Body and Teaser
-        // @TODO: allow for CCK fields
+        // TODO: allow for CCK fields
         if (isset($node->body)) {
           $file['filepath']['new'] = str_replace($file['filename']['old'], $file['filename']['new'], $file['filepath']['new']);
 

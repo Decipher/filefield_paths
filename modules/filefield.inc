@@ -86,7 +86,6 @@ function filefield_filefield_paths_get_fields(&$node, &$ffp) {
  */
 function filefield_filefield_paths_update($field_name, $type_name) {
   if (!empty($field_name)) {
-    $type_name = str_replace('-', '_', $type_name);
     $field = content_fields($field_name, $type_name);
     $db_info = content_database_info($field);
 

@@ -13,8 +13,12 @@ Features
 
 * Configurable file paths now use node tokens instead of user tokens.
 * Configurable filenames.
-* Support for the ImageField module.
-* Support for the core Upload module.
+* Support for:
+  * Drupal core Upload module.
+  * FileField module.
+  * ImageField module.
+  * ImageField Crop module.
+  * Comment Upload module.
 * File path and filename cleanup options:
   * Filter out words and punctuation by taking advantage of the Pathauto module.
   * Convert unicode characters into US-ASCII with the Transliteration module.
