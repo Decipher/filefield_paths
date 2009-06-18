@@ -18,6 +18,7 @@ Features
   * FileField module.
   * ImageField module.
   * ImageField Crop module.
+  * Image module.
   * Comment Upload module.
 * File path and filename cleanup options:
   * Filter out words and punctuation by taking advantage of the Pathauto module.
@@ -59,6 +60,13 @@ wish to use.
   Settings can be found on the content types configuration page in 'Workflow >
   Upload Path settings'.
   http://[www.yoursite.com/path/to/drupal]/admin/content/types/[node-type]
+
+
+* Image module
+
+  Settings can be found on the Images configuration page in 'Image Path
+  settings'.
+  http://[www.yoursite.com/path/to/drupal]/admin/settings/image
 
 
 * Comment Upload module

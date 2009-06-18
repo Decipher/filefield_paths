@@ -10,6 +10,7 @@ FileField Paths 5.x-1.x-dev, xxxx-xx-xx (development release)
 - #466412: Fixed issue with Upload module when CCK not installed.
 - #465848: Added support for the Comment Upload module.
 - by libeco: Added Dutch translation.
+- Added support for the Image module.
 - Added translation template.
 
 

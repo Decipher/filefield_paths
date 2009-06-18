@@ -478,6 +478,10 @@ function filefield_paths_token_list($type = 'all') {
     $tokens['file']['filefield-extension'] = t("File extension");
     $tokens['file']['filefield-onlyname-original'] = t("File name without extension - original");
     $tokens['file']['filefield-extension-original'] = t("File extension - original");
+    // Tokens for Image module integration.
+    if (module_exists('image')) {
+      $tokens['image']['image-derivative'] = t("Image derivative (thumbnail, preview, etc)");
+    }
     return $tokens;
   }
 }
@@ -498,6 +502,12 @@ function filefield_paths_token_values($type, $object = NULL) {
     }
     $tokens['filefield-onlyname-original'] = $orig['filename'];
     $tokens['filefield-extension-original'] = $orig['extension'];
+    // Tokens for Image module integration.
+    if (module_exists('image')) {
+      $tokens['image-derivative'] = (isset($object[0]['type']) && $object[0]['type'] !== '_original')
+        ? '.'. $object[0]['type']
+        : '';
+    }
     return $tokens;
   }
 }
