@@ -1,8 +1,12 @@
 // $Id$
 
-The FileField Paths module extends the default functionality of Drupals Upload
-module and the FileField module by adding the ability to use node tokens in
-destination paths and filenames.
+The FileField Paths module extends the default functionality of Drupals core
+Upload module, the FileField module and many other File Upload modules by adding
+the ability to use node tokens in destination paths and filenames.
+
+In simple terms, FileField Paths allows you to automatically sort and rename
+your uploaded files using token based replacement patterns to maintain a nice
+clean filesystem.
 
 FileField Paths was written and is maintained by Stuart Clark (deciphered).
 - http://stuar.tc/lark
@@ -23,6 +27,7 @@ Features
 * File path and filename cleanup options:
   * Filter out words and punctuation by taking advantage of the Pathauto module.
   * Convert unicode characters into US-ASCII with the Transliteration module.
+* Automatically updates unprocessed file paths in the node body on save.
 * Retroactive updates - rename and/or move previously uploaded files (Use with
   caution)
 

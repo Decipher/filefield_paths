@@ -197,7 +197,6 @@ function filefield_paths_form_alter($form_id, &$form) {
         '#weight' => 10
       );
 
-      // TODO: Prevent this being implemented twice.
       $form['#submit']['filefield_paths_form_submit'] = array();
     }
   }
@@ -445,6 +444,7 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
 
         // Fix reference to old paths in Body and Teaser
         // TODO: allow for CCK fields
+        // TODO: preg_reaplce to better support FileField Insert.
         if (isset($node->body)) {
           $file['filepath']['new'] = str_replace($file['filename']['old'], $file['filename']['new'], $file['filepath']['new']);
 
