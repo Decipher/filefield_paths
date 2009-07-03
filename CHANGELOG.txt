@@ -3,6 +3,7 @@
 FileField Paths 5.x-1.x-dev, xxxx-xx-xx (development release)
 -----------------------------------
 
+- #494830: Added support for FileField Sources.
 - #485528: Fixed issue with Content Type names containing spaces.
 - #480580 by Ralf: Fixed undefined indexes.
 - #478924: Updated README.TXT documentation.

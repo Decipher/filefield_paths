@@ -362,7 +362,8 @@ function filefield_paths_nodeapi(&$node, $op, $a3 = NULL, $a4 = NULL) {
 
       // Re-write cck fields.
       if (module_exists('content')) {
-        content_update($node);
+        _content_field_invoke_default('update', $node);
+        cache_clear_all('content:'. $node->nid .':'. $node->vid, 'cache_content');
       }
 
       // Cleanup temporary paths.
