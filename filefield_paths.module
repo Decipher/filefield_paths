@@ -120,6 +120,12 @@ function filefield_paths_widget_settings_alter(&$settings, $op, $widget) {
         break;
     }
   }
+
+  foreach (_filefield_paths_includes() as $include) {
+    if (function_exists($function = "_filefield_paths_include_{$include}_widget_settings_alter")) {
+      $function($settings, $op, $widget);
+    }
+  }
 }
 
 /**
@@ -132,144 +138,6 @@ function _filefield_paths_module_supported($module) {
 
   return FALSE;
 }
-
-///**
-// * Implements hook_form_submit().
-// */
-//function filefield_paths_form_submit($form, &$form_state) {
-//  $ffp = array();
-//
-//  // Invoke hook_filefield_paths_form_submit().
-//  foreach (module_implements('filefield_paths_form_submit') as $module) {
-//    $function = $module . '_filefield_paths_form_submit';
-//    $function($form_state, $ffp);
-//  }
-//
-//  if (count($ffp) > 0) {
-//    $retroactive_update = FALSE;
-//    $fields = module_invoke_all('filefield_paths_field_settings');
-//    foreach ($ffp as $field_name => $field_data) {
-//      $cols = $vals = $data = array();
-//
-//      foreach ($fields as $name => &$field) {
-//        $field['settings'] = array(
-//          'value' => $form_state['values']['ffp_' . $field_name][$name],
-//          'tolower' => $form_state['values']['ffp_' . $field_name][$name . '_cleanup'][$name . '_tolower'],
-//          'pathauto' => $form_state['values']['ffp_' . $field_name][$name . '_cleanup'][$name . '_pathauto'],
-//          'transliterate' => $form_state['values']['ffp_' . $field_name][$name . '_cleanup'][$name . '_transliterate']
-//        );
-//
-//        // Store additional settings from addon modules.
-//        if (isset($field['data'])) {
-//          foreach ($field['data'] as $key => $value) {
-//            $field['settings'][$key] = $form_state['values']['ffp_' . $field_name][$value];
-//          }
-//        }
-//
-//        $cols[] = $field['sql'];
-//        $vals[] = "'%s'";
-//        $data[] = serialize($field['settings']);
-//      }
-//
-//      $result = db_fetch_object(
-//        db_query(
-//          "SELECT * FROM {filefield_paths} WHERE type = '%s' AND field = '%s'",
-//          $field_data['type'], $field_name
-//        )
-//      );
-//
-//      // Update existing entry.
-//      if (!empty($result)) {
-//        foreach ($cols as &$col) {
-//          $col .= " = '%s'";
-//        }
-//
-//        db_query(
-//          "UPDATE {filefield_paths} SET " . implode(', ', $cols) . " WHERE type = '%s' AND field = '%s'",
-//          array_merge($data, array($field_data['type'], $field_name))
-//        );
-//      }
-//
-//      // Create new entry.
-//      else {
-//        db_query(
-//          "INSERT INTO {filefield_paths} (type, field, " . implode(', ', $cols) . ") VALUES ('%s', '%s', " . implode(', ', $vals) . ")",
-//          array_merge(array($field_data['type'], $field_name), $data)
-//        );
-//      }
-//
-//      if ($form_state['values']['ffp_' . $field_name]['retroactive_update']) {
-//        $retroactive_update = TRUE;
-//        $module = isset($form['#field']) ? $form['#field']['module'] : $field_name;
-//        filefield_paths_batch_update($module, $field_name, arg(3));
-//      }
-//
-//      variable_set("ffp_{$field_data['type']}_{$field_name}", $form_state['values']['ffp_' . $field_name]['active_updating']);
-//    }
-//
-//    if ($retroactive_update) {
-//      // Run batch.
-//      batch_process($form_state['redirect']);
-//    }
-//  }
-//}
-//
-///**
-// * Set batch process to update FileField Paths.
-// *
-// * @param $module
-// *   The upload widgets module ('filefield', 'upload', etc).
-// * @param $field
-// *   The CCK field name - set as NULL if not applicable.
-// * @param $type
-// *   The Node type ('page', 'story', etc).
-// */
-//function filefield_paths_batch_update($module, $field, $type) {
-//  $objects = array();
-//
-//  // Invoke hook_filefield_paths_batch_update().
-//  if (function_exists($function = $module . '_filefield_paths_batch_update')) {
-//    $function($field, str_replace('-', '_', $type), $objects);
-//  }
-//
-//  // Create batch.
-//  $batch = array(
-//    'title' => t('Updating FileField Paths'),
-//    'operations' => array(
-//      array('_filefield_paths_batch_update_process', array(array_unique($objects), $module, $field))
-//    ),
-//  );
-//  batch_set($batch);
-//}
-//
-//function _filefield_paths_batch_update_process($objects, $module, $field, &$context) {
-//  if (!isset($context['sandbox']['progress'])) {
-//    $context['sandbox']['progress'] = 0;
-//    $context['sandbox']['max'] = count($objects);
-//    $context['sandbox']['objects'] = $objects;
-//  }
-//
-//  // Process nodes by groups of 5.
-//  $count = min(5, count($context['sandbox']['objects']));
-//  for ($i = 1; $i <= $count; $i++) {
-//    // For each oid, load the object, update the files and save it.
-//    $oid = array_shift($context['sandbox']['objects']);
-//
-//    // Invoke hook_filefield_paths_update().
-//    if (function_exists($function = $module . '_filefield_paths_update')) {
-//      $function($oid, $field);
-//    }
-//
-//    // Update our progress information.
-//    $context['sandbox']['progress']++;
-//  }
-//
-//  // Inform the batch engine that we are not finished,
-//  // and provide an estimation of the completion level we reached.
-//  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
-//    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
-//  }
-//}
 
 /**
  * Implements hook_nodeapi().
@@ -382,6 +250,9 @@ function filefield_paths_process_file(&$file, $settings, &$node) {
  * Move file and update its database record.
  */
 function _filefield_paths_file_move($source, &$file) {
+  // Backup messages.
+  $messages = $_SESSION['messages'];
+
   // Create destination directories.
   $directories = array();
   foreach (explode('/', dirname($file['filepath'])) as $directory) {
@@ -389,9 +260,14 @@ function _filefield_paths_file_move($source, &$file) {
     $path = file_create_path(implode($directories, '/'));
     if (!file_check_directory($path, FILE_CREATE_DIRECTORY)) {
       watchdog('filefield_paths', 'FileField Paths failed to create directory (%d).', array('%d' => $path), WATCHDOG_ERROR);
+      // Restore message.
+      $_SESSION['messages'] = $messages;
       return FALSE;
     }
   }
+
+  // Restore message.
+  $_SESSION['messages'] = $messages;
 
   // Move file.
   if (!file_move($source, $file['filepath'])) {

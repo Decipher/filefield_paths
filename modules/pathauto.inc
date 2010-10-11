@@ -3,8 +3,6 @@
 /**
  * @file
  * Pathauto module integration.
- *
- * Integration to be deprecated in favor of CTools.
  */
 
 /**
@@ -22,6 +20,20 @@ function pathauto_filefield_paths_field_options() {
 function pathauto_filefield_paths_field_postprocess($value, $field, $settings) {
   if ($settings['pathauto']) {
     module_load_include('inc', 'pathauto');
-    $value = pathauto_cleanstring($value);
+
+    if ($field == 'file_name') {
+      $pathinfo = pathinfo($value);
+      $value = drupal_substr($value, 0, drupal_strlen($value) - drupal_strlen($pathinfo['extension']) - 1);
+    }
+
+    $values = explode('/', $value);
+    foreach ($values as &$tmp_value) {
+      $tmp_value = pathauto_cleanstring($tmp_value);
+    }
+    $value = implode('/', $values);
+
+    if ($field == 'file_name') {
+      $value .= '.' . pathauto_cleanstring($pathinfo['extension']);
+    }
   }
 }
