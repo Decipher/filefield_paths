@@ -6,41 +6,6 @@
  */
 
 /**
- * Implements hook_schema().
- */
-function filefield_paths_schema() {
-  $schema['filefield_paths'] = array(
-    'fields' => array(
-      'type' => array('type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => ''),
-      'field' => array('type' => 'varchar', 'length' => 32, 'not null' => TRUE, 'default' => ''),
-      'filename' => array('type' => 'text', 'size' => 'medium', 'not null' => TRUE, 'serialize' => TRUE),
-      'filepath' => array('type' => 'text', 'size' => 'medium', 'not null' => TRUE, 'serialize' => TRUE),
-    ),
-    'unique keys' => array(
-      'type_field' => array('type', 'field'),
-    ),
-  );
-
-  return $schema;
-}
-
-/**
- * Implements hook_schema_alter().
- *
- * @param $schema
- *   The system-wide schema
- */
-function filefield_paths_schema_alter(&$schema) {
-  $schema['files']['fields']['origname'] = array(
-    'description' => 'Original name of the file.',
-    'type' => 'varchar',
-    'length' => 255,
-    'not null' => TRUE,
-    'default' => '',
-  );
-}
-
-/**
  * Implements hook_install().
  */
 function filefield_paths_install() {

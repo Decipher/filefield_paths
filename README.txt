@@ -18,24 +18,23 @@ Features
 * Configurable file paths now use node tokens instead of user tokens.
 * Configurable filenames.
 * Support for:
-  * Drupal core Upload module.
   * FileField module.
   * ImageField module.
   * ImageField Crop module.
-  * Image module.
-  * Comment Upload module.
-  * Audio module.
 * File path and filename cleanup options:
   * Filter out words and punctuation by taking advantage of the Pathauto module.
   * Convert unicode characters into US-ASCII with the Transliteration module.
 * Automatically updates unprocessed file paths in the node body on save.
 * Retroactive updates - rename and/or move previously uploaded files (Use with
-  caution)
+  caution).
+* Improved trash cleanup - removes all temporary and empty FileField Paths
+  directories on Cron.
 
 
 Required Modules
 --------------------------
 
+* CCK               - http://drupal.org/project/cck
 * Token             - http://drupal.org/project/token
 
 
@@ -58,35 +57,7 @@ wish to use.
 
   Settings can be found on the fields configuration page in 'Page settings >
   FileField Path settings'.
-  http://[www.yoursite.com/path/to/drupal]/admin/content/node-type/[node-type]/fields/[field-name] 
-
-
-* Upload module
-
-  Settings can be found on the content types configuration page in 'Workflow
-  settings > Upload Path settings'.
-  http://[www.yoursite.com/path/to/drupal]/admin/content/node-type/[node-type]
-
-
-* Image module
-
-  Settings can be found on the Images configuration page in 'Image file settings
-  > Image Path settings'.
-  http://[www.yoursite.com/path/to/drupal]/admin/settings/image
-
-
-* Comment Upload module
-
-  Settings can be found on the content types configuration page in 'Comment
-  settings > Comment Upload Path settings'.
-  http://[www.yoursite.com/path/to/drupal]/admin/content/node-type/[node-type]
-
-
-* Audio module
-
-  Settings can be found on the content types configuration page in 'Audio Path
-  settings'.
-  http://[www.yoursite.com/path/to/drupal]/admin/content/node-type/audio
+  http://[www.yoursite.com/path/to/drupal]/admin/content/node-type/[node-type]/fields/[field-name]
 
 
 Frequently Asked Questions

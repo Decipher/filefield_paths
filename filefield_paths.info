@@ -1,6 +1,7 @@
 ; $Id$
 name = FileField Paths
 description = Adds improved Token based file sorting and renaming functionalities.
+dependencies[] = content
 dependencies[] = token
-package = FileField Paths
+package = CCK
 core = 6.x

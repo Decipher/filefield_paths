@@ -1,5 +1,15 @@
 // $Id$
 
+FileField Paths 6.x-2.x-dev, xxxx-xx-xx (Developmental release)
+-----------------------------------
+
+- #723784 by andrewlevine, Deciphered: Fixed regular expression.
+- Improved Trash cleanup.
+- Changed settings storage to provide exportability.
+- Changed API for improved modularity.
+- Removed support for non-CCK based modules.
+
+
 FileField Paths 6.x-1.4, 2010-01-11
 -----------------------------------
 

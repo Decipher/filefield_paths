@@ -1,0 +1,31 @@
+/* $Id */
+
+.filefield_paths-js_ui-wrapper {
+  position: relative;
+}
+
+.filefield_paths-js_ui-wrapper .form-text {
+  float: left;
+  padding-right: 24px;
+}
+
+.filefield_paths-js_ui-wrapper a.filefield_paths-button-config {
+  background-image: url('sprites.png');
+  background-position: 0 -48px;
+  display: block;
+  float: left;
+  height: 12px;
+  margin: 6px 0 0 -24px;
+  width: 16px;
+}
+
+.filefield_paths-js_ui-wrapper a.filefield_paths-button-config:hover {
+  background-position: 0 -60px;
+}
+
+/* @TODO - Report an issue to Token instead of attempting to fix this myself */
+/* @SEE http://drupal.org/node/920002 */
+.token-tree,
+.token-tree .expander {
+  margin-left: 0 !important;
+}
