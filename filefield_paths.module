@@ -439,6 +439,9 @@ function filefield_paths_node_update(&$node) {
 
     // Re-write cck fields.
     if (module_exists('content')) {
+      if (module_exists('filefield')) {
+        _field_file_cache(NULL, TRUE);
+      }
       _content_field_invoke_default('update', $node);
       cache_clear_all('content:'. $node->nid . ':' . $node->vid, content_cache_tablename());
     }
@@ -734,7 +737,7 @@ function _filefield_paths_get_values($type, $object, $pathauto = FALSE) {
     }
 
     if (!function_exists('pathauto_clean_token_values')) {
-      _pathauto_include();
+      module_load_include('inc', 'pathauto');
     }
     $full->values = pathauto_clean_token_values($temp);
   }

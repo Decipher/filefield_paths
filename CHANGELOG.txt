@@ -1,5 +1,12 @@
 // $Id$
 
+FileField Paths 6.x-1.x-dev, xxxx-xx-xx (Developmental release)
+-----------------------------------
+
+- #877578 by tomgf: Fixed Pathauto support.
+- #635854 by hefox: Fixed cache issue.
+
+
 FileField Paths 6.x-1.4, 2010-01-11
 -----------------------------------
 
@@ -82,4 +89,3 @@ FileField Paths 6.x-1.0, 2008-11-03
 -----------------------------------
 
 - Initial 6.x release.
-
