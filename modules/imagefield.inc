@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Provides ImageField module specific functions for FileField Paths.

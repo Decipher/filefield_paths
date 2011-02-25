@@ -1,4 +1,3 @@
-// $Id$
 
 The FileField Paths module extends the default functionality of Drupals core
 Upload module, the FileField module and many other File Upload modules by adding

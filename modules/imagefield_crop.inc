@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Provides ImageField Crop module specific functions for FileField Paths.

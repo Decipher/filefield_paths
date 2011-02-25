@@ -1,4 +1,3 @@
-; $Id$
 name = FileField Paths
 description = Adds improved Token based file sorting and renaming functionalities.
 dependencies[] = token

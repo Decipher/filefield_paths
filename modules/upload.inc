@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Provides FileField Paths integration with the Upload module.
