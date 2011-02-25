@@ -1,4 +1,3 @@
-// $Id$
 
 Drupal.behaviors.fileFieldPaths_UI = function(context) {
   $.each(Drupal.settings.fileFieldPaths_UI.fields, function(id) {

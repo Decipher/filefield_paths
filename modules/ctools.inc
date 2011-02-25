@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * CTools module integration.

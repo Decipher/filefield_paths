@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * FileField Paths module integration.

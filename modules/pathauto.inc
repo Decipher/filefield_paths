@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Pathauto module integration.

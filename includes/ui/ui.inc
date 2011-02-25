@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * UI Tweaks for FileField Paths.

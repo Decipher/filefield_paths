@@ -1,4 +1,3 @@
-// $Id$
 
 FileField Paths 6.x-2.x-dev, xxxx-xx-xx (Developmental release)
 -----------------------------------

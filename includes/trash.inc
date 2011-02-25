@@ -1,5 +1,4 @@
 <?php
-// $Id$
 /**
  * @file
  * Trash cleanup functionality for FileField Paths module.
