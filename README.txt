@@ -1,4 +1,3 @@
-
 The FileField Paths module extends the default functionality of Drupals core
 Upload module, the FileField module and many other File Upload modules by adding
 the ability to use node tokens in destination paths and filenames.
@@ -57,7 +56,7 @@ wish to use.
 
   Settings can be found on the fields configuration page in 'Page settings >
   FileField Path settings'.
-  http://[www.yoursite.com/path/to/drupal]/admin/content/node-type/[node-type]/fields/[field-name] 
+  http://[www.yoursite.com/path/to/drupal]/admin/content/node-type/[node-type]/fields/[field-name]
 
 
 * Upload module
@@ -117,4 +116,3 @@ A. Retroactive updates will go through every single node of the particular
    possible that the moving/renaming of these files could break links. It is
    strongly advised that you only use this functionality on your developmental
    servers so that you can make sure not to introduce any linking issues.
-
