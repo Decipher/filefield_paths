@@ -1,6 +1,16 @@
 name = FileField Paths
-description = Adds improved Token based file sorting and renaming functionalities.
-dependencies[] = content
+description = Adds extra functionality to FileFields Path settings.
 dependencies[] = token
-package = CCK
-core = 6.x
+core = 7.x
+package = Fields
+files[] = filefield_paths.install
+files[] = filefield_paths.module
+files[] = modules/file.inc
+files[] = modules/image.inc
+files[] = tests/filefield_paths.test
+
+; Information added by drupal.org packaging script on 2011-02-25
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "filefield_paths"
+datestamp = "1298619259"
