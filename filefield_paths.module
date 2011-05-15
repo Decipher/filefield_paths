@@ -452,14 +452,16 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
         $fields = field_info_fields();
         foreach ($fields as $name => $field) {
           if ($field['module'] == 'text' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
-            foreach ($node->{$field['field_name']}[LANGUAGE_NONE] as &$item) {
-              $original = $item['value'];
-              $item['value'] = (preg_match('/' . $pattern['regex'] . '/s', $item['value']))
-                ? preg_replace('/' . $pattern['regex'] . '/s', $pattern['replace'], $item['value'])
-                : preg_replace('/' . $pattern['regex_enc'] . '/s', $pattern['replace'], $item['value']);
+            foreach ($node->{$field['field_name']} as &$language) {
+              foreach ($language as &$item) {
+                $original = $item['value'];
+                $item['value'] = (preg_match('/' . $pattern['regex'] . '/s', $item['value']))
+                  ? preg_replace('/' . $pattern['regex'] . '/s', $pattern['replace'], $item['value'])
+                  : preg_replace('/' . $pattern['regex_enc'] . '/s', $pattern['replace'], $item['value']);
 
-              if ($item['value'] !== $original) {
-                $update->node = TRUE;
+                if ($item['value'] !== $original) {
+                  $update->node = TRUE;
+                }
               }
             }
           }

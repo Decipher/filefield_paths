@@ -54,21 +54,21 @@ function image_filefield_paths_get_fields(&$node, &$ffp) {
     $fields = field_info_fields();
     foreach ($fields as $name => $field) {
       if ($field['type'] == 'image' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
+        foreach ($node->{$field['field_name']} as $language) {
+          foreach ($language as $file) {
+            $new = !isset($file['uri']) ? TRUE : FALSE;
+            $file = !isset($file['uri']) ? file_load($file['fid']) : (object) $file;
 
-        foreach ($node->{$field['field_name']}[LANGUAGE_NONE] as $file) {
-          $new = !isset($file['uri']) ? TRUE : FALSE;
-          $file = !isset($file['uri']) ? file_load($file['fid']) : (object) $file;
+            $ffp['#files'][] = array(
+              'field' => (array) $file,
+              'module' => $field['module'],
+              'name' => $field['field_name'],
+              'new' => ($new || isset($file->new)) ? TRUE : FALSE,
+            );
 
-          $ffp['#files'][] = array(
-            'field' => (array) $file,
-            'module' => $field['module'],
-            'name' => $field['field_name'],
-            'new' => ($new || isset($file->new)) ? TRUE : FALSE,
-          );
-
-          $ffp['#types'][$field['field_name']] = TRUE;
+            $ffp['#types'][$field['field_name']] = TRUE;
+          }
         }
-
       }
     }
   }
@@ -95,15 +95,18 @@ function file_filefield_paths_update($oid, $field) {
 
   // Flag files for update.
   if (isset($node->{$field})) {
-    foreach ($node->{$field}[LANGUAGE_NONE] as &$file) {
-      if (!is_array($file) || empty($file['uri'])) {
-        continue;
-      }
+    foreach ($node->{$field} as &$language) {
+      foreach ($language as &$file) {
 
-      $file['new'] = TRUE;
+        if (!is_array($file) || empty($file['uri'])) {
+
+          continue;
+        }
+
+        $file['new'] = TRUE;
+      }
     }
   }
-
   // Process Node.
   filefield_paths_node_update($node);
 }
