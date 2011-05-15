@@ -341,7 +341,9 @@ function filefield_paths_node_update($node) {
       // Invoke hook_filefield_paths_process_file().
       foreach (module_implements('filefield_paths_process_file') as $module) {
         $function = $module . '_filefield_paths_process_file';
-        $function(($file['new'] || variable_get("ffp_{$node->type}_{$file['name']}", 0)), $file, $ffp['#settings'][$file['name']], $node, $update);
+        $settings = isset($ffp['#settings'][$file['name']]) ? $ffp['#settings'][$file['name']] : NULL;
+        $some_var_exists = variable_get("ffp_{$node->type}_{$file['name']}", 0); // wth is this?
+        $function(($file['new'] || $some_var_exists), $file, $settings, $node, $update);
       }
     }
 
