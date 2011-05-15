@@ -128,7 +128,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
             ? $field['settings']['pathauto']
             : 0
           ,
-          '#description' => t('Cleanup !title using !url', array('!title' => $field['title'], '!url' => l(t('Pathauto settings'), 'admin/build/path/pathauto'))),
+          '#description' => t('Cleanup !title using !url', array('!title' => $field['title'], '!url' => l(t('Pathauto settings'), 'admin/config/search/path/settings'))),
         );
         if (!module_exists('pathauto')) {
           $field_data['form_path'][$name . '_cleanup'][$name . '_pathauto']['#disabled'] = TRUE;
