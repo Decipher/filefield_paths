@@ -437,7 +437,7 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
 
     // Finalize files if necessary.
     $dirname = dirname($file['filepath']['new']);
-    if ($dirname != dirname($file['field']['uri']) || $file['filename']['new'] != $file['field']['uri']) {
+    if ($dirname != dirname($file['field']['uri']) || $file['filename']['new'] != $file['field']['filename']) {
       if (file_prepare_directory($dirname, FILE_CREATE_DIRECTORY) && file_move((object) $file['field'], $file['filepath']['new'])) {
 
         // Fix reference to old paths.
