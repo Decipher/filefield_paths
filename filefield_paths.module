@@ -366,12 +366,12 @@ function filefield_paths_node_update($node) {
 }
 
 /**
- * Implementation of hook_content_fieldapi().
+ * Implementation of hook_field_delete_instance().
  */
-function filefield_paths_field_delete_field($field) {
+function filefield_paths_field_delete_instance($instance) {
   db_delete('filefield_paths')
-    ->condition('type', $field['bundles']['node'][0])
-    ->condition('field', $field['field_name'])
+    ->condition('type', $instance['bundle'])
+    ->condition('field', $instance['field_name'])
     ->execute();
 }
 
