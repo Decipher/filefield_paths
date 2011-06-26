@@ -84,11 +84,13 @@ function file_filefield_paths_get_fields(&$node, &$ffp) {
 /**
  * Implements hook_filefield_paths_batch_update().
  */
-function image_filefield_paths_batch_update($field, $type, &$objects) {
-  $instance = field_info_instance('node', $field, $type);
+function file_filefield_paths_batch_update($field, $type, &$objects) {
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', array($type))
+    ->fieldCondition($field);
 
-  // TODO This needs to be replaced with EntityFieldQuery
-  //$results = field_attach_query($instance['field_id'], array(array('bundle', array($type))));
+  $results = $query->execute();
 
   // Build array of Node IDs.
   foreach ($results['node'] as $node) {
@@ -99,7 +101,7 @@ function image_filefield_paths_batch_update($field, $type, &$objects) {
 /**
  * Implements hook_filefield_paths_update().
  */
-function image_filefield_paths_update($oid, $field) {
+function file_filefield_paths_update($oid, $field) {
   $node = node_load($oid);
 
   // Flag files for update.
