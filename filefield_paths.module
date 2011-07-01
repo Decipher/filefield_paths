@@ -546,32 +546,40 @@ function filefield_paths_tokens($type, $tokens, array $data = array(), array $op
  * Process and cleanup strings.
  */
 function filefield_paths_process_string($value, $data, $settings = array()) {
-  // Process string tokens.
-  $value = token_replace($value, $data);
-
-  // Transliterate string.
-  if (module_exists('transliteration') && isset($settings['transliterate']) && $settings['transliterate']) {
-    $value = transliteration_get($value);
-    if ($type == 'field') {
-      $paths = explode('/', $value);
-      foreach ($paths as &$path) {
-        $path = transliteration_clean_filename($path);
-      }
-
-      $value = implode('/', $paths);
-    }
-  }
-
-  // Convert string to lower case.
-  if ((isset($settings['tolower']) && $settings['tolower']) || (isset($settings['pathauto']) && $settings['pathauto'] && variable_get('pathauto_case', 0))) {
-    // Convert string to lower case
-    $value = drupal_strtolower($value);
-  }
+  // Process string tokens
+  // Callback so only token results are filtered, not seperators
+  $value = token_replace($value, $data,
+    array(
+      'callback' => 'filefield_paths_process_callback',
+      'callback_options' => array(
+        'transliterate' => (module_exists('transliteration') && isset($settings['transliterate']) && $settings['transliterate']),
+        'pathauto' => (module_exists('pathauto') && isset($settings['pathauto']) && $settings['pathauto'] && module_load_include('inc', 'pathauto')),
+        'lower' => (isset($settings['tolower']) && $settings['tolower']) || (isset($settings['pathauto']) && $settings['pathauto'] && module_exists('pathauto') && variable_get('pathauto_case', 0))
+      )
+    )
+  );
 
   // Ensure that there are no double-slash sequences due to empty token values.
   $value = preg_replace('/\/+/', '/', $value);
 
   return $value;
+}
+
+/**
+ * Callback for processing result of token_replace by token
+ */
+function filefield_paths_process_callback(&$replacements, &$data, &$options) {
+  foreach ($replacements as &$value) {
+    if ($options['callback_options']['transliterate']) {
+      $value = transliteration_clean_filename($value);
+    }
+    if ($options['callback_options']['pathauto']) {
+      $value = pathauto_cleanstring($value);
+    }
+    if ($options['callback_options']['lower']) {
+      $value = drupal_strtolower($value);
+    }
+  }
 }
 
 /**
