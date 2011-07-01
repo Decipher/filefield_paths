@@ -583,15 +583,11 @@ function filefield_paths_process_callback(&$replacements, &$data, &$options) {
 }
 
 /**
- * Implements hook_file_insert().
+ * Implements hook_file_presave().
  */
-function filefield_paths_file_insert($file) {
+function filefield_paths_file_presave($file) {
   // Store original filename in the database.
   if (empty($file->origname)) {
     $file->origname = $file->filename;
-    db_update('file_managed')
-      ->fields(array('origname' => $file->filename))
-      ->condition('fid', $file->fid)
-      ->execute();
   }
 }
