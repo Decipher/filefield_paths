@@ -486,7 +486,7 @@ function filefield_paths_get_fields(&$node, $op = NULL) {
  * Implements hook_filefield_paths_process_file().
  */
 function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &$node, &$update) {
-  if ($new) {
+  if ($new && !empty($file['field']['filename'])) {
     // Process filename
     $file['filename']['old'] = $file['field']['filename'];
     if (($file['filename']['new'] = $settings['filename']['value']) != '') {
