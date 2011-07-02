@@ -527,14 +527,12 @@ function filefield_paths_tokens($type, $tokens, array $data = array(), array $op
       switch ($name) {
         case 'ffp-name-only':
           $info = pathinfo($file->filename);
-          // PHP < 5.2: pathinfo() doesn't return 'filename' variable.
-          $replacements[$original] = isset($orig['filename']) ? $info['filename'] : basename($file->filename, '.' . $info['extension']);
+          $replacements[$original] = $info['filename'];
           break;
 
         case 'ffp-name-only-original':
           $info = pathinfo($file->origname);
-          // PHP < 5.2: pathinfo() doesn't return 'filename' variable.
-          $replacements[$original] = isset($orig['filename']) ? $info['filename'] : basename($file->origname, '.' . $info['extension']);
+          $replacements[$original] = $info['filename'];
           break;
 
         case 'ffp-extension-original':
