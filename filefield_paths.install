@@ -94,15 +94,18 @@ function filefield_paths_update_7103() {
 
   // Add origname field to {file_managed}, and populate with the current
   // filenames.
-  db_add_field('file_managed', 'origname', array(
-    'description' => 'Original name of the file with no path components. Used by the filefield_paths module.',
-    'type' => 'varchar',
-    'length' => 255,
-    'not null' => TRUE,
-    'default' => '',
-  ));
+  if (!db_field_exists('file_managed', 'origname')) {
+    db_add_field('file_managed', 'origname', array(
+      'description' => 'Original name of the file with no path components. Used by the filefield_paths module.',
+      'type' => 'varchar',
+      'length' => 255,
+      'not null' => TRUE,
+      'default' => '',
+    ));
+  }
   db_update('file_managed')
     ->expression('origname', 'filename')
+    ->condition('origname', '')
     ->execute();
 }
 
