@@ -7,9 +7,3 @@ files[] = filefield_paths.module
 files[] = modules/file.inc
 files[] = modules/image.inc
 files[] = tests/filefield_paths.test
-
-; Information added by drupal.org packaging script on 2011-02-25
-version = "7.x-1.x-dev"
-core = "7.x"
-project = "filefield_paths"
-datestamp = "1298619259"
