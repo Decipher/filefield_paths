@@ -446,29 +446,34 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
     if ($dirname != dirname($file['field']['uri']) || $file['filename']['new'] != $file['field']['filename']) {
       if (file_prepare_directory($dirname, FILE_CREATE_DIRECTORY) && file_move((object) $file['field'], $file['filepath']['new'])) {
 
-        // Fix reference to old paths.
-        $file_directory_path = file_uri_scheme($file['field']['uri']) !== 'private'
-          ? 'public:/'
-          : 'private:/';
+        // Replace references in text fields
+        $old_uri_path = parse_url(file_create_url($file['filepath']['old']), PHP_URL_PATH);
+        $new_uri_path = parse_url(file_create_url($file['filepath']['new']), PHP_URL_PATH);
 
-        $pattern = array(
-          'regex'     => str_replace('/', '\/', $file_directory_path) . '([^"]*?)' . str_replace('/', '\/', str_replace('public:/', '', file_uri_target($file['filepath']['old']))),
-          'regex_enc' => str_replace('/', '\/', drupal_encode_path($file_directory_path)) . '([^"]*?)' . str_replace('/', '\/', str_replace(drupal_encode_path('public:/'), '', drupal_encode_path(file_uri_target($file['filepath']['old'])))),
-          'replace'   => $file_directory_path . '$1' . str_replace('public:/', '', file_uri_target($file['filepath']['new'])),
+        $search = array(
+          $old_uri_path,
+          $file['filepath']['old'],
+          drupal_encode_path($old_uri_path)
+        );
+
+        $replace = array(
+          $new_uri_path,
+          $file['filepath']['new'],
+          drupal_encode_path($new_uri_path)
         );
 
         $fields = field_info_fields();
+        $count = 0;
         foreach ($fields as $name => $field) {
           if ($field['module'] == 'text' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
             foreach ($node->{$field['field_name']} as &$language) {
               foreach ($language as &$item) {
-                $original = $item['value'];
-                $item['value'] = (preg_match('/' . $pattern['regex'] . '/s', $item['value']))
-                  ? preg_replace('/' . $pattern['regex'] . '/s', $pattern['replace'], $item['value'])
-                  : preg_replace('/' . $pattern['regex_enc'] . '/s', $pattern['replace'], $item['value']);
-
-                if ($item['value'] !== $original) {
-                  $update->node = TRUE;
+                for ($i = 0; $i < count($search); $i++) {
+                  $item['value'] = preg_replace('/' . preg_quote($search[$i], '/') . '/', $replace[$i], $item['value'], -1, $count);
+                  if ($count > 0) {
+                    $update->node = TRUE;
+                    break;
+                  }
                 }
               }
             }
