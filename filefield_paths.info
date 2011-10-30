@@ -1,9 +1,15 @@
-name = FileField Paths
-description = Adds extra functionality to FileFields Path settings.
+name = File<strike>Field</strike> Paths
+description = Adds extra functionality to File Path settings.
 dependencies[] = token
+package = Fields
 core = 7.x
+
 files[] = filefield_paths.install
 files[] = filefield_paths.module
+
 files[] = modules/file.inc
+files[] = modules/filefield_paths.inc
 files[] = modules/image.inc
-files[] = tests/filefield_paths.test
+files[] = modules/token.inc
+
+;files[] = tests/filefield_paths.test
