@@ -1,8 +1,7 @@
 <?php
-
 /**
  * @file
- * Provides FileField Paths integration with the File module.
+ * File module integration.
  */
 
 /**
@@ -12,8 +11,8 @@ function file_filefield_paths_form_alter(&$form, &$ffp) {
   if (isset($form['#field']) && $form['#field']['type'] == 'file' && isset($form['instance']['settings']['file_directory'])) {
     $ffp[$form['#field']['field_name']] = array(
       'show' => TRUE,
-      'type' => $form['instance']['bundle']['#value'],
-      'form_path' => &$form['instance']['ffp_'. $form['#field']['field_name']],
+      'type' => "{$form['instance']['entity_type']['#value']}::{$form['instance']['bundle']['#value']}",
+      'form_path' => &$form['instance']["ffp_{$form['#field']['field_name']}"],
       'file_path_default' => $form['instance']['settings']['file_directory']['#default_value']
     );
 
@@ -36,32 +35,25 @@ function file_filefield_paths_form_alter(&$form, &$ffp) {
  * Implements hook_filefield_paths_form_submit().
  */
 function file_filefield_paths_form_submit(&$form_state, &$ffp) {
-  if (isset($form_state['values']['form_id']) && $form_state['values']['form_id'] != 'node_type_form') {
-    $form_state['values']['ffp_' . $form_state['values']['instance']['field_name']] = $form_state['values']['instance']['ffp_' . $form_state['values']['instance']['field_name']];
+  if (isset($form_state['values']['form_id']) && $form_state['values']['form_id'] == 'field_ui_field_edit_form') {
+    $form_state['values']["ffp_{$form_state['values']['instance']['field_name']}"] = $form_state['values']['instance']["ffp_{$form_state['values']['instance']['field_name']}"];
     $ffp[$form_state['values']['instance']['field_name']] = array(
-      'type' => $form_state['values']['instance']['bundle'],
+      'type' => "{$form_state['values']['instance']['entity_type']}::{$form_state['values']['instance']['bundle']}",
     );
 
-    $form_state['values']['instance']['settings']['file_directory'] = $form_state['values']['ffp_' . $form_state['values']['instance']['field_name']]['file_path'];
+    $form_state['values']['instance']['settings']['file_directory'] = $form_state['values']["ffp_{$form_state['values']['instance']['field_name']}"]['file_path'];
   }
 }
 
 /**
  * Implements hook_filefield_paths_get_fields().
  */
-function file_filefield_paths_get_fields(&$node, &$ffp) {
-  if (is_object($node)) {
-    // TODO: Replace with field_info_fields() when http://drupal.org/node/613754 is fixed.
-    $instances = field_info_instances('node', $node->type);
-    $fields = array();
-    foreach ($instances as $field_name => $instance) {
-      $fields[$field_name] = field_info_field($field_name);
-    }
-
+function file_filefield_paths_get_fields(&$entity, &$ffp) {
+  if (is_object($entity)) {
+    $fields = field_info_fields();
     foreach ($fields as $name => $field) {
-      if ($field['type'] == 'file' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
-
-        foreach ($node->{$field['field_name']} as $language) {
+      if ($field['type'] == 'file' && isset($entity->{$field['field_name']}) && is_array($entity->{$field['field_name']})) {
+        foreach ($entity->{$field['field_name']} as $language) {
           foreach ($language as $file) {
             $new = !isset($file['uri']) ? TRUE : FALSE;
             $file = !isset($file['uri']) ? file_load($file['fid']) : (object) $file;
@@ -84,31 +76,25 @@ function file_filefield_paths_get_fields(&$node, &$ffp) {
 /**
  * Implements hook_filefield_paths_batch_update().
  */
-function file_filefield_paths_batch_update($field, $type, &$objects) {
+function file_filefield_paths_batch_update($instance, &$objects) {
   $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'node')
-    ->entityCondition('bundle', array($type))
-    ->fieldCondition($field);
+  $query->entityCondition('entity_type', $instance['entity_type'])
+    ->entityCondition('bundle', array($instance['bundle']))
+    ->fieldCondition($instance['field_name']);
 
-  $results = $query->execute();
-
-  // Build array of Node IDs.
-  foreach ($results['node'] as $node) {
-    $objects[] = $node->nid;
-  }
+  $objects = $query->execute();
 }
 
 /**
  * Implements hook_filefield_paths_update().
  */
-function file_filefield_paths_update($oid, $field) {
-  $node = node_load($oid);
+function file_filefield_paths_update($oid, $instance) {
+  $entity = current(entity_load($instance['entity_type'], array_keys($oid)));
 
   // Flag files for update.
-  if (isset($node->{$field})) {
-    foreach ($node->{$field} as &$language) {
+  if (isset($entity->{$instance['field_name']})) {
+    foreach ($entity->{$instance['field_name']} as &$language) {
       foreach ($language as &$file) {
-
         if (!is_array($file) || empty($file['uri'])) {
           continue;
         }
@@ -117,6 +103,7 @@ function file_filefield_paths_update($oid, $field) {
       }
     }
   }
-  // Process Node.
-  filefield_paths_node_update($node);
+
+  // Process Entity.
+  filefield_paths_entity_update($entity, $instance['entity_type']);
 }
