@@ -353,6 +353,7 @@ function filefield_paths_field_delete_instance($instance) {
 
 function filefield_paths_get_fields(&$entity, $type, $op = NULL) {
   $ffp = array();
+  $entity_info = entity_get_info();
 
   // Invoke hook_filefield_paths_get_fields().
   foreach (module_implements('filefield_paths_get_fields') as $module) {
@@ -369,7 +370,7 @@ function filefield_paths_get_fields(&$entity, $type, $op = NULL) {
   // Load fields settings
   foreach (array_keys($ffp['#types']) as $name) {
     // @TODO - Confirm this works for all entity types.
-    $field_type = isset($entity->type) ? "{$type}::{$entity->type}" : "{$type}::{$type}";
+    $field_type = isset($entity->{$entity_info[$type]['entity keys']['bundle']}) ? "{$type}::{$entity->{$entity_info[$type]['entity keys']['bundle']}}" : "{$type}::{$type}";
     $results = db_select('filefield_paths', 'f')
       ->fields('f')
       ->condition('type', $field_type)
