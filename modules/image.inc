@@ -55,14 +55,13 @@ function image_filefield_paths_get_fields(&$entity, &$ffp) {
       if ($field['type'] == 'image' && isset($entity->{$field['field_name']}) && is_array($entity->{$field['field_name']})) {
         foreach ($entity->{$field['field_name']} as $language) {
           foreach ($language as $file) {
-            $new = !isset($file['uri']) ? TRUE : FALSE;
-            $file = !isset($file['uri']) ? file_load($file['fid']) : (object) $file;
+            $file = file_load($file['fid']);
 
             $ffp['#files'][] = array(
               'field' => (array) $file,
               'module' => $field['module'],
               'name' => $field['field_name'],
-              'new' => ($new || isset($file->new)) ? TRUE : FALSE,
+              'new' => $file->timestamp == REQUEST_TIME,
             );
 
             $ffp['#types'][$field['field_name']] = TRUE;

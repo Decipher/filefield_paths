@@ -332,6 +332,16 @@ function filefield_paths_entity_update($entity, $type) {
 }
 
 /**
+ * Implements hook_file_presave().
+ */
+function filefield_paths_file_presave($file) {
+  // Store original filename in the database.
+  if (empty($file->origname)) {
+    $file->origname = $file->filename;
+  }
+}
+
+/**
  * Implements hook_field_delete_instance().
  */
 function filefield_paths_field_delete_instance($instance) {
@@ -418,14 +428,4 @@ function filefield_paths_process_string($value, $data, $settings = array()) {
   $value = preg_replace('/\/+/', '/', $value);
 
   return $value;
-}
-
-/**
- * Implements hook_file_presave().
- */
-function filefield_paths_file_presave($file) {
-  // Store original filename in the database.
-  if (empty($file->origname)) {
-    $file->origname = $file->filename;
-  }
 }
