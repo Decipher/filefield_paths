@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Adds extra functionality to FileFields Path settings.
+ * Contains core functions for the FileField Paths module.
  */
 
 /**
@@ -27,6 +27,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
 
   // If supporting module enabled, show FileField Paths settings form.
   if (count($ffp) > 0) {
+    $entity_info = entity_get_info($form['#instance']['entity_type']);
     $fields = module_invoke_all('filefield_paths_field_settings');
     foreach ($ffp as $field_name => $field_data) {
       $active_updating = 0;
@@ -54,6 +55,8 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
           $keys = array_keys($field['form']);
           for ($i = 1; $i < count($field['form']); $i++) {
             $field['form'][$keys[$i]]['#weight'] = ($count - 1) * 3 + 2 + $i;
+            $field['form'][$keys[$i]]['#element_validate'] = array('token_element_validate');
+            $field['form'][$keys[$i]]['#token_types'] = array('file', $entity_info['token type']);
           }
           unset($keys);
 
@@ -76,7 +79,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
 
         $field_data['form_path']["{$name}_cleanup"] = array(
           '#type' => 'fieldset',
-          '#title' => t('@title cleanup settings', array('@title' => filter_xss($field['title']))),
+          '#title' => t('@title cleanup settings', array('@title' => $field['title'])),
           '#collapsible' => TRUE,
           '#collapsed' => TRUE,
           '#weight' => ($count - 1) * 3 + 1,
@@ -127,6 +130,13 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
         }
       }
 
+      // Replacement patterns for field.
+      $field_data['form_path']['token_tree'] = array(
+        '#theme' => 'token_tree',
+        '#token_types' => array('file', $entity_info['token type']),
+        '#weight' => 10,
+      );
+
       // Retroactive updates.
       $field_data['form_path']['retroactive_update'] = array(
         '#type' => 'checkbox',
@@ -134,7 +144,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
         '#description' => t('Move and rename previously uploaded files') . '.' .
           '<br /> <strong style="color: #FF0000;">' . t('Warning') . ':</strong> ' .
           t('This feature should only be used on developmental servers or with extreme caution') . '.',
-        '#weight' => 10
+        '#weight' => 11
       );
 
       // Active updating.
@@ -145,13 +155,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
         '#description' => t('Actively move and rename previously uploaded files as required') . '.' .
           '<br /> <strong style="color: #FF0000;">' . t('Warning') . ':</strong> ' .
           t('This feature should only be used on developmental servers or with extreme caution') . '.',
-        '#weight' => 11
-      );
-
-      $field_data['form_path']['token_tree'] = array(
-        '#theme' => 'token_tree',
-        '#token_types' => $field_data['form_path']['file_path']['#token_types'] + $field_data['form_path']['file_name']['#token_types'],
-        '#weight' => 15,
+        '#weight' => 12
       );
 
       if (!in_array('filefield_paths_form_submit', $form['#submit'])) {
@@ -239,6 +243,11 @@ function filefield_paths_form_submit($form, &$form_state) {
   }
 }
 
+/**
+ * Set batch process to update FileField Paths.
+ *
+ * @param $instance
+ */
 function filefield_paths_batch_update($instance) {
   $objects = array();
 
@@ -313,7 +322,9 @@ function filefield_paths_entity_update($entity, $type) {
       }
     }
 
-    field_attach_update($type, $entity);
+    if ($update->entity == TRUE) {
+      field_attach_update($type, $entity);
+    }
 
 //  // Cleanup temporary paths.
 //  if ($ffp['#settings']) {
@@ -346,7 +357,7 @@ function filefield_paths_file_presave($file) {
  */
 function filefield_paths_field_delete_instance($instance) {
   db_delete('filefield_paths')
-    ->condition('type', $instance['bundle'])
+    ->condition('type', "{$instance['entity_type']}::{$instance['bundle']}")
     ->condition('field', $instance['field_name'])
     ->execute();
 }
@@ -361,6 +372,9 @@ function filefield_paths_field_delete_instance($instance) {
 //  }
 //}
 
+/**
+ *
+ */
 function filefield_paths_get_fields(&$entity, $type, $op = NULL) {
   $ffp = array();
   $entity_info = entity_get_info();
@@ -379,7 +393,6 @@ function filefield_paths_get_fields(&$entity, $type, $op = NULL) {
 
   // Load fields settings
   foreach (array_keys($ffp['#types']) as $name) {
-    // @TODO - Confirm this works for all entity types.
     $field_type = isset($entity->{$entity_info[$type]['entity keys']['bundle']}) ? "{$type}::{$entity->{$entity_info[$type]['entity keys']['bundle']}}" : "{$type}::{$type}";
     $results = db_select('filefield_paths', 'f')
       ->fields('f')

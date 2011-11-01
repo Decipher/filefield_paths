@@ -17,8 +17,6 @@ function filefield_paths_filefield_paths_field_settings() {
         'file_path' => array(
           '#maxlength' => 512,
           '#size' => 128,
-          '#element_validate' => array('token_element_validate'),
-          '#token_types' => array('file', 'node'),
         ),
       ),
     ),
@@ -32,8 +30,6 @@ function filefield_paths_filefield_paths_field_settings() {
           '#type' => 'textfield',
           '#title' => t('File name'),
           '#default_value' => '[file:ffp-name-only-original].[file:ffp-extension-original]',
-          '#element_validate' => array('token_element_validate'),
-          '#token_types' => array('file', 'node'),
         ),
       ),
     )
@@ -44,7 +40,7 @@ function filefield_paths_filefield_paths_field_settings() {
  * Implements hook_filefield_paths_process_file().
  */
 function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &$entity, $type, &$update) {
-  if ($new) {
+  if ($new && !empty($file['field']['filename'])) {
     $token_data = array('file' => file_load($file['field']['fid']), $type => $entity);
 
     // Process filename.
