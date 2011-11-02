@@ -238,7 +238,7 @@ function filefield_paths_form_submit($form, &$form_state) {
 
     if ($retroactive_update) {
       // Run batch.
-      //batch_process($form_state['redirect']);
+      batch_process($form_state['redirect']);
     }
   }
 }
@@ -316,7 +316,7 @@ function filefield_paths_entity_update($entity, $type) {
       foreach (module_implements('filefield_paths_process_file') as $module) {
         $function = "{$module}_filefield_paths_process_file";
         $settings = isset($ffp['#settings'][$file['name']]) ? $ffp['#settings'][$file['name']] : NULL;
-        if ($settings) {
+        if (!is_null($settings)) {
           $function(($file['new'] || $settings['active_updating']), $file, $settings, $entity, $type, $update);
         }
       }

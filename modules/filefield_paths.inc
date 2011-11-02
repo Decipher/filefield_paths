@@ -57,8 +57,9 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
     $dirname = dirname($file['filepath']['new']);
     if ($dirname != dirname($file['field']['uri']) || $file['filename']['new'] != $file['field']['filename']) {
       if (file_prepare_directory($dirname, FILE_CREATE_DIRECTORY) && file_move((object) $file['field'], $file['filepath']['new'])) {
+        $update->entity = TRUE;
 
-        // Replace references in text fields
+        // Fix reference to old paths.
         $old_uri_path = parse_url(file_create_url($file['filepath']['old']), PHP_URL_PATH);
         $new_uri_path = parse_url(file_create_url($file['filepath']['new']), PHP_URL_PATH);
 
@@ -77,13 +78,12 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
         $fields = field_info_fields();
         $count = 0;
         foreach ($fields as $name => $field) {
-          if ($field['module'] == 'text' && isset($node->{$field['field_name']}) && is_array($node->{$field['field_name']})) {
-            foreach ($node->{$field['field_name']} as &$language) {
+          if ($field['module'] == 'text' && isset($entity->{$field['field_name']}) && is_array($entity->{$field['field_name']})) {
+            foreach ($entity->{$field['field_name']} as &$language) {
               foreach ($language as &$item) {
                 for ($i = 0; $i < count($search); $i++) {
                   $item['value'] = preg_replace('/' . preg_quote($search[$i], '/') . '/', $replace[$i], $item['value'], -1, $count);
                   if ($count > 0) {
-                    $update->entity = TRUE;
                     break;
                   }
                 }

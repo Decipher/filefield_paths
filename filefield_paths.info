@@ -1,5 +1,5 @@
 name = File<strike>Field</strike> Paths
-description = Adds extra functionality to File Path settings.
+description = Adds improved Token based file sorting and renaming functionalities.
 dependencies[] = token
 package = Fields
 core = 7.x

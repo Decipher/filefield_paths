@@ -55,13 +55,14 @@ function image_filefield_paths_get_fields(&$entity, &$ffp) {
       if ($field['type'] == 'image' && isset($entity->{$field['field_name']}) && is_array($entity->{$field['field_name']})) {
         foreach ($entity->{$field['field_name']} as $language) {
           foreach ($language as $file) {
+            $new = isset($file['new']) ? $file['new'] : FALSE;
             $file = file_load($file['fid']);
 
             $ffp['#files'][] = array(
               'field' => (array) $file,
               'module' => $field['module'],
               'name' => $field['field_name'],
-              'new' => $file->timestamp == REQUEST_TIME,
+              'new' => $new || $file->timestamp == REQUEST_TIME,
             );
 
             $ffp['#types'][$field['field_name']] = TRUE;
@@ -77,18 +78,19 @@ function image_filefield_paths_get_fields(&$entity, &$ffp) {
  */
 function image_filefield_paths_batch_update($instance, &$objects) {
   $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', $instance['entity_type'])
+  $result = $query->entityCondition('entity_type', $instance['entity_type'])
     ->entityCondition('bundle', array($instance['bundle']))
-    ->fieldCondition($instance['field_name']);
+    ->fieldCondition($instance['field_name'])
+    ->execute();
 
-  $objects = $query->execute();
+  $objects = array_keys($result[$instance['entity_type']]);
 }
 
 /**
  * Implements hook_filefield_paths_update().
  */
 function image_filefield_paths_update($oid, $instance) {
-  $entity = current(entity_load($instance['entity_type'], array_keys($oid)));
+  $entity = current(entity_load($instance['entity_type'], array($oid)));
 
   // Flag files for update.
   if (isset($entity->{$instance['field_name']})) {
