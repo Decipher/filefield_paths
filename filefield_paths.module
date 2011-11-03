@@ -132,8 +132,11 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
 
       // Replacement patterns for field.
       $field_data['form_path']['token_tree'] = array(
-        '#theme' => 'token_tree',
-        '#token_types' => array('file', $entity_info['token type']),
+        '#type' => 'fieldset',
+        '#title' => t('Replacement patterns'),
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#description' => theme('token_tree', array('token_types' => array('file', $entity_info['token type']))),
         '#weight' => 10,
       );
 
@@ -181,10 +184,14 @@ function filefield_paths_form_submit($form, &$form_state) {
     $retroactive_update = FALSE;
     $fields = module_invoke_all('filefield_paths_field_settings');
     foreach ($ffp as $field_name => $field_data) {
-      $cols = array();
+      $cols = array(
+        'type' => $field_data['type'],
+        'field' => $field_name,
+        'active_updating' => $form_state['values']["ffp_{$field_name}"]['active_updating'],
+      );
 
       foreach ($fields as $name => &$field) {
-        $field['settings'] = array(
+        $cols[$field['sql']] = array(
           'value' => $form_state['values']["ffp_{$field_name}"][$name],
           'tolower' => $form_state['values']["ffp_{$field_name}"]["{$name}_cleanup"]["{$name}_tolower"],
           'pathauto' => $form_state['values']["ffp_{$field_name}"]["{$name}_cleanup"]["{$name}_pathauto"],
@@ -194,39 +201,26 @@ function filefield_paths_form_submit($form, &$form_state) {
         // Store additional settings from add-on modules.
         if (isset($field['data'])) {
           foreach ($field['data'] as $key => $value) {
-            $field['settings'][$key] = $form_state['values']["ffp_{$field_name}"][$value];
+            $cols[$field['sql']][$key] = $form_state['values']["ffp_{$field_name}"][$value];
           }
         }
-
-        $cols[$field['sql']] = serialize($field['settings']);
       }
-
-      $cols['active_updating'] = $form_state['values']["ffp_{$field_name}"]['active_updating'];
 
       $results = db_select('filefield_paths', 'f')
         ->fields('f')
-        ->condition('type', $field_data['type'])
-        ->condition('field', $field_name)
+        ->condition('type', $cols['type'])
+        ->condition('field', $cols['field'])
         ->execute()
         ->fetchAll();
 
       // Update existing entry.
       if (!empty($results)) {
-        db_update('filefield_paths')
-          ->fields($cols)
-          ->condition('type', $field_data['type'])
-          ->condition('field', $field_name)
-          ->execute();
+        drupal_write_record('filefield_paths', $cols, array('type', 'field'));
       }
 
       // Create new entry.
       else {
-        db_insert('filefield_paths')
-          ->fields(array_merge(array(
-            'type' => $field_data['type'],
-            'field' => $field_name,
-          ), $cols))
-          ->execute();
+        drupal_write_record('filefield_paths', $cols);
       }
 
       if ($form_state['values']["ffp_{$field_name}"]['retroactive_update']) {
@@ -417,23 +411,36 @@ function filefield_paths_get_fields(&$entity, $type, $op = NULL) {
  * Process and cleanup strings.
  */
 function filefield_paths_process_string($value, $data, $settings = array()) {
-  // Process string tokens.
-  $value = token_replace($value, $data);
-
-  // Transliterate string.
-  if (module_exists('transliteration') && isset($settings['transliterate']) && $settings['transliterate']) {
-    $value = transliteration_get($value);
-    $paths = explode('/', $value);
-    foreach ($paths as &$path) {
-      $path = transliteration_clean_filename($path);
-    }
-
-    $value = implode('/', $paths);
+  $transliterate = module_exists('transliteration') && isset($settings['transliterate']) && $settings['transliterate'];
+  $pathauto = module_exists('pathauto') && isset($settings['pathauto']) && $settings['pathauto'] == TRUE;
+  if ($pathauto == TRUE) {
+    module_load_include('inc', 'pathauto');
   }
 
+  $paths = explode('/', $value);
+  foreach ($paths as &$path) {
+
+    // Process string tokens.
+    $path = token_replace($path, $data, array('clear' => TRUE));
+
+    // Cleanup with pathauto.
+    if ($pathauto == TRUE) {
+      $path_parts = explode('.', $path);
+      foreach ($path_parts as &$path_part) {
+        $path_part = pathauto_cleanstring($path_part);
+      }
+      $path = implode('.', $path_parts);
+    }
+
+    // Transliterate string.
+    if ($transliterate == TRUE) {
+      $path = transliteration_clean_filename($path);
+    }
+  }
+  $value = implode('/', $paths);
+
   // Convert string to lower case.
-  if ((isset($settings['tolower']) && $settings['tolower']) || (isset($settings['pathauto']) && $settings['pathauto'] && variable_get('pathauto_case', 0))) {
-    // Convert string to lower case
+  if (isset($settings['tolower']) && $settings['tolower'] == TRUE) {
     $value = drupal_strtolower($value);
   }
 

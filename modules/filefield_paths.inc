@@ -97,10 +97,5 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
         $file['field']['uri'] = $file['filepath']['new'];
       }
     }
-
-    // Replace description.
-    //if ($file['field']['description'] == $file['filename']['old']) {
-    //  $file['field']['description'] = $file['filename']['new'];
-    //}
   }
 }
