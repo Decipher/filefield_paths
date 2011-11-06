@@ -60,37 +60,10 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
         $update->entity = TRUE;
 
         // Fix reference to old paths.
-        $old_uri_path = parse_url(file_create_url($file['filepath']['old']), PHP_URL_PATH);
-        $new_uri_path = parse_url(file_create_url($file['filepath']['new']), PHP_URL_PATH);
+        $file['filepath']['new'] = str_replace($file['filename']['old'], $file['filename']['new'], $file['filepath']['new']);
 
-        $search = array(
-          $old_uri_path,
-          $file['filepath']['old'],
-          drupal_encode_path($old_uri_path)
-        );
-
-        $replace = array(
-          $new_uri_path,
-          $file['filepath']['new'],
-          drupal_encode_path($new_uri_path)
-        );
-
-        $fields = field_info_fields();
-        $count = 0;
-        foreach ($fields as $name => $field) {
-          if ($field['module'] == 'text' && isset($entity->{$field['field_name']}) && is_array($entity->{$field['field_name']})) {
-            foreach ($entity->{$field['field_name']} as &$language) {
-              foreach ($language as &$item) {
-                for ($i = 0; $i < count($search); $i++) {
-                  $item['value'] = preg_replace('/' . preg_quote($search[$i], '/') . '/', $replace[$i], $item['value'], -1, $count);
-                  if ($count > 0) {
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
+        // Process regular expression.
+        _filefield_paths_replace_path($file['filepath']['old'], $file['filepath']['new'], $entity, $update);
 
         // Store new filename in file Array
         $file['field']['filename'] = $file['filename']['new'];
