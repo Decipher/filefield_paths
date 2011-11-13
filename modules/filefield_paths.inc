@@ -41,6 +41,7 @@ function filefield_paths_filefield_paths_field_settings() {
  */
 function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &$entity, $type, &$update) {
   if ($new && !empty($file['field']['filename'])) {
+    $field = field_info_field($file['name']);
     $token_data = array('file' => file_load($file['field']['fid']), $type => $entity);
 
     // Process filename.
@@ -51,7 +52,7 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
 
     // Process filepath.
     $file['filepath']['old'] = $file['field']['uri'];
-    $file['filepath']['new'] = file_uri_scheme($file['field']['uri']) . '://' . filefield_paths_process_string($settings['filepath']['value'] . '/' . $file['filename']['new'], $token_data, $settings['filepath']);
+    $file['filepath']['new'] = "{$field['settings']['uri_scheme']}://" . filefield_paths_process_string($settings['filepath']['value'] . "/{$file['filename']['new']}", $token_data, $settings['filepath']);
 
     // Finalize files if necessary.
     $dirname = dirname($file['filepath']['new']);
@@ -68,6 +69,25 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
         // Store new filename in file Array
         $file['field']['filename'] = $file['filename']['new'];
         $file['field']['uri'] = $file['filepath']['new'];
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_filefield_paths_cleanup().
+ */
+function filefield_paths_filefield_paths_cleanup($ffp, $name) {
+  foreach ($ffp['#files'] as $file) {
+    if (isset($file['filepath'])) {
+      $scheme = file_uri_scheme($file['filepath']['old']);
+      $paths = explode('/', str_replace("{$scheme}://", '', dirname($file['filepath']['old'])));
+      while ($paths) {
+        if (drupal_rmdir("{$scheme}://" . implode('/', $paths)) == TRUE) {
+          array_pop($paths);
+          continue;
+        }
+        break;
       }
     }
   }

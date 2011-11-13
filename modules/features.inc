@@ -68,7 +68,6 @@ function filefield_paths_features_export($data, &$export, $module_name = '') {
 
   $pipe = array();
   foreach ($data as $identifier) {
-    dpm($identifier);
     if ($wrapper = filefield_paths_load($identifier)) {
       $export['features']['filefield_paths'][$identifier] = $identifier;
       if ($wrapper['filename']['transliterate'] || $wrapper['filepath']['transliterate']) {

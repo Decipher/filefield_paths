@@ -320,19 +320,16 @@ function filefield_paths_entity_update($entity, $type) {
       field_attach_update($type, $entity);
     }
 
-//  // Cleanup temporary paths.
-//  if ($ffp['#settings']) {
-//    foreach ($ffp['#settings'] as $name => $field) {
-//      $paths = explode('/', $field['filepath']['value']);
-//      filefield_paths_cleanup_temp($paths);
-//
-//      // Invoke hook_filefield_paths_cleanup().
-//      foreach (module_implements('filefield_paths_cleanup') as $module) {
-//        $function = $module . '_filefield_paths_cleanup';
-//        $function($ffp, $paths, $name);
-//      }
-//    }
-//  }
+    // Cleanup temporary paths.
+    if ($ffp['#settings']) {
+      foreach ($ffp['#settings'] as $name => $field) {
+        // Invoke hook_filefield_paths_cleanup().
+        foreach (module_implements('filefield_paths_cleanup') as $module) {
+          $function = "{$module}_filefield_paths_cleanup";
+          $function($ffp, $name);
+        }
+      }
+    }
   }
 }
 
@@ -355,16 +352,6 @@ function filefield_paths_field_delete_instance($instance) {
     ->condition('field', $instance['field_name'])
     ->execute();
 }
-
-//function filefield_paths_cleanup_temp($paths) {
-//  while ($paths) {
-//    if (@rmdir(file_directory_path() . '/' . implode('/', $paths)) === TRUE) {
-//      array_pop($paths);
-//      continue;
-//    }
-//    break;
-//  }
-//}
 
 /**
  *
