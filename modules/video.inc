@@ -5,6 +5,19 @@
  */
 
 /**
+ * Implements hook_filefield_paths_info() on behalf of video.module.
+ */
+function video_filefield_paths_info() {
+  $field_type = field_info_field_types('video');
+
+  return array(
+    'video' => array(
+      'label' => $field_type['label'],
+    ),
+  );
+}
+
+/**
  * Implements hook_filefield_paths_form_alter().
  */
 function video_filefield_paths_form_alter(&$form, &$ffp) {

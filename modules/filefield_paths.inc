@@ -81,7 +81,7 @@ function filefield_paths_filefield_paths_cleanup($ffp, $name) {
   foreach ($ffp['#files'] as $file) {
     if (isset($file['filepath'])) {
       $scheme = file_uri_scheme($file['filepath']['old']);
-      $paths = explode('/', str_replace("{$scheme}://", '', dirname($file['filepath']['old'])));
+      $paths = explode('/', str_replace("{$scheme}://", '', drupal_dirname($file['filepath']['old'])));
       while ($paths) {
         if (@drupal_rmdir("{$scheme}://" . implode('/', $paths)) == TRUE) {
           array_pop($paths);

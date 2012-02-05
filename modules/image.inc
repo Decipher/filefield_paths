@@ -5,6 +5,19 @@
  */
 
 /**
+ * Implements hook_filefield_paths_info() on behalf of image.module.
+ */
+function image_filefield_paths_info() {
+  $field_type = field_info_field_types('image');
+
+  return array(
+    'image' => array(
+      'label' => $field_type['label'],
+    ),
+  );
+}
+
+/**
  * Implements hook_filefield_paths_form_alter().
  */
 function image_filefield_paths_form_alter(&$form, &$ffp) {

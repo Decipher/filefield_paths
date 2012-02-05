@@ -1,6 +1,7 @@
 FileField Paths 7.x-1.x-dev, xxxx-xx-xx (Developmental release)
 --------------------------------------------------------------------------------
 
+- #1414090: Added Drush command for Retroactive updates.
 - #1335984: Removed debug code.
 - #1328064: Fixed/Re-enabled Retroactive updates.
 - #1326094: Fixed coder issues.
