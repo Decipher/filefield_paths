@@ -407,6 +407,7 @@ function _filefield_paths_replace_path($old, $new, &$entity, &$update) {
 
   // Build replacement.
   $info = parse_url($new);
+  $info['path'] = !empty($info['path']) ? $info['path'] : '';
   $replacement = "_filefield_paths_replace_path_uri_scheme('\\1', '{$old}', '{$new}') . '\\2{$info['host']}{$info['path']}'";
 
   $fields = field_info_fields();
