@@ -55,8 +55,8 @@ function filefield_paths_filefield_paths_process_file($new, &$file, $settings, &
     $file['filepath']['new'] = "{$field['settings']['uri_scheme']}://" . filefield_paths_process_string($settings['filepath']['value'] . "/{$file['filename']['new']}", $token_data, $settings['filepath']);
 
     // Finalize files if necessary.
-    $dirname = dirname($file['filepath']['new']);
-    if ($dirname != dirname($file['field']['uri']) || $file['filename']['new'] != $file['field']['filename']) {
+    $dirname = drupal_dirname($file['filepath']['new']);
+    if ($dirname != drupal_dirname($file['field']['uri']) || $file['filename']['new'] != $file['field']['filename']) {
       if (file_prepare_directory($dirname, FILE_CREATE_DIRECTORY) && file_move((object) $file['field'], $file['filepath']['new'])) {
         $update->entity = TRUE;
 
@@ -83,7 +83,7 @@ function filefield_paths_filefield_paths_cleanup($ffp, $name) {
       $scheme = file_uri_scheme($file['filepath']['old']);
       $paths = explode('/', str_replace("{$scheme}://", '', dirname($file['filepath']['old'])));
       while ($paths) {
-        if (drupal_rmdir("{$scheme}://" . implode('/', $paths)) == TRUE) {
+        if (@drupal_rmdir("{$scheme}://" . implode('/', $paths)) == TRUE) {
           array_pop($paths);
           continue;
         }

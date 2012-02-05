@@ -35,7 +35,7 @@ function image_filefield_paths_form_alter(&$form, &$ffp) {
  * Implements hook_filefield_paths_form_submit().
  */
 function image_filefield_paths_form_submit(&$form_state, &$ffp) {
-  if (isset($form_state['values']['form_id']) && $form_state['values']['form_id'] == 'field_ui_field_edit_form') {
+  if (isset($form_state['values']['instance']) && $form_state['values']['instance']['widget']['module'] == 'image' && isset($form_state['values']['form_id']) && $form_state['values']['form_id'] == 'field_ui_field_edit_form') {
     $form_state['values']["ffp_{$form_state['values']['instance']['field_name']}"] = $form_state['values']['instance']["ffp_{$form_state['values']['instance']['field_name']}"];
     $ffp[$form_state['values']['instance']['field_name']] = array(
       'type' => "{$form_state['values']['instance']['entity_type']}::{$form_state['values']['instance']['bundle']}",

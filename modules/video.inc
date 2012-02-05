@@ -1,14 +1,14 @@
 <?php
 /**
  * @file
- * File module integration.
+ * Video module integration.
  */
 
 /**
  * Implements hook_filefield_paths_form_alter().
  */
-function file_filefield_paths_form_alter(&$form, &$ffp) {
-  if (isset($form['#field']) && $form['#field']['type'] == 'file' && isset($form['instance']['settings']['file_directory'])) {
+function video_filefield_paths_form_alter(&$form, &$ffp) {
+  if (isset($form['#field']) && $form['#field']['type'] == 'video' && isset($form['instance']['settings']['file_directory'])) {
     $ffp[$form['#field']['field_name']] = array(
       'show' => TRUE,
       'type' => "{$form['instance']['entity_type']['#value']}::{$form['instance']['bundle']['#value']}",
@@ -19,7 +19,7 @@ function file_filefield_paths_form_alter(&$form, &$ffp) {
     // Create path settings fieldset
     $ffp[$form['#field']['field_name']]['form_path'] = array(
       '#type' => 'fieldset',
-      '#title' => t('File Path settings'),
+      '#title' => t('Video Path settings'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#weight' => 1,
@@ -34,8 +34,8 @@ function file_filefield_paths_form_alter(&$form, &$ffp) {
 /**
  * Implements hook_filefield_paths_form_submit().
  */
-function file_filefield_paths_form_submit(&$form_state, &$ffp) {
-  if (isset($form_state['values']['instance']) && $form_state['values']['instance']['widget']['module'] == 'file' && isset($form_state['values']['form_id']) && $form_state['values']['form_id'] == 'field_ui_field_edit_form') {
+function video_filefield_paths_form_submit(&$form_state, &$ffp) {
+  if (isset($form_state['values']['instance']) && $form_state['values']['instance']['widget']['module'] == 'video' && isset($form_state['values']['form_id']) && $form_state['values']['form_id'] == 'field_ui_field_edit_form') {
     $form_state['values']["ffp_{$form_state['values']['instance']['field_name']}"] = $form_state['values']['instance']["ffp_{$form_state['values']['instance']['field_name']}"];
     $ffp[$form_state['values']['instance']['field_name']] = array(
       'type' => "{$form_state['values']['instance']['entity_type']}::{$form_state['values']['instance']['bundle']}",
@@ -48,11 +48,11 @@ function file_filefield_paths_form_submit(&$form_state, &$ffp) {
 /**
  * Implements hook_filefield_paths_get_fields().
  */
-function file_filefield_paths_get_fields(&$entity, &$ffp) {
+function video_filefield_paths_get_fields(&$entity, &$ffp) {
   if (is_object($entity)) {
     $fields = field_info_fields();
     foreach ($fields as $name => $field) {
-      if ($field['type'] == 'file' && isset($entity->{$field['field_name']}) && is_array($entity->{$field['field_name']})) {
+      if ($field['type'] == 'video' && isset($entity->{$field['field_name']}) && is_array($entity->{$field['field_name']})) {
         foreach ($entity->{$field['field_name']} as $language) {
           foreach ($language as $file) {
             $new = isset($file['new']) ? $file['new'] : FALSE;
@@ -76,7 +76,7 @@ function file_filefield_paths_get_fields(&$entity, &$ffp) {
 /**
  * Implements hook_filefield_paths_batch_update().
  */
-function file_filefield_paths_batch_update($instance, &$objects) {
+function video_filefield_paths_batch_update($instance, &$objects) {
   $query = new EntityFieldQuery();
   $result = $query->entityCondition('entity_type', $instance['entity_type'])
     ->entityCondition('bundle', array($instance['bundle']))
@@ -89,7 +89,7 @@ function file_filefield_paths_batch_update($instance, &$objects) {
 /**
  * Implements hook_filefield_paths_update().
  */
-function file_filefield_paths_update($oid, $instance) {
+function video_filefield_paths_update($oid, $instance) {
   $entity = current(entity_load($instance['entity_type'], array($oid)));
 
   // Flag files for update.
@@ -99,7 +99,7 @@ function file_filefield_paths_update($oid, $instance) {
         if (!is_array($file) || empty($file['uri'])) {
           continue;
         }
-
+  
         $file['new'] = TRUE;
       }
     }

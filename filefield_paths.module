@@ -407,20 +407,40 @@ function _filefield_paths_replace_path($old, $new, &$entity, &$update) {
 
   // Build replacement.
   $info = parse_url($new);
-  $replacement = "\$1\$2{$info['host']}{$info['path']}";
+  $replacement = "_filefield_paths_replace_path_uri_scheme('\\1', '{$old}', '{$new}') . '\\2{$info['host']}{$info['path']}'";
 
   $fields = field_info_fields();
   foreach ($fields as $name => $field) {
     if ($field['module'] == 'text' && isset($entity->{$field['field_name']}) && is_array($entity->{$field['field_name']})) {
       foreach ($entity->{$field['field_name']} as &$language) {
         foreach ($language as &$item) {
-          $item['value'] = preg_replace("/$regex/", $replacement, $item['value']);
+          $item['value'] = preg_replace("/$regex/e", $replacement, $item['value']);
         }
       }
     }
   }
 }
 
+/**
+ * Helper function for FileField Paths URI updater regular expression.
+ *
+ * Determines what format the old URI prefix was and returns the new URI prefix
+ * in the same format.
+ */
+function _filefield_paths_replace_path_uri_scheme($prefix, $old, $new) {
+  switch (TRUE) {
+    case $prefix == file_uri_scheme($old) . '://':
+      return file_uri_scheme($new) . '://';
+
+    case $prefix == file_create_url(file_uri_scheme($old) . '://'):
+      return file_create_url(file_uri_scheme($new) . '://');
+
+    case $prefix == parse_url(file_create_url(file_uri_scheme($old) . '://'), PHP_URL_PATH):
+      return parse_url(file_create_url(file_uri_scheme($new) . '://'), PHP_URL_PATH);
+  }
+
+  return $prefix;
+}
 
 /**
  * Process and cleanup strings.
