@@ -121,7 +121,10 @@ function filefield_paths_comment($a1, $op) {
 
       // Process files
       foreach ($ffp['#files'] as &$file) {
-        module_invoke_all('filefield_paths_process_file', $file['new'], $file, $ffp['#settings'][$file['name']], $node, $update);
+        foreach (module_implements('filefield_paths_process_file') as $module) {
+          $function = "{$module}_filefield_paths_process_file";
+          $function($file['new'], $file, $ffp['#settings'][$file['name']], $node, $update);
+        }
       }
       break;
   }

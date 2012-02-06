@@ -1,9 +1,15 @@
 FileField Paths 6.x-1.x-dev, xxxx-xx-xx (Developmental release)
 -----------------------------------
 
+- #1364492 by mikeytown2, Deciphered: Improved modules include code.
+- #1249918 by aaron1234nz: Fixed pass-by-reference issue in Comment Upload integration.
+- #1195374 by mikeytown2: Fixed issue with undefined index.
+- #1151514 by kndr, Deciphered: Removed unnecessary db_rewrite_sql() call.
+- #1057340 by _toch, Deciphered: Fixed unset issue.
 - #877578 by tomgf: Fixed Pathauto support.
 - #635854 by hefox: Fixed cache issue.
 - #578442 by szantog, deciphered: Added features support.
+
 
 FileField Paths 6.x-1.4, 2010-01-11
 -----------------------------------

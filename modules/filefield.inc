@@ -8,7 +8,7 @@
  * Implements hook_filefield_paths_form_alter().
  */
 function filefield_filefield_paths_form_alter(&$form, &$ffp) {
-  if (isset($form['basic']) && $form['basic']['type']['#value'] == 'filefield' && isset($form['widget']['path_settings'])) {
+  if (isset($form['basic']['type']['#value']) && $form['basic']['type']['#value'] == 'filefield' && isset($form['widget']['path_settings'])) {
     $form['widget']['ffp_'. $form['field_name']['#value']] = $form['widget']['path_settings'];
     $form['widget']['path_settings']['#access'] = FALSE;
 
@@ -59,7 +59,9 @@ function filefield_filefield_paths_get_fields(&$node, &$ffp) {
               ? TRUE
               : FALSE
           );
-          unset($file['data']['process']);
+          if (is_array($file['data']['process'])) {
+            unset($file['data']['process']);
+          }
 
           $ffp['#types'][$field['field_name']] = TRUE;
         }

@@ -42,8 +42,7 @@ function filefield_paths_features_api() {
  */
 function filefield_paths_features_export_options() {
   $options = array();
-  $sql = db_rewrite_sql("SELECT * FROM {filefield_paths}");
-  $result = db_query($sql);
+  $result = db_query("SELECT * FROM {filefield_paths}");
   while ($row = db_fetch_object($result)) {
     // Generate the unique keys that can identify the row
     // "{node_type}-{field}" eg "story-field_illustration"
