@@ -7,11 +7,31 @@
 /**
  * Include additional files.
  */
-foreach (module_list() as $module) {
-  if (file_exists($file = dirname(__FILE__) . "/modules/{$module}.inc")) {
-    require_once $file;
+$info = pathinfo(__FILE__);
+// Get files to include from cache.
+$files = cache_get("{$info['filename']}_inc_modules");
+if (!empty($files->data)) {
+  $files = $files->data;
+}
+else {
+  $files = array();
+  // If not in the cache, get files from module list.
+  foreach (module_list() as $module) {
+    if (file_exists($file = "{$info['dirname']}/modules/{$module}.inc")) {
+      $files[] = $file;
+    }
+  }
+  cache_set("{$info['filename']}_inc_modules", $files, 'cache', CACHE_TEMPORARY);
+}
+// Add in the files.
+foreach ($files as $file) {
+  if (!include_once $file) {
+    // Clear the cache if a file is missing.
+    cache_clear_all("{$info['filename']}_inc_modules");
   }
 }
+// Clean up because we are outside of a function call.
+unset($info, $files, $file, $module);
 
 /**
  * Implements hook_form_alter().
@@ -222,11 +242,12 @@ function filefield_paths_entity_insert($entity, $type) {
 function filefield_paths_entity_update($entity, $type) {
   $field_types = _filefield_paths_get_field_types();
   $entity_info = entity_get_info($type);
+  $bundle_name = !empty($entity_info['entity keys']['bundle']) ? $entity->{$entity_info['entity keys']['bundle']} : $type;
   if ($entity_info['fieldable']) {
-    foreach (field_info_fields($type, $entity->{$entity_info['entity keys']['bundle']}) as $field) {
+    foreach (field_info_fields($type, $bundle_name) as $field) {
       if (in_array($field['type'], array_keys($field_types))) {
         $files = array();
-        $instance = field_info_instance($type, $field['field_name'], $entity->{$entity_info['entity keys']['bundle']});
+        $instance = field_info_instance($type, $field['field_name'], $bundle_name);
         if (isset($entity->{$field['field_name']})) {
           foreach ($entity->{$field['field_name']} as $langcode => &$deltas) {
             foreach ($deltas as $delta => &$file) {
@@ -248,15 +269,19 @@ function filefield_paths_entity_update($entity, $type) {
       }
     }
 
-    // Remember revision flag.
-    $revision = $entity->revision;
-    // Remove revision flag as long as fields already processed it, and no need
-    // to create new revision for moved files.
-    $entity->revision = FALSE;
+    if (isset($entity->revision)) {
+      // Remember revision flag.
+      $revision = $entity->revision;
+      // Remove revision flag as long as fields already processed it, and no need
+      // to create new revision for moved files.
+      $entity->revision = FALSE;
+    }
     // Save any changes back to the database.
     field_attach_update($type, $entity);
-    // Restore revision flag so that other modules can process it if needed.
-    $entity->revision = $revision;
+    if (isset($entity->revision)) {
+      // Restore revision flag so that other modules can process it if needed.
+      $entity->revision = $revision;
+    }
   }
 }
 
