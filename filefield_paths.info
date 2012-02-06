@@ -1,4 +1,4 @@
-name = File<strike>Field</strike> Paths
+name = File (Field) Paths
 description = Adds improved Token based file sorting and renaming functionalities.
 dependencies[] = token
 package = Fields

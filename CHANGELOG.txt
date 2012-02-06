@@ -1,10 +1,11 @@
-FileField Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
+File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 --------------------------------------------------------------------------------
 
 - #1429238 by ocanzillon: Fixed Drush command syntax error.
+- Changed a large chunk of core functionality to simplify.
 
 
-FileField Paths 7.x-1.0-beta2, 2012-02-05
+File (Field) Paths 7.x-1.0-beta2, 2012-02-05
 --------------------------------------------------------------------------------
 
 - #1414090: Added Drush command for Retroactive updates.
@@ -14,7 +15,7 @@ FileField Paths 7.x-1.0-beta2, 2012-02-05
 - Added support for Video module.
 
 
-FileField Paths 7.x-1.0-beta1, 2011-11-08
+File (Field) Paths 7.x-1.0-beta1, 2011-11-08
 --------------------------------------------------------------------------------
 
 - #1328064: Fixed/Re-enabled Retroactive updates.
@@ -34,5 +35,5 @@ FileField Paths 7.x-1.0-beta1, 2011-11-08
 - Added Entity support.
 
 
-FileField Paths 7.x-1.0-alpha1, 2011-06-12
+File (Field) Paths 7.x-1.0-alpha1, 2011-06-12
 --------------------------------------------------------------------------------
