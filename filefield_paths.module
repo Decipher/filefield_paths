@@ -248,8 +248,15 @@ function filefield_paths_entity_update($entity, $type) {
       }
     }
 
+    // Remember revision flag.
+    $revision = $entity->revision;
+    // Remove revision flag as long as fields already processed it, and no need
+    // to create new revision for moved files.
+    $entity->revision = FALSE;
     // Save any changes back to the database.
     field_attach_update($type, $entity);
+    // Restore revision flag so that other modules can process it if needed.
+    $entity->revision = $revision;
   }
 }
 
