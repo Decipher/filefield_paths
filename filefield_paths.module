@@ -7,31 +7,11 @@
 /**
  * Include additional files.
  */
-$info = pathinfo(__FILE__);
-// Get files to include from cache.
-$files = cache_get("{$info['filename']}_inc_modules");
-if (!empty($files->data)) {
-  $files = $files->data;
-}
-else {
-  $files = array();
-  // If not in the cache, get files from module list.
-  foreach (module_list() as $module) {
-    if (file_exists($file = "{$info['dirname']}/modules/{$module}.inc")) {
-      $files[] = $file;
-    }
-  }
-  cache_set("{$info['filename']}_inc_modules", $files, 'cache', CACHE_TEMPORARY);
-}
-// Add in the files.
-foreach ($files as $file) {
-  if (!include_once $file) {
-    // Clear the cache if a file is missing.
-    cache_clear_all("{$info['filename']}_inc_modules");
+foreach (module_list() as $module) {
+  if (file_exists($file = dirname(__FILE__) . "/modules/{$module}.inc")) {
+    require_once $file;
   }
 }
-// Clean up because we are outside of a function call.
-unset($info, $files, $file, $module);
 
 /**
  * Implements hook_theme().

@@ -1,7 +1,6 @@
 FileField Paths 6.x-1.x-dev, xxxx-xx-xx (Developmental release)
 -----------------------------------
 
-- #1364492 by mikeytown2, Deciphered: Improved modules include code.
 - #1249918 by aaron1234nz: Fixed pass-by-reference issue in Comment Upload integration.
 - #1195374 by mikeytown2: Fixed issue with undefined index.
 - #1151514 by kndr, Deciphered: Removed unnecessary db_rewrite_sql() call.
