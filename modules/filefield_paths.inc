@@ -63,7 +63,8 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
 
       // Finalize file if necessary.
       if ($file !== $old_file) {
-        if (file_prepare_directory(drupal_dirname($file['uri']), FILE_CREATE_DIRECTORY) && file_move((object) $old_file, $file['uri'])) {
+        $dirname = drupal_dirname($file['uri']);
+        if (file_prepare_directory($dirname, FILE_CREATE_DIRECTORY) && file_move((object) $old_file, $file['uri'])) {
           // Process regular expression.
           _filefield_paths_replace_path($old_file['uri'], $file['uri'], $entity);
 

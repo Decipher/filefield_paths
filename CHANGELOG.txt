@@ -1,6 +1,14 @@
 File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 --------------------------------------------------------------------------------
 
+- #1432200: Fixed issue with missing langcode variable.
+- #1420700: Fixed issue with pass-by-reference issue.
+- Fixed issue with malformed URIs.
+
+
+File (Field) Paths 7.x-1.0-beta3, 2012-02-08
+--------------------------------------------------------------------------------
+
 - #1429238 by ocanzillon: Fixed Drush command syntax error.
 - #1334448 by pianodavid, Deciphered: Fixed issue with revision flag.
 - Changed a large chunk of core functionality to simplify.
