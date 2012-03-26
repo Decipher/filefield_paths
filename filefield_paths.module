@@ -270,7 +270,7 @@ function filefield_paths_entity_update($entity, $type) {
  */
 function filefield_paths_file_presave($file) {
   // Store original filename in the database.
-  if (empty($file->origname)) {
+  if (empty($file->origname) && isset($file->filename)) {
     $file->origname = $file->filename;
   }
 }
