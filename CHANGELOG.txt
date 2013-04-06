@@ -5,6 +5,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 - #1925298 by David_Rothstein: Fixed issue with Image derivatives.
 - #1714596: Fixed issue with file_attach_update() introduced in Drupal 7.15.
 - #1705298: Fixed extra beggining slash.
+- #1601104 by tseven: Fixed notice when no extension present.
 - #1512466 by maximpodorov, perarnet: Fixed issue with multi-value updates.
 - #1438290 by xtfer: Fixed D6 to D7 upgrade path.
 - #1432200: Fixed issue with missing langcode variable.
