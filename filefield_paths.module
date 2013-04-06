@@ -335,11 +335,11 @@ function filefield_paths_process_string($value, $data, $settings = array()) {
     module_load_include('inc', 'pathauto');
   }
 
+  // Process string tokens.
+  $value = token_replace($value, $data, array('clear' => TRUE));
+
   $paths = explode('/', $value);
   foreach ($paths as &$path) {
-
-    // Process string tokens.
-    $path = token_replace($path, $data, array('clear' => TRUE));
 
     // Cleanup with pathauto.
     if ($pathauto == TRUE) {

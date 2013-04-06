@@ -1,6 +1,7 @@
 File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 --------------------------------------------------------------------------------
 
+- #1942720 by pp: Fixed issue with cleanup wehn token contains a '/'' character.
 - #1714596: Fixed issue with file_attach_update() introduced in Drupal 7.15.
 - #1705298: Fixed extra beggining slash.
 - #1512466 by maximpodorov, perarnet: Fixed issue with multi-value updates.
