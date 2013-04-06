@@ -285,7 +285,7 @@ function _filefield_paths_replace_path($old, $new, $entity) {
   $info['path'] = !empty($info['path']) ? $info['path'] : '';
   $absolute = str_replace("{$info['host']}{$info['path']}", '', file_create_url($old));
   $relative = parse_url($absolute, PHP_URL_PATH);
-  $regex = str_replace('/', '\/', "({$absolute}|{$relative}|{$info['scheme']}://)(styles/.*?/{$info['scheme']}/|)({$info['host']}{$info['path']})");
+  $regex = str_replace('/', '\/', "({$absolute}|{$relative}|{$info['scheme']}://)(styles/[a-z0-9\-_/]*?/{$info['scheme']}/|)({$info['host']}{$info['path']})");
 
   // Build replacement.
   $info = parse_url(file_stream_wrapper_uri_normalize($new));
