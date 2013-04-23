@@ -216,6 +216,7 @@ function filefield_paths_entity_insert($entity, $type) {
  * Implements hook_entity_update().
  */
 function filefield_paths_entity_update($entity, $type) {
+  $processed = FALSE;
   $field_types = _filefield_paths_get_field_types();
   $entity_info = entity_get_info($type);
   $bundle_name = !empty($entity_info['entity keys']['bundle']) ? $entity->{$entity_info['entity keys']['bundle']} : $type;
@@ -237,6 +238,7 @@ function filefield_paths_entity_update($entity, $type) {
             // Invoke hook_filefield_paths_process_file().
             foreach (module_implements('filefield_paths_process_file') as $module) {
               if (function_exists($function = "{$module}_filefield_paths_process_file")) {
+                $processed = TRUE;
                 $function($type, $entity, $field, $instance, $langcode, $files);
               }
             }
@@ -245,19 +247,21 @@ function filefield_paths_entity_update($entity, $type) {
       }
     }
 
-    if (isset($entity->revision)) {
-      // Remember revision flag.
-      $revision = $entity->revision;
-      // Remove revision flag as long as fields already processed it, and no need
-      // to create new revision for moved files.
-      $entity->revision = FALSE;
-    }
-    // Save any changes back to the database.
-    $entity->original = isset($entity->original) ? $entity->original : NULL;
-    field_attach_update($type, $entity);
-    if (isset($entity->revision)) {
-      // Restore revision flag so that other modules can process it if needed.
-      $entity->revision = $revision;
+    if ($processed) {
+      if (isset($entity->revision)) {
+        // Remember revision flag.
+        $revision = $entity->revision;
+        // Remove revision flag as long as fields already processed it, and no need
+        // to create new revision for moved files.
+        $entity->revision = FALSE;
+      }
+      // Save any changes back to the database.
+      $entity->original = isset($entity->original) ? $entity->original : NULL;
+      field_attach_update($type, $entity);
+      if (isset($entity->revision)) {
+        // Restore revision flag so that other modules can process it if needed.
+        $entity->revision = $revision;
+      }
     }
   }
 }
