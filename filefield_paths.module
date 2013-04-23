@@ -279,6 +279,7 @@ function _filefield_paths_replace_path($old, $new, $entity) {
   // Build regular expression.
   $info = parse_url(file_stream_wrapper_uri_normalize($old));
   $info['path'] = !empty($info['path']) ? $info['path'] : '';
+  $info['path'] = drupal_encode_path($info['path']);
   $absolute = str_replace("{$info['host']}{$info['path']}", '', file_create_url($old));
   $relative = parse_url($absolute, PHP_URL_PATH);
   $regex = str_replace('/', '\/', "({$absolute}|{$relative}|{$info['scheme']}://)(styles/([a-z0-9\-_/]*?)/{$info['scheme']}/|)({$info['host']}{$info['path']})");
@@ -302,6 +303,9 @@ function _filefield_paths_replace_path($old, $new, $entity) {
       foreach ($entity->{$field['field_name']} as &$language) {
         foreach ($language as &$item) {
           $item['value'] = preg_replace("/$regex/e", $replacement, $item['value']);
+          if (isset($item['summary'])) {
+            $item['summary'] = preg_replace("/$regex/e", $replacement, $item['summary']);
+          }
         }
       }
     }

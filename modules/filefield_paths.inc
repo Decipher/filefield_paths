@@ -60,7 +60,7 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
           : $file['filename'];
 
         // Process filepath.
-        $file['uri'] = "{$field['settings']['uri_scheme']}://" . ltrim(filefield_paths_process_string($settings['file_path']['value'] . "/{$file['filename']}", $token_data, $settings['file_path']['options']), '/');
+        $file['uri'] = "{$field['settings']['uri_scheme']}://" . ltrim(filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']) . "/{$file['filename']}", '/');
 
         // Finalize file if necessary.
         if ($file !== $old_file) {
