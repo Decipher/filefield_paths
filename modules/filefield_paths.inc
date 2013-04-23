@@ -45,7 +45,7 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
   if (isset($instance['settings']['filefield_paths'])) {
     $settings = $instance['settings']['filefield_paths'];
     foreach ($items as &$file) {
-      if ($file['timestamp'] == REQUEST_TIME || $settings['active_updating']) {
+      if (filefield_paths_uri_is_local($file['uri']) && ($file['timestamp'] == REQUEST_TIME || $settings['active_updating'])) {
         $token_data = array(
           'file' => (object) $file,
           $type => $entity

@@ -14,6 +14,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 - #1438290 by xtfer: Fixed D6 to D7 upgrade path.
 - #1432200: Fixed issue with missing langcode variable.
 - #1420700: Fixed issue with pass-by-reference issue.
+- #1361884 by burningdog, dwkitchen, Deciphered: Fixed processing remote files.
 - #1262828 by Pablo Gosse: Fixed issue with regex.
 - Fixed issue with malformed URIs.
 

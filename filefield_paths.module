@@ -404,3 +404,18 @@ function _filefield_paths_get_field_types($reset = FALSE) {
 
   return $field_types;
 }
+
+/**
+ * Check if a uri is considered local or not.
+ *
+ * @param string $uri
+ *   A file uri.
+ *
+ * @return
+ *   TRUE if the uri is using a local stream wrapper, or FALSE otherwise.
+ */
+function filefield_paths_uri_is_local($uri) {
+  $scheme = file_uri_scheme($uri);
+  $wrappers = file_get_stream_wrappers(STREAM_WRAPPERS_LOCAL);
+  return !empty($wrappers[$scheme]) && empty($wrappers[$scheme]['remote']);
+}
