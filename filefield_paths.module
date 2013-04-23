@@ -63,7 +63,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
         // Field options.
         $form['instance']['settings']['filefield_paths'][$name]['options'] = array(
           '#type' => 'fieldset',
-          '#title' => t('@title options', array('@title' => $field['title'])),
+          '#title' => t('@title options', array('@title' => t($field['title']))),
           '#collapsible' => TRUE,
           '#collapsed' => TRUE,
           '#weight' => 1,
@@ -75,22 +75,22 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
         // Cleanup field with Pathauto module.
         $form['instance']['settings']['filefield_paths'][$name]['options']['pathauto'] = array(
           '#type' => 'checkbox',
-          '#title' => t('Cleanup using Pathauto') . '.',
+          '#title' => t('Cleanup using Pathauto'),
           '#default_value' => isset($settings[$name]['options']['pathauto']) && module_exists('pathauto')
             ? $settings[$name]['options']['pathauto']
             : FALSE,
-          '#description' => t('Cleanup @title using', array('@title' => $field['title'])) . ' ' . l(t('Pathauto settings'), 'admin/config/search/path/settings'),
+          '#description' => t('Cleanup %title using <a href="@pathauto">Pathauto settings</a>.', array('%title' => t($field['title']), '@pathauto' => url('admin/config/search/path/settings'))),
           '#disabled' => !module_exists('pathauto'),
         );
 
         // Transliterate field with Transliteration module.
         $form['instance']['settings']['filefield_paths'][$name]['options']['transliterate'] = array(
           '#type' => 'checkbox',
-          '#title' => t('Transliterate') . '.',
+          '#title' => t('Transliterate'),
           '#default_value' => isset($settings[$name]['options']['transliterate']) && module_exists('transliteration')
             ? $settings[$name]['options']['transliterate']
             : 0,
-          '#description' => t('Transliterate @title', array('@title' => $field['title'])) . '.',
+          '#description' => t('Provides one-way string transliteration (romanization) and cleans the %title during upload by replacing unwanted characters.', array('%title' => t($field['title']))),
           '#disabled' => !module_exists('transliteration'),
         );
 
@@ -108,9 +108,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
         $form['instance']['settings']['filefield_paths']['retroactive_update'] = array(
           '#type' => 'checkbox',
           '#title' => t('Retroactive update'),
-          '#description' => t('Move and rename previously uploaded files') . '.' .
-            '<br /> <strong style="color: #FF0000;">' . t('Warning') . ':</strong> ' .
-            t('This feature should only be used on developmental servers or with extreme caution') . '.',
+          '#description' => t('Move and rename previously uploaded files.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
           '#weight' => 11,
         );
 
@@ -119,9 +117,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
           '#type' => 'checkbox',
           '#title' => t('Active updating'),
           '#default_value' => isset($settings['active_updating']) ? $settings['active_updating'] : FALSE,
-          '#description' => t('Actively move and rename previously uploaded files as required') . '.' .
-            '<br /> <strong style="color: #FF0000;">' . t('Warning') . ':</strong> ' .
-            t('This feature should only be used on developmental servers or with extreme caution') . '.',
+          '#description' => t('Actively move and rename previously uploaded files as required.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
           '#weight' => 12
         );
       }
