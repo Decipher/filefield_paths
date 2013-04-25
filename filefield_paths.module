@@ -22,8 +22,19 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
     $entity_info = entity_get_info($form['#instance']['entity_type']);
     $settings = isset($form['#instance']['settings']['filefield_paths']) ? $form['#instance']['settings']['filefield_paths'] : array();
 
+    $form['instance']['settings']['filefield_paths_enabled'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable File (Field) Paths?'),
+      '#default_value' => isset($form['#instance']['settings']['filefield_paths_enabled']) ? $form['#instance']['settings']['filefield_paths_enabled'] : TRUE,
+      '#weight' => 1,
+    );
+
     // Hide standard File directory field.
-    $form['instance']['settings']['file_directory']['#access'] = FALSE;
+    $form['instance']['settings']['file_directory']['#states'] = array(
+      'visible' => array(
+        ':input[name="instance[settings][filefield_paths_enabled]"]' => array('checked' => FALSE),
+      ),
+    );
 
     // File (Field) Paths fieldset element.
     $form['instance']['settings']['filefield_paths'] = array(
@@ -33,6 +44,11 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
       '#collapsed' => TRUE,
       '#weight' => 1,
       '#tree' => TRUE,
+      '#states' => array(
+        'visible' => array(
+          ':input[name="instance[settings][filefield_paths_enabled]"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
     // Additional File (Field) Paths widget fields.
@@ -132,7 +148,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
  */
 function filefield_paths_form_submit($form, &$form_state) {
   // Retroactive updates.
-  if ($form_state['values']['instance']['settings']['filefield_paths']['retroactive_update']) {
+  if ($form_state['values']['instance']['settings']['filefield_paths_enabled'] && $form_state['values']['instance']['settings']['filefield_paths']['retroactive_update']) {
     filefield_paths_batch_update($form_state['values']['instance']);
     batch_process($form_state['redirect']);
   }
@@ -225,7 +241,8 @@ function filefield_paths_entity_update($entity, $type) {
       if (in_array($field['type'], array_keys($field_types))) {
         $files = array();
         $instance = field_info_instance($type, $field['field_name'], $bundle_name);
-        if (isset($entity->{$field['field_name']})) {
+        $enabled = (isset($instance['settings']['filefield_paths_enabled']) && $instance['settings']['filefield_paths_enabled']) || !isset($instance['settings']['filefield_paths_enabled']);
+        if ($enabled && isset($entity->{$field['field_name']})) {
           foreach ($entity->{$field['field_name']} as $langcode => &$deltas) {
             foreach ($deltas as $delta => &$file) {
               // Prepare file.
