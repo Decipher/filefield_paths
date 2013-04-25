@@ -31,6 +31,8 @@ function filefield_paths_filefield_paths_field_settings() {
         'value' => array(
           '#type' => 'textfield',
           '#title' => t('File name'),
+          '#maxlength' => 512,
+          '#size' => 128,
           '#default_value' => '[file:ffp-name-only-original].[file:ffp-extension-original]',
         ),
       ),

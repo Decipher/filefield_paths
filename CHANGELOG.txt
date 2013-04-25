@@ -18,6 +18,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 - #1420700: Fixed issue with pass-by-reference issue.
 - #1361884 by burningdog, dwkitchen, Deciphered: Fixed processing remote files.
 - #1262828 by Pablo Gosse: Fixed issue with regex.
+- #860848 by mostou: Fixed File name field length.
 - Fixed issue with malformed URIs.
 
 
