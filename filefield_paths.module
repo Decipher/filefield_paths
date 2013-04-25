@@ -7,8 +7,10 @@
 /**
  * Include additional files.
  */
+$dirname = dirname(__FILE__) . "/modules";
+$includes = file_scan_directory($dirname, '/.inc$/');
 foreach (module_list() as $module) {
-  if (file_exists($file = dirname(__FILE__) . "/modules/{$module}.inc")) {
+  if (isset($includes[$file = "{$dirname}/{$module}.inc"])) {
     require_once $file;
   }
 }

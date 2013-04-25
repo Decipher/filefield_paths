@@ -1,4 +1,4 @@
-File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
+File (Field) Paths 7.x-1.0-beta4, 2013-04-25
 --------------------------------------------------------------------------------
 
 - #1945148: Fixed issue with File path cleanup process.
@@ -16,6 +16,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 - #1438290 by xtfer: Fixed D6 to D7 upgrade path.
 - #1432200: Fixed issue with missing langcode variable.
 - #1420700: Fixed issue with pass-by-reference issue.
+- #1364492 by j0rd, Deciphered: Improved require_once routine.
 - #1361884 by burningdog, dwkitchen, Deciphered: Fixed processing remote files.
 - #1262828 by Pablo Gosse: Fixed issue with regex.
 - #860848 by mostou: Fixed File name field length.
