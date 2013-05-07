@@ -152,6 +152,32 @@ function filefield_paths_update_7106() {
  * Removed filefield_paths table/schema.
  */
 function filefield_paths_update_7107() {
+  $results = db_select('filefield_paths', 'ffp')
+    ->fields('ffp')
+    ->execute();
+  foreach ($results as $result) {
+    $instance = field_info_instance('node', $result->field, $result->type);
+    if (!isset($instance["ffp_{$result->field}}"])) {
+      $filepath = unserialize($result->filepath);
+      $filename = unserialize($result->filename);
+
+      $instance["ffp_{$result->field}"] = array(
+        'file_path' => $filepath['value'],
+        'file_path_cleanup' => array(
+          'file_path_pathauto' => $filepath['pathauto'],
+          'file_path_transliterate' => $filepath['transliterate'],
+        ),
+        'file_name' => $filename['value'],
+        'file_name_cleanup' => array(
+          'file_name_pathauto' => $filename['pathauto'],
+          'file_name_transliterate' => $filename['transliterate'],
+        ),
+        'active_updating' => $result->active_updating,
+      );
+      field_update_instance($instance);
+    }
+  }
+
   // Remove filefield_paths table/schema.
   db_drop_table('filefield_paths');
 
@@ -163,7 +189,7 @@ function filefield_paths_update_7107() {
       foreach ($field['bundles'] as $entity_type => $bundles) {
         foreach ($bundles as $bundle_name) {
           $instance = field_info_instance($entity_type, $field['field_name'], $bundle_name);
-          if ($instance["ffp_{$field['field_name']}"] && !isset($instance['settings']['filefield_paths'])) {
+          if (isset($instance["ffp_{$field['field_name']}"]) && !isset($instance['settings']['filefield_paths'])) {
             $instance['settings']['filefield_paths'] = array(
               'file_path' => array(
                 'value' => $instance["ffp_{$field['field_name']}"]['file_path'],
@@ -179,7 +205,6 @@ function filefield_paths_update_7107() {
                   'transliterate' => $instance["ffp_{$field['field_name']}"]['file_name_cleanup']['file_name_transliterate'],
                 ),
               ),
-              'retroactive_update' => $instance["ffp_{$field['field_name']}"]['retroactive_update'],
               'active_updating' => $instance["ffp_{$field['field_name']}"]['active_updating'],
             );
             unset($instance["ffp_{$field['field_name']}"]);

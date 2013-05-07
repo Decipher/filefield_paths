@@ -9,9 +9,9 @@ files[] = filefield_paths.install
 files[] = filefield_paths.module
 
 ; Integration files.
+files[] = filefield_paths.drush.inc
 files[] = modules/features.inc
 files[] = modules/file.inc
-files[] = modules/filefield_paths.drush.inc
 files[] = modules/filefield_paths.inc
 files[] = modules/image.inc
 files[] = modules/token.inc

@@ -1,8 +1,17 @@
+File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
+--------------------------------------------------------------------------------
+
+- #1985650: Fixed issue with moved Drush file in .info.
+- #1985280: Fixed issue with hook_entity_update() foreach loop.
+- #1495716/#1986472: Fixed issue with D6 -> D7 upgrade path.
+
+
+
 File (Field) Paths 7.x-1.0-beta4, 2013-04-25
 --------------------------------------------------------------------------------
 
 - #1945148: Fixed issue with File path cleanup process.
-- #1942720 by pp: Fixed issue with cleanup wehn token contains a '/'' character.
+- #1942720 by pp: Fixed issue with cleanup wehn token contains a '/' character.
 - #1925298 by David_Rothstein: Fixed issue with Image derivatives.
 - #1866450: Fixed issue with foreign characters in Regex.
 - #1714596: Fixed issue with file_attach_update() introduced in Drupal 7.15.
