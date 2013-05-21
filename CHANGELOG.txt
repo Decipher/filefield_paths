@@ -1,13 +1,16 @@
-FileField Paths 6.x-1.x-dev, xxxx-xx-xx (Developmental release)
------------------------------------
+File (Field) Paths 6.x-1.5, 2013-05-21
+--------------------------------------
 
-- #1249918 by aaron1234nz: Fixed pass-by-reference issue in Comment Upload integration.
+- #1249918 by aaron1234nz: Fixed pass-by-reference issue in Comment Upload
+  integration.
 - #1195374 by mikeytown2: Fixed issue with undefined index.
 - #1151514 by kndr, Deciphered: Removed unnecessary db_rewrite_sql() call.
 - #1057340 by _toch, Deciphered: Fixed unset issue.
 - #877578 by tomgf: Fixed Pathauto support.
 - #635854 by hefox: Fixed cache issue.
 - #578442 by szantog, deciphered: Added features support.
+- #288416 by kunago, sammys, msonnabaum: Fix "The selected file /var/www could
+  not be copied."
 
 
 FileField Paths 6.x-1.4, 2010-01-11

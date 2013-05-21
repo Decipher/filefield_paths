@@ -1,17 +1,21 @@
-The FileField Paths module extends the default functionality of Drupals core
+The File (Field) Paths module extends the default functionality of Drupals core
 Upload module, the FileField module and many other File Upload modules by adding
 the ability to use node tokens in destination paths and filenames.
 
-In simple terms, FileField Paths allows you to automatically sort and rename
+In simple terms, File (Field) Paths allows you to automatically sort and rename
 your uploaded files using token based replacement patterns to maintain a nice
 clean filesystem.
 
-FileField Paths was written and is maintained by Stuart Clark (deciphered).
+File (Field) Paths was written and is maintained by Stuart Clark (deciphered).
 - http://stuar.tc/lark
+
+The 6.x-1.x branch is maintained by Robert Allerstorfer (roball) since
+2013-05-20.
+- http://drupal.org/user/405360
 
 
 Features
---------------------------
+--------
 
 * Configurable file paths now use node tokens instead of user tokens.
 * Configurable filenames.
@@ -32,13 +36,13 @@ Features
 
 
 Required Modules
---------------------------
+----------------
 
 * Token             - http://drupal.org/project/token
 
 
 Recommended Modules
---------------------------
+-------------------
 
 * ImageField Tokens - http://drupal.org/project/imagefield_tokens
 * File Aliases      - http://drupal.org/project/file_aliases
@@ -47,9 +51,9 @@ Recommended Modules
 
 
 Usage/Configuration
---------------------------
+-------------------
 
-Once installed, FileField Paths needs to be configured for each file type you
+Once installed, File (Field) Paths needs to be configured for each file type you
 wish to use.
 
 * FileField/ImageField module
