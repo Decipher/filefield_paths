@@ -384,15 +384,17 @@ function filefield_paths_process_string($value, $data, $settings = array()) {
   $value = token_replace($value, $data, array('clear' => TRUE));
 
   $paths = explode('/', $value);
-  foreach ($paths as &$path) {
+  foreach ($paths as $i => &$path) {
 
     // Cleanup with pathauto.
     if ($pathauto == TRUE) {
-      $path_parts = explode('.', $path);
-      foreach ($path_parts as &$path_part) {
-        $path_part = pathauto_cleanstring($path_part);
+      if ('file_name' == $settings['context'] && count($paths) == $i + 1) {
+        $pathinfo = pathinfo($path);
+        $path = str_replace($pathinfo['filename'], pathauto_cleanstring($pathinfo['filename']), $path);
       }
-      $path = implode('.', $path_parts);
+      else {
+        $path = pathauto_cleanstring($path);
+      }
     }
 
     // Transliterate string.

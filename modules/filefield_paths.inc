@@ -57,11 +57,13 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
         $old_file = $file;
 
         // Process filename.
+        $settings['file_name']['options']['context'] = 'file_name';
         $file['filename'] = !empty($settings['file_name']['value'])
           ? filefield_paths_process_string($settings['file_name']['value'], $token_data, $settings['file_name']['options'])
           : $file['filename'];
 
         // Process filepath.
+        $settings['file_path']['options']['context'] = 'file_path';
         $file['uri'] = "{$field['settings']['uri_scheme']}://" . ltrim(filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']) . "/{$file['filename']}", '/');
 
         // Finalize file if necessary.
