@@ -267,20 +267,8 @@ function filefield_paths_entity_update($entity, $type) {
     }
 
     if ($processed) {
-      if (isset($entity->revision)) {
-        // Remember revision flag.
-        $revision = $entity->revision;
-        // Remove revision flag as long as fields already processed it, and no need
-        // to create new revision for moved files.
-        $entity->revision = FALSE;
-      }
-      // Save any changes back to the database.
       $entity->original = isset($entity->original) ? $entity->original : NULL;
       field_attach_update($type, $entity);
-      if (isset($entity->revision)) {
-        // Restore revision flag so that other modules can process it if needed.
-        $entity->revision = $revision;
-      }
     }
   }
 }
