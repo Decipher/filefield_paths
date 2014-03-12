@@ -19,6 +19,7 @@ function filefield_paths_filefield_paths_field_settings() {
           '#title' => t('File path'),
           '#maxlength' => 512,
           '#size' => 128,
+          '#element_validate' => array('_file_generic_settings_file_directory_validate'),
         ),
       ),
     ),

@@ -64,7 +64,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
       // Attach widget field form elements.
       if (isset($field['form']) && is_array($field['form'])) {
         foreach (array_keys($field['form']) as $delta => $key) {
-          $form['instance']['settings']['filefield_paths'][$name][$key] = array_merge(
+          $form['instance']['settings']['filefield_paths'][$name][$key] = array_merge_recursive(
             $field['form'][$key],
             array(
               '#element_validate' => array('token_element_validate'),
