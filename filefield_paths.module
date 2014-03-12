@@ -298,14 +298,14 @@ function _filefield_paths_replace_path($old, $new, $entity) {
   // Build replacement.
   $info = parse_url(file_stream_wrapper_uri_normalize($new));
   $info['path'] = !empty($info['path']) ? $info['path'] : '';
-  $replacement = "_filefield_paths_replace_path_uri_scheme('\\1', '{$old}', '{$new}') . '\\2{$info['host']}{$info['path']}'";
+  $replacement = "_filefield_paths_replace_path_uri_scheme('\${1}', '{$old}', '{$new}') . '\${2}{$info['host']}{$info['path']}'";
 
   // Newer versions of the Image module add an 8 character token which is
   // required if the image style hasn't been generated yet. Look for this token
   // in the query string and replace it.
   if (defined('IMAGE_DERIVATIVE_TOKEN')) {
     $regex .= '(\?(\S+?&|)' . IMAGE_DERIVATIVE_TOKEN . '=(\S{8})|)';
-    $replacement .= " . _filefield_paths_replace_image_derivative_token('{$old}', '{$new}', '\\5', '\\7', '\\3')";
+    $replacement .= " . _filefield_paths_replace_image_derivative_token('{$old}', '{$new}', '\${5}', '\${7}', '\${3}')";
   }
 
   $fields = field_info_fields();

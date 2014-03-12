@@ -2,6 +2,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 --------------------------------------------------------------------------------
 
 - #2211665: Added File path validation to remove unnecessary slashes.
+- #2185755 by treksler: Fixed issue with regex, backreferences and numbers.
 - #2047835: Fixed issue with pathauto replacemenets and periods (.).
 - #1985650: Fixed issue with moved Drush file in .info.
 - #1985280: Fixed issue with hook_entity_update() foreach loop.
