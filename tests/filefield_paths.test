@@ -121,3 +121,37 @@ class FileFieldPathsTextReplaceTestCase extends FileFieldPathsTestCase {
     $this->assert(strpos($node->body[$langcode][0]['value'], "node/{$nid}") !== FALSE, t('File path replaced correctly in text field.'));
   }
 }
+
+/**
+ * Class FileFieldPathsUpdatesCase
+ */
+class FileFieldPathsUpdatesCase extends FileFieldPathsTestCase {
+  /**
+   * @inheritdoc
+   */
+  public static function getInfo() {
+    return array(
+      'name'        => 'Update functionality',
+      'description' => 'Tests retroactive and active updates functionality.',
+      'group'       => 'File (Field) Paths',
+    );
+  }
+
+  /**
+   * Test behaviour of Retroactive updates when no updates are needed.
+   */
+  public function testRetroEmpty() {
+    // Create a File field.
+    $field_name = strtolower($this->randomName());
+    $this->createFileField($field_name, $this->content_type);
+
+    // Trigger retroactive updates.
+    $edit = array(
+      'instance[settings][filefield_paths][retroactive_update]' => TRUE
+    );
+    $this->drupalPost("admin/structure/types/manage/{$this->content_type}/fields/{$field_name}", $edit, t('Save settings'));
+
+    // Ensure no errors are thrown.
+    $this->assertNoText('Error', t('No errors were found.'));
+  }
+}

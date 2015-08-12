@@ -151,8 +151,9 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
 function filefield_paths_form_submit($form, &$form_state) {
   // Retroactive updates.
   if ($form_state['values']['instance']['settings']['filefield_paths_enabled'] && $form_state['values']['instance']['settings']['filefield_paths']['retroactive_update']) {
-    filefield_paths_batch_update($form_state['values']['instance']);
-    batch_process($form_state['redirect']);
+    if (filefield_paths_batch_update($form_state['values']['instance'])) {
+      batch_process($form_state['redirect']);
+    }
   }
 }
 
@@ -160,6 +161,8 @@ function filefield_paths_form_submit($form, &$form_state) {
  * Set batch process to update File (Field) Paths.
  *
  * @param $instance
+ *
+ * @return bool
  */
 function filefield_paths_batch_update($instance) {
   $query = new EntityFieldQuery();
@@ -167,6 +170,12 @@ function filefield_paths_batch_update($instance) {
     ->entityCondition('bundle', array($instance['bundle']))
     ->fieldCondition($instance['field_name'])
     ->execute();
+
+  // If there are no results, do not set a batch as there is nothing to process.
+  if (empty($result[$instance['entity_type']])) {
+    return FALSE;
+  }
+
   $objects = array_keys($result[$instance['entity_type']]);
 
   // Create batch.
@@ -177,6 +186,8 @@ function filefield_paths_batch_update($instance) {
     ),
   );
   batch_set($batch);
+
+  return TRUE;
 }
 
 /**
