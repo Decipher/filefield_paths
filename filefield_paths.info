@@ -18,5 +18,4 @@ files[] = modules/token.inc
 files[] = modules/video.inc
 
 ; Simpletest files.
-; files[] = tests/file.test
-; files[] = tests/filefield_paths.test
+files[] = tests/filefield_paths.test
