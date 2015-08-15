@@ -42,18 +42,19 @@ function filefield_paths_tokens($type, $tokens, array $data = array(), array $op
     foreach ($tokens as $name => $original) {
       switch ($name) {
         case 'ffp-name-only':
-          $info = pathinfo($file->filename);
-          $replacements[$original] = $info['filename'];
+          $basename = drupal_basename($file->filename);
+          $extension = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
+          $replacements[$original] = !is_null($extension) ? substr($basename, 0, strlen($basename) - strlen($extension)) : $basename;
           break;
 
         case 'ffp-name-only-original':
-          $info = pathinfo($file->origname);
-          $replacements[$original] = $info['filename'];
+          $basename = drupal_basename($file->origname);
+          $extension = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
+          $replacements[$original] = !is_null($extension) ? substr($basename, 0, strlen($basename) - strlen($extension)) : $basename;
           break;
 
         case 'ffp-extension-original':
-          $info = pathinfo($file->origname);
-          $replacements[$original] = isset($info['extension']) ? $info['extension'] : NULL;
+          $replacements[$original] = preg_match('/[^.]+$/', drupal_basename($file->origname), $matches) ? $matches[0] : NULL;
           break;
       }
     }
