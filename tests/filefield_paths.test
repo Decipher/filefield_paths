@@ -10,17 +10,59 @@
  */
 class FileFieldPathsTestCase extends FileFieldTestCase {
   var $content_type = NULL;
+  var $public_files_directory = NULL;
 
   /**
    * @inheritdoc
    */
   function setUp() {
     // Setup required modules.
-    parent::setUp('filefield_paths');
+    parent::setUp(array('filefield_paths', 'image'));
 
     // Create a content type.
     $content_type       = $this->drupalCreateContentType();
     $this->content_type = $content_type->name;
+  }
+
+  /**
+   * Creates a new image field.
+   *
+   * @param $name
+   *   The name of the new field (all lowercase), exclude the "field_" prefix.
+   * @param $type_name
+   *   The node type that this field will be added to.
+   * @param $field_settings
+   *   A list of field settings that will be added to the defaults.
+   * @param $instance_settings
+   *   A list of instance settings that will be added to the instance defaults.
+   * @param $widget_settings
+   *   A list of widget settings that will be added to the widget defaults.
+   */
+  function createImageField($name, $type_name, $field_settings = array(), $instance_settings = array(), $widget_settings = array()) {
+    $field             = array(
+      'field_name'  => $name,
+      'type'        => 'image',
+      'settings'    => array(),
+      'cardinality' => !empty($field_settings['cardinality']) ? $field_settings['cardinality'] : 1,
+    );
+    $field['settings'] = array_merge($field['settings'], $field_settings);
+    field_create_field($field);
+
+    $instance                       = array(
+      'field_name'  => $name,
+      'label'       => $name,
+      'entity_type' => 'node',
+      'bundle'      => $type_name,
+      'required'    => !empty($instance_settings['required']),
+      'settings'    => array(),
+      'widget'      => array(
+        'type'     => 'image_image',
+        'settings' => array(),
+      ),
+    );
+    $instance['settings']           = array_merge($instance['settings'], $instance_settings);
+    $instance['widget']['settings'] = array_merge($instance['widget']['settings'], $widget_settings);
+    field_create_instance($instance);
   }
 }
 
@@ -286,5 +328,46 @@ class FileFieldPathsUpdatesCase extends FileFieldPathsTestCase {
 
     // Ensure no errors are thrown.
     $this->assertNoText('Error', t('No errors were found.'));
+  }
+
+  /**
+   * Test basic Retroactive updates functionality.
+   */
+  public function testRetroBasic() {
+    // Create an Image field.
+    $field_name = strtolower($this->randomName());
+    $this->createImageField($field_name, $this->content_type, array());
+
+    // Modify instance settings.
+    $instance = field_info_instance('node', $field_name, $this->content_type);
+
+    $instance['display']['default']['settings']['image_style'] = 'thumbnail';
+    $instance['display']['default']['settings']['image_link']  = 'content';
+    field_update_instance($instance);
+    $this->drupalGet("admin/structure/types/manage/{$this->content_type}/display");
+    $original_instance = field_info_instance('node', $field_name, $this->content_type);
+
+    // Create a node with a test file.
+    $test_file = $this->getTestFile('image');
+    $nid       = $this->uploadNodeFile($test_file, $field_name, $this->content_type);
+
+    // Ensure that the file is in the default path.
+    $this->drupalGet("node/{$nid}");
+    $this->assertRaw("{$this->public_files_directory}/styles/thumbnail/public/{$test_file->name}", t('The File is in the default path.'));
+
+    // Trigger retroactive updates.
+    $edit['instance[settings][filefield_paths][retroactive_update]'] = TRUE;
+    $edit['instance[settings][filefield_paths][file_path][value]']   = 'node/[node:nid]';
+    $this->drupalPost("admin/structure/types/manage/{$this->content_type}/fields/{$field_name}", $edit, t('Save settings'));
+
+    // Ensure instance display settings haven't changed.
+    // @see https://www.drupal.org/node/2276435
+    drupal_static_reset('_field_info_field_cache');
+    $instance = field_info_instance('node', $field_name, $this->content_type);
+    $this->assert($original_instance['display'] === $instance['display'], t('Instance settings have not changed.'));
+
+    // Ensure that the file path has been retroactively updated.
+    $this->drupalGet("node/{$nid}");
+    $this->assertRaw("{$this->public_files_directory}/styles/thumbnail/public/node/{$nid}/{$test_file->name}", t('The File path has been retroactively updated.'));
   }
 }
