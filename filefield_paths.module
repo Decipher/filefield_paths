@@ -215,8 +215,8 @@ function _filefield_paths_batch_update_process($objects, $instance, &$context) {
       field_update_instance($instance);
     }
 
-    // Invoke File (Field) Paths implementation of hook_entity_update().
-    filefield_paths_entity_update($entity, $instance['entity_type']);
+    // Invoke field_attach_update().
+    field_attach_update($instance['entity_type'], $entity);
 
     // Restore active updating to it's previous state if necessary.
     if (!$active_updating) {
@@ -236,25 +236,30 @@ function _filefield_paths_batch_update_process($objects, $instance, &$context) {
 }
 
 /**
- * Implements hook_entity_insert().
+ * Implements hook_field_storage_pre_insert().
+ *
+ * @param $entity_type
+ * @param $entity
  */
-function filefield_paths_entity_insert($entity, $type) {
-  filefield_paths_entity_update($entity, $type);
+function filefield_paths_field_storage_pre_insert($entity_type, $entity) {
+  filefield_paths_field_storage_pre_update($entity_type, $entity);
 }
 
 /**
- * Implements hook_entity_update().
+ * Implements hook_field_storage_pre_update().
+ *
+ * @param $entity_type
+ * @param $entity
  */
-function filefield_paths_entity_update($entity, $type) {
-  $processed = FALSE;
+function filefield_paths_field_storage_pre_update($entity_type, $entity) {
   $field_types = _filefield_paths_get_field_types();
-  $entity_info = entity_get_info($type);
-  $bundle_name = !empty($entity_info['entity keys']['bundle']) ? $entity->{$entity_info['entity keys']['bundle']} : $type;
-  if ($entity_info['fieldable']) {
-    foreach (field_info_fields($type, $bundle_name) as $field) {
+  $entity_info = entity_get_info($entity_type);
+  list(, , $bundle) = entity_extract_ids($entity_type, $entity);
+    if ($entity_info['fieldable']) {
+    foreach (field_info_fields() as $field) {
       if (in_array($field['type'], array_keys($field_types))) {
         $files = array();
-        $instance = field_info_instance($type, $field['field_name'], $bundle_name);
+        $instance = field_info_instance($entity_type, $field['field_name'], $bundle);
         $enabled = (isset($instance['settings']['filefield_paths_enabled']) && $instance['settings']['filefield_paths_enabled']) || !isset($instance['settings']['filefield_paths_enabled']);
         if ($enabled && isset($entity->{$field['field_name']})) {
           foreach ($entity->{$field['field_name']} as $langcode => &$deltas) {
@@ -262,25 +267,19 @@ function filefield_paths_entity_update($entity, $type) {
               // Prepare file.
               if (function_exists($function = "{$field['module']}_field_load")) {
                 $items = array(array(&$file));
-                $function($type, array($entity), $field, array($instance), $langcode, $items, FIELD_LOAD_CURRENT);
+                $function($entity_type, array($entity), $field, array($instance), $langcode, $items, FIELD_LOAD_CURRENT);
               }
               $files[] = &$file;
             }
             // Invoke hook_filefield_paths_process_file().
             foreach (module_implements('filefield_paths_process_file') as $module) {
               if (function_exists($function = "{$module}_filefield_paths_process_file")) {
-                $processed = TRUE;
-                $function($type, $entity, $field, $instance, $langcode, $files);
+                $function($entity_type, $entity, $field, $instance, $langcode, $files);
               }
             }
           }
         }
       }
-    }
-
-    if ($processed) {
-      $entity->original = isset($entity->original) ? $entity->original : NULL;
-      field_attach_update($type, $entity);
     }
   }
 }
