@@ -27,15 +27,15 @@ class FileFieldPathsSettingsManager {
    * @param FormStateInterface $form_state
    */
   public function alterSettingsForm(array &$form, FormStateInterface $form_state) {
-    $field = $form_state->get('field');
     $file_field_types = _filefield_paths_get_field_types();
+    $field_config = $form_state->getBuildInfo()['callback_object']->getEntity();
 
-    if (isset($field->field_type) && in_array($field->field_type, $file_field_types)) {
+    if (in_array($field_config->getType(), $file_field_types)) {
       // Get our 3rd party settings to use as defaults on the form.
-      $defaults = $field->getThirdPartySettings('filefield_paths');
+      $defaults = $field_config->getThirdPartySettings('filefield_paths');
 
       // FFP fieldset.
-      $form['field']['third_party_settings']['filefield_paths'] = array(
+      $form['third_party_settings']['filefield_paths'] = array(
         '#type' => 'details',
         '#title' => t('File (Field) Paths settings'),
         '#open' => TRUE,
@@ -43,7 +43,7 @@ class FileFieldPathsSettingsManager {
 
       // Enable / disable.
       $default = isset($defaults['enabled']) ? $defaults['enabled'] : FALSE;
-      $form['field']['third_party_settings']['filefield_paths']['enabled'] = array(
+      $form['third_party_settings']['filefield_paths']['enabled'] = array(
         '#type' => 'checkbox',
         '#title' => t('Enable File (Field) Paths?'),
         '#default_value' => $default,
@@ -52,7 +52,7 @@ class FileFieldPathsSettingsManager {
 
       // @TODO: Hiding directory field doesn't work.
       // Hide standard File directory field.
-      $form['field']['settings']['file_directory']['#states'] = array(
+      $form['third_party_settings']['settings']['file_directory']['#states'] = array(
         '#states' => array(
           '!visible' => array(
             ':input[name="field[third_party_settings][filefield_paths][enabled]"]' => array('value' => '1'),
@@ -61,11 +61,11 @@ class FileFieldPathsSettingsManager {
       );
 
       // Token browser.
-      $form['field']['third_party_settings']['filefield_paths']['token_tree'] = $this->tokenService->tokenBrowser();
+      $form['third_party_settings']['filefield_paths']['token_tree'] = $this->tokenService->tokenBrowser();
 
       // File path.
       $default = isset($defaults['filepath']) ? $defaults['filepath'] : '';
-      $form['field']['third_party_settings']['filefield_paths']['filepath'] = array(
+      $form['third_party_settings']['filefield_paths']['filepath'] = array(
         '#type' => 'textfield',
         '#title' => t('File path'),
         '#maxlength' => 512,
@@ -75,7 +75,7 @@ class FileFieldPathsSettingsManager {
       );
 
       // File path options fieldset.
-      $form['field']['third_party_settings']['filefield_paths']['path_options'] = array(
+      $form['third_party_settings']['filefield_paths']['path_options'] = array(
         '#type' => 'details',
         '#title' => t('File path options'),
         '#open' => FALSE,
@@ -83,15 +83,15 @@ class FileFieldPathsSettingsManager {
 
       // Clean up path.
       $default = isset($defaults['path_options']['clean_path']) ? $defaults['path_options']['clean_path'] : TRUE;
-      $form['field']['third_party_settings']['filefield_paths']['path_options']['clean_path'] = $this->getStringCleanElement('filepath', $default);
+      $form['third_party_settings']['filefield_paths']['path_options']['clean_path'] = $this->getStringCleanElement('filepath', $default);
 
       // Transliterate path.
       $default = isset($defaults['path_options']['transliterate_path']) ? $defaults['path_options']['transliterate_path'] : TRUE;
-      $form['field']['third_party_settings']['filefield_paths']['path_options']['transliterate_path'] = $this->getTransliterationElement('filepath', $default);
+      $form['third_party_settings']['filefield_paths']['path_options']['transliterate_path'] = $this->getTransliterationElement('filepath', $default);
 
       // File name.
       $default = (isset($defaults['filename']) && !empty($defaults['filename'])) ? $defaults['filename'] : '[file:ffp-name-only-original].[file:ffp-extension-original]';
-      $form['field']['third_party_settings']['filefield_paths']['filename'] = array(
+      $form['third_party_settings']['filefield_paths']['filename'] = array(
         '#type' => 'textfield',
         '#title' => t('File name'),
         '#maxlength' => 512,
@@ -101,7 +101,7 @@ class FileFieldPathsSettingsManager {
       );
 
       // File name options fieldset.
-      $form['field']['third_party_settings']['filefield_paths']['name_options'] = array(
+      $form['third_party_settings']['filefield_paths']['name_options'] = array(
         '#type' => 'details',
         '#title' => t('File name options'),
         '#open' => FALSE,
@@ -109,15 +109,15 @@ class FileFieldPathsSettingsManager {
 
       // Clean up filename.
       $default = isset($defaults['name_options']['clean_filename']) ? $defaults['name_options']['clean_filename'] : TRUE;
-      $form['field']['third_party_settings']['filefield_paths']['name_options']['clean_filename'] = $this->getStringCleanElement('filename', $default);
+      $form['third_party_settings']['filefield_paths']['name_options']['clean_filename'] = $this->getStringCleanElement('filename', $default);
 
       // Transliterate filename.
       $default = isset($defaults['name_options']['transliterate_filename']) ? $defaults['name_options']['transliterate_filename'] : TRUE;
-      $form['field']['third_party_settings']['filefield_paths']['name_options']['transliterate_filename'] = $this->getTransliterationElement('filename', $default);
+      $form['third_party_settings']['filefield_paths']['name_options']['transliterate_filename'] = $this->getTransliterationElement('filename', $default);
 
       // Retroactive updates.
       $default = isset($defaults['retroactive_update']) ? $defaults['retroactive_update'] : FALSE;
-      $form['field']['third_party_settings']['filefield_paths']['retroactive_update'] = array(
+      $form['third_party_settings']['filefield_paths']['retroactive_update'] = array(
         '#type' => 'checkbox',
         '#title' => t('Retroactive update'),
         '#description' => t('Move and rename previously uploaded files.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
@@ -127,7 +127,7 @@ class FileFieldPathsSettingsManager {
 
       // Active updating.
       $default = isset($defaults['active_updating']) ? $defaults['active_updating'] : FALSE;
-      $form['field']['third_party_settings']['filefield_paths']['active_updating'] = array(
+      $form['third_party_settings']['filefield_paths']['active_updating'] = array(
         '#type' => 'checkbox',
         '#title' => t('Active updating'),
         '#default_value' => $default,

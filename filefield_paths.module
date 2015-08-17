@@ -9,9 +9,9 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 
 /**
- * Implements hook_form_FORM_ID_alter() for 'field_ui_field_edit_form'.
+ * Implements hook_form_FORM_ID_alter() for 'field_config_edit_form'.
  */
-function filefield_paths_form_field_ui_field_edit_form_alter(array &$form, FormStateInterface $form_state) {
+function filefield_paths_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state) {
   // Get the settings manager service to do all the work.
   $settings_manager = \Drupal::service('filefield_paths.settings_manager');
 
