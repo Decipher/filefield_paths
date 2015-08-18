@@ -148,6 +148,44 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
     $this->assertRaw("{$this->public_files_directory}/node/{$nid}/2.txt", t('The second File path has been processed correctly.'));
     $this->assertRaw("{$this->public_files_directory}/node/{$nid}/3.txt", t('The third File path has been processed correctly.'));
   }
+
+  /**
+   * Test a file usage of a basic file upload with File (Field) Paths.
+   */
+  public function testFileUsage() {
+    // Create a File field with 'node/[node:nid]' as the File path.
+    $field_name                                                 = strtolower($this->randomName());
+    $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
+    $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
+    $this->drupalPost("admin/structure/types/manage/{$this->content_type}/fields/{$field_name}", array(), t('Save settings'));
+
+    // Create a node with a test file.
+    $test_file = $this->getTestFile('text');
+    $nid       = $this->uploadNodeFile($test_file, $field_name, $this->content_type);
+
+    // Get file usage for uploaded file.
+    $node  = node_load($nid, NULL, TRUE);
+    $items = field_get_items('node', $node, $field_name);
+    $file  = file_load($items[0]['fid']);
+    $usage = file_usage_list($file);
+
+    // Ensure file usage count for new node is correct.
+    $this->assert(isset($usage['file']['node'][$nid]) && $usage['file']['node'][$nid] == 1, t('File usage count for new node is correct.'));
+
+    // Update node.
+    $this->drupalPost("node/{$nid}/edit", array(), t('Save'));
+    $usage = file_usage_list($file);
+
+    // Ensure file usage count for updated node is correct.
+    $this->assert(isset($usage['file']['node'][$nid]) && $usage['file']['node'][$nid] == 1, t('File usage count for updated node is correct.'));
+
+    // Update node with revision.
+    $this->drupalPost("node/{$nid}/edit", array('revision' => TRUE), t('Save'));
+    $usage = file_usage_list($file);
+
+    // Ensure file usage count for updated node with revision is correct.
+    $this->assert(isset($usage['file']['node'][$nid]) && $usage['file']['node'][$nid] == 2, t('File usage count for updated node with revision is correct.'));
+  }
 }
 
 /**
