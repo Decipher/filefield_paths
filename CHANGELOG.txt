@@ -8,6 +8,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 - #2103151 by Deciphered, david_garcia, Sumeet.Pareek, kitikonti, kolier:
     Fixed deprecated /e modifier in preg_replace().
 - #2185755 by treksler: Fixed issue with regex, backreferences and numbers.
+- #2068365 by Deciphered, vinmassaro: Fixed issue when no instance in update.
 - #2047835: Fixed issue with pathauto replacemenets and periods (.).
 - #1985650: Fixed issue with moved Drush file in .info.
 - #1985280: Fixed issue with hook_entity_update() foreach loop.

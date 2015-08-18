@@ -157,7 +157,7 @@ function filefield_paths_update_7107() {
     ->execute();
   foreach ($results as $result) {
     $instance = field_info_instance('node', $result->field, $result->type);
-    if (!isset($instance["ffp_{$result->field}}"])) {
+    if (!is_null($instance) && isset($instance["ffp_{$result->field}}"])) {
       $filepath = unserialize($result->filepath);
       $filename = unserialize($result->filename);
 
