@@ -11,7 +11,8 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 - #2068365 by Deciphered, vinmassaro: Fixed issue when no instance in update.
 - #2047835: Fixed issue with pathauto replacemenets and periods (.).
 - #1985650: Fixed issue with moved Drush file in .info.
-- #1985280: Fixed issue with hook_entity_update() foreach loop.
+- #1985280 by Deciphered, drasgardian: Fixed issue with hook_entity_update()
+    foreach loop.
 - #1495716/#1986472: Fixed issue with D6 -> D7 upgrade path.
 - #1292436 by maximpodorov, InternetDevels: Fixed issue pathinfo and UTF files.
 - Added tests.
