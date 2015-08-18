@@ -95,6 +95,20 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
   }
 
   /**
+   * Test File (Field) Paths works as normal when no file uploaded.
+   */
+  public function testNoFile() {
+    // Create a File field.
+    $field_name                                                 = strtolower($this->randomName());
+    $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
+    $instance_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
+    $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
+
+    // Create a node without a file attached.
+    $this->drupalCreateNode(array('type' => $this->content_type));
+  }
+
+  /**
    * Test a basic file upload with File (Field) Paths.
    */
   public function testUploadFile() {
