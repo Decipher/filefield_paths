@@ -28,7 +28,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
       '#type' => 'checkbox',
       '#title' => t('Enable File (Field) Paths?'),
       '#default_value' => isset($form['#instance']['settings']['filefield_paths_enabled']) ? $form['#instance']['settings']['filefield_paths_enabled'] : TRUE,
-      '#weight' => 1,
+      '#weight' => 2,
     );
 
     // Hide standard File directory field.
@@ -44,7 +44,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
       '#title' => t('File (Field) Path settings'),
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
-      '#weight' => 1,
+      '#weight' => 3,
       '#tree' => TRUE,
       '#states' => array(
         'visible' => array(

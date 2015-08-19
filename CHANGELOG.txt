@@ -4,6 +4,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 - #2276435 by Decipherd, david_garcia, rajmataj: Fixed issue with retroactive
     updates and instance settings.
 - #2271595 by Deciphered, tstoeckler, Reg: Fixed issue with empty batch.
+- #2214409: Updated field form layout.
 - #2211665: Added File path validation to remove unnecessary slashes.
 - #2103151 by Deciphered, david_garcia, Sumeet.Pareek, kitikonti, kolier:
     Fixed deprecated /e modifier in preg_replace().
