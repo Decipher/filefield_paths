@@ -6,8 +6,13 @@
 
 /**
  * Implements hook_filefield_paths_field_settings().
+ *
+ * @param $field
+ * @param $instance
+ *
+ * @return array
  */
-function filefield_paths_filefield_paths_field_settings() {
+function filefield_paths_filefield_paths_field_settings($field, $instance) {
   return array(
     'file_path' => array(
       'title' => 'File path',
@@ -20,6 +25,7 @@ function filefield_paths_filefield_paths_field_settings() {
           '#maxlength' => 512,
           '#size' => 128,
           '#element_validate' => array('_file_generic_settings_file_directory_validate'),
+          '#default_value' => $instance['settings']['file_directory'],
         ),
       ),
     ),

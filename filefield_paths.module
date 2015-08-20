@@ -54,7 +54,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
     );
 
     // Additional File (Field) Paths widget fields.
-    $fields = module_invoke_all('filefield_paths_field_settings');
+    $fields = module_invoke_all('filefield_paths_field_settings', $form['#field'], $form['#instance']);
     foreach ($fields as $name => $field) {
       // Attach widget fields.
       $form['instance']['settings']['filefield_paths'][$name] = array(

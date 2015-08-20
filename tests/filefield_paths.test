@@ -87,7 +87,8 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
   public function testAddField() {
     // Create a File field.
     $field_name = strtolower($this->randomName());
-    $this->createFileField($field_name, $this->content_type);
+    $instance_settings = array('file_directory' => "fields/{$field_name}");
+    $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
 
     // Ensure File (Field) Paths settings are present.
     $this->drupalGet("admin/structure/types/manage/{$this->content_type}/fields/{$field_name}");
@@ -97,6 +98,9 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
     // 'File (Field) Path settings'.
     $element = $this->xpath('//div[contains(@class, :class)]/following-sibling::*[1]/@id', array(':class' => 'form-item-instance-settings-filefield-paths-enabled'));
     $this->assert(isset($element[0]) && 'edit-instance-settings-filefield-paths' == (string) $element[0], t('Enable checkbox is next to settings fieldset.'));
+
+    // Ensure that the File path used the File directory as it's default value.
+    $this->assertFieldByName('instance[settings][filefield_paths][file_path][value]', "fields/{$field_name}");
   }
 
   /**
