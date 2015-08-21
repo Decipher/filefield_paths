@@ -65,7 +65,7 @@ class FileFieldPathsManager {
    */
   public function processContentEntity(ContentEntityInterface $container_entity) {
     if ($container_entity instanceof ContentEntityInterface) {
-      // Get a list of the types of fields that have files. (File, integer, video)
+      // Get a list of the types of fields that have files. (File, image, video)
       $field_types = _filefield_paths_get_field_types();
 
       // Get a list of the fields on this entity.
@@ -74,14 +74,13 @@ class FileFieldPathsManager {
       // Iterate through all the fields looking for ones in our list.
       foreach ($fields as $key => $field) {
         // Get the field definition which holds the type and our settings.
-        $field_info = $field->getFieldDefinition();
-
-        // Get the field type, ie: file.
-        $field_type = $field_info->getType();
-
-        // Check the field type against our list of fields.
-        if (isset($field_type) && in_array($field_type, $field_types)) {
-          $this->processField($container_entity, $field_info);
+        $field_definition = $field->getFieldDefinition();
+        // Fields based on BaseFieldDefinition don't have third party settings.
+        if (in_array('Drupal\Core\Config\Entity\ThirdPartySettingsInterface', class_implements($field_definition))) {
+          // Check the field type against our list of fields.
+          if (in_array($field_definition->getType(), $field_types)) {
+            $this->processField($container_entity, $field_definition);
+          }
         }
       }
     }
@@ -92,15 +91,15 @@ class FileFieldPathsManager {
    *
    * @param ThirdPartySettingsInterface $field_info
    */
-  protected function processField(ContentEntityInterface $container_entity, ThirdPartySettingsInterface $field_info) {
+  protected function processField(ContentEntityInterface $container_entity, ThirdPartySettingsInterface $field_definition) {
     // Retrieve the settings we added to the field.
-    $this->setFieldPathSettings($field_info->getThirdPartySettings('filefield_paths'));
+    $this->setFieldPathSettings($field_definition->getThirdPartySettings('filefield_paths'));
 
     // If FFP is enabled on this field, process it.
     if ($this->fieldPathSettings['enabled']) {
 
       // Get the machine name of the field.
-      $field_name = $field_info->getName();
+      $field_name = $field_definition->getName();
 
       // Go through each item on the field.
       foreach ($container_entity->{$field_name} as $item) {
