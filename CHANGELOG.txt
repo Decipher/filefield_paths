@@ -1,8 +1,9 @@
 File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 --------------------------------------------------------------------------------
 
+- #2551187: Changed token tree to dialog.
 - #2398411: Added default value of file_directory to file path.
-- #2276435 by Decipherd, david_garcia, rajmataj: Fixed issue with retroactive
+- #2276435 by Deciphered, david_garcia, rajmataj: Fixed issue with retroactive
     updates and instance settings.
 - #2271595 by Deciphered, tstoeckler, Reg: Fixed issue with empty batch.
 - #2214409: Updated field form layout.

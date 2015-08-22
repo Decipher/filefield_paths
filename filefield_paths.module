@@ -114,11 +114,9 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
 
         // Replacement patterns for field.
         $form['instance']['settings']['filefield_paths']['token_tree'] = array(
-          '#type' => 'fieldset',
-          '#title' => t('Replacement patterns'),
-          '#collapsible' => TRUE,
-          '#collapsed' => TRUE,
-          '#description' => theme('token_tree', array('token_types' => array('file', $entity_info['token type']))),
+          '#theme' => 'token_tree',
+          '#token_types' => array('file', $entity_info['token type']),
+          '#dialog' => TRUE,
           '#weight' => 10,
         );
 
