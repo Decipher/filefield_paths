@@ -64,13 +64,11 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
       // Attach widget field form elements.
       if (isset($field['form']) && is_array($field['form'])) {
         foreach (array_keys($field['form']) as $delta => $key) {
-          $form['instance']['settings']['filefield_paths'][$name][$key] = array_merge_recursive(
-            $field['form'][$key],
-            array(
-              '#element_validate' => array('token_element_validate'),
-              '#token_types' => array('file', $entity_info['token type']),
-            )
-          );
+          $form['instance']['settings']['filefield_paths'][$name][$key] = $field['form'][$key];
+          if (module_exists('token')) {
+            $form['instance']['settings']['filefield_paths'][$name][$key]['#element_validate'][] = 'token_element_validate';
+            $form['instance']['settings']['filefield_paths'][$name][$key]['#token_types'] = array('file', $entity_info['token type']);
+          }
 
           // Fetch stored value from instance.
           if (isset($settings[$name][$key])) {
@@ -113,12 +111,14 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
         );
 
         // Replacement patterns for field.
-        $form['instance']['settings']['filefield_paths']['token_tree'] = array(
-          '#theme' => 'token_tree',
-          '#token_types' => array('file', $entity_info['token type']),
-          '#dialog' => TRUE,
-          '#weight' => 10,
-        );
+        if (module_exists('token')) {
+          $form['instance']['settings']['filefield_paths']['token_tree'] = array(
+            '#theme' => 'token_tree',
+            '#token_types' => array('file', $entity_info['token type']),
+            '#dialog' => TRUE,
+            '#weight' => 10,
+          );
+        }
 
         // Retroactive updates.
         $form['instance']['settings']['filefield_paths']['retroactive_update'] = array(

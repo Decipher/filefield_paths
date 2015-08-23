@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- * Token module integration.
+ * Tokens for the File (Field) Paths module.
  */
 
 /**

@@ -28,16 +28,11 @@ Features
   caution)
 
 
-Required Modules
---------------------------------------------------------------------------------
-
-* Token           - http://drupal.org/project/token
-
-
 Recommended Modules
 --------------------------------------------------------------------------------
 
 * Pathauto        - http://drupal.org/project/pathauto
+* Token           - http://drupal.org/project/token
 * Transliteration - http://drupal.org/project/transliteration
 
 
