@@ -17,7 +17,7 @@ class FileFieldPathsTestCase extends FileFieldTestCase {
    */
   function setUp() {
     // Setup required modules.
-    parent::setUp(array('filefield_paths', 'image'));
+    parent::setUp(array('filefield_paths_test', 'image'));
 
     // Create a content type.
     $content_type       = $this->drupalCreateContentType();
@@ -86,7 +86,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
    */
   public function testAddField() {
     // Create a File field.
-    $field_name = strtolower($this->randomName());
+    $field_name        = strtolower($this->randomName());
     $instance_settings = array('file_directory' => "fields/{$field_name}");
     $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
 
@@ -208,6 +208,53 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
 
     // Ensure file usage count for updated node with revision is correct.
     $this->assert(isset($usage['file']['node'][$nid]) && $usage['file']['node'][$nid] == 2, t('File usage count for updated node with revision is correct.'));
+  }
+
+  /**
+   * Test File (Field) Paths works with read-only stream wrappers.
+   */
+  public function testReadOnly() {
+    // Create a File field.
+    $field_name        = strtolower($this->randomName());
+    $instance_settings = array('file_directory' => "fields/{$field_name}");
+    $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
+
+    // Get a test file.
+    $file = $this->getTestFile('image');
+
+    // Prepare the file for the test 'ffp://' read-only stream wrapper.
+    $file->uri = str_replace('public', 'ffp', $file->uri);
+    $uri       = file_stream_wrapper_uri_normalize($file->uri);
+
+    // Create a file object.
+    $file           = new stdClass();
+    $file->fid      = NULL;
+    $file->uri      = $uri;
+    $file->filename = basename($file->uri);
+    $file->filemime = file_get_mimetype($file->uri);
+    $file->uid      = $GLOBALS['user']->uid;
+    $file->status   = FILE_STATUS_PERMANENT;
+    $file->display  = TRUE;
+    file_save($file);
+
+    // Attach the file to a node.
+    $node                                = array();
+    $node['type']                        = $this->content_type;
+    $node[$field_name][LANGUAGE_NONE][0] = (array) $file;
+
+    $node = $this->drupalCreateNode($node);
+
+    // Ensure file has been attached to a node.
+    $this->assert(isset($node->{$field_name}[LANGUAGE_NONE][0]) && !empty($node->{$field_name}[LANGUAGE_NONE][0]), t('Read-only file is correctly attached to a node.'));
+
+    $edit                                                            = array();
+    $edit['instance[settings][filefield_paths][retroactive_update]'] = TRUE;
+    $edit['instance[settings][filefield_paths][file_path][value]']   = 'node/[node:nid]';
+    $this->drupalPost("admin/structure/types/manage/{$this->content_type}/fields/{$field_name}", $edit, t('Save settings'));
+
+    // Ensure file is still in original location.
+    $this->drupalGet("node/{$node->nid}");
+    $this->assertRaw("{$this->public_files_directory}/{$file->filename}", t('Read-only file not affected by Retroactive updates.'));
   }
 }
 

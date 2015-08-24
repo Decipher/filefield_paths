@@ -1,0 +1,6 @@
+name = File (Field) Paths tests
+description = Support module for File (Field) Paths related testing.
+package = Testing
+dependencies[] = filefield_paths
+core = 7.x
+hidden = TRUE
