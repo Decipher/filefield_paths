@@ -19,6 +19,22 @@ foreach (module_list() as $module) {
  * Implements hook_form_alter().
  */
 function filefield_paths_form_alter(&$form, $form_state, $form_id) {
+  // Force all File (Field) Paths uploads to go to the temporary file system
+  // prior to being processed.
+  if (isset($form['#entity']) && $form['#type'] == 'form') {
+    $instances = field_info_instances($form['#entity_type'], $form['#bundle']);
+    foreach ($instances as $field_name => $field) {
+      if (isset($field['settings']['filefield_paths_enabled']) && $field['settings']['filefield_paths_enabled']) {
+        $language = field_language($form['#entity_type'], $form['#entity'], $field_name);
+        if (isset($form[$field_name][$language]) && is_array($form[$field_name][$language])) {
+          foreach (element_children($form[$field_name][$language]) as $delta) {
+            $form[$field_name][$language][$delta]['#upload_location'] = 'temporary://';
+          }
+        }
+      }
+    }
+  }
+
   $field_types = _filefield_paths_get_field_types();
   if (isset($form['#field']) && in_array($form['#field']['type'], array_keys($field_types))) {
     $entity_info = entity_get_info($form['#instance']['entity_type']);
