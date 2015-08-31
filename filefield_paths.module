@@ -183,6 +183,7 @@ function filefield_paths_batch_update($instance) {
   $result = $query->entityCondition('entity_type', $instance['entity_type'])
     ->entityCondition('bundle', array($instance['bundle']))
     ->fieldCondition($instance['field_name'])
+    ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT')
     ->execute();
 
   // If there are no results, do not set a batch as there is nothing to process.

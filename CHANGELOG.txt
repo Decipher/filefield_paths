@@ -2,6 +2,8 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 --------------------------------------------------------------------------------
 
 - #2551187: Changed token tree to dialog.
+- #2514874 by Deciphered, smithmilner: Fixed issue with Drush command and
+    permissions.
 - #2398411: Added default value of file_directory to file path.
 - #2383527: Changed unprocessed destination to temporary://.
 - #2276435 by Deciphered, david_garcia, rajmataj: Fixed issue with retroactive

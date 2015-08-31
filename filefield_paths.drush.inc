@@ -151,10 +151,11 @@ function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NU
  */
 function _filefield_paths_drush_ffp_update($instances) {
   foreach ($instances as $instance) {
-    filefield_paths_batch_update($instance);
-    $batch =& batch_get();
-    $batch['progressive'] = FALSE;
-    drush_backend_batch_process();
-    drush_log(dt('!field_name File (Field) Paths updated.', array('!field_name' => "{$instance['label']} ({$instance['entity_type']}-{$instance['bundle']}-{$instance['field_name']})")), 'success');
+    if (filefield_paths_batch_update($instance)) {
+      $batch =& batch_get();
+      $batch['progressive'] = FALSE;
+      drush_backend_batch_process();
+      drush_log(dt('!field_name File (Field) Paths updated.', array('!field_name' => "{$instance['label']} ({$instance['entity_type']}-{$instance['bundle']}-{$instance['field_name']})")), 'success');
+    }
   }
 }
