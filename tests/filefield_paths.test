@@ -216,8 +216,9 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
   public function testReadOnly() {
     // Create a File field.
     $field_name        = strtolower($this->randomName());
+    $field_settings    = array('uri_scheme' => 'ffp');
     $instance_settings = array('file_directory' => "fields/{$field_name}");
-    $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
+    $this->createFileField($field_name, $this->content_type, $field_settings, $instance_settings);
 
     // Get a test file.
     $file = $this->getTestFile('image');

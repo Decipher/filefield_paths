@@ -53,8 +53,12 @@ function filefield_paths_filefield_paths_field_settings($field, $instance) {
 function filefield_paths_filefield_paths_process_file($type, $entity, $field, $instance, $langcode, &$items) {
   if (isset($instance['settings']['filefield_paths'])) {
     $settings = $instance['settings']['filefield_paths'];
+
+    // Check that the destination is writeable.
+    $wrappers = file_get_stream_wrappers(STREAM_WRAPPERS_WRITE);
     foreach ($items as &$file) {
-      if (filefield_paths_uri_is_local($file['uri']) && ($file['timestamp'] == REQUEST_TIME || $settings['active_updating'])) {
+      $scheme = $field['settings']['uri_scheme'];
+      if (!empty($wrappers[$scheme]) && ($file['timestamp'] == REQUEST_TIME || $settings['active_updating'])) {
         $token_data = array(
           'file' => (object) $file,
           $type => $entity
@@ -71,7 +75,8 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
 
         // Process filepath.
         $settings['file_path']['options']['context'] = 'file_path';
-        $file['uri'] = "{$field['settings']['uri_scheme']}://" . ltrim(filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']) . "/{$file['filename']}", '/');
+        $path = filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
+        $file['uri'] = file_stream_wrapper_uri_normalize("{$scheme}://{$path}/{$file['filename']}");
 
         // Finalize file if necessary.
         if ($file !== $old_file) {
