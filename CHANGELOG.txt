@@ -14,6 +14,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 - #2103151 by Deciphered, david_garcia, Sumeet.Pareek, kitikonti, kolier:
     Fixed deprecated /e modifier in preg_replace().
 - #2185755 by treksler: Fixed issue with regex, backreferences and numbers.
+- #2119789: Fixed issue with complex characters in regex functionality.
 - #2068365 by Deciphered, vinmassaro: Fixed issue when no instance in update.
 - #2047835: Fixed issue with pathauto replacemenets and periods (.).
 - #2019723 by Deciphered, szantog, jcandan, justafish: Fixed issue with remote

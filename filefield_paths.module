@@ -313,38 +313,51 @@ function filefield_paths_file_presave($file) {
  * Run regular expression over all available text-based fields.
  */
 function _filefield_paths_replace_path($old, $new, $entity) {
-  // Build regular expression.
-  $info = parse_url(file_stream_wrapper_uri_normalize($old));
-  $info['path'] = !empty($info['path']) ? $info['path'] : '';
-  $info['path'] = drupal_encode_path($info['path']);
-  $absolute = str_replace("{$info['host']}{$info['path']}", '', file_create_url($old));
-  $relative = parse_url($absolute, PHP_URL_PATH);
-  $regex = str_replace('/', '\/', "({$absolute}|{$relative}|{$info['scheme']}://)(styles/([a-z0-9\-_/]*?)/{$info['scheme']}/|)({$info['host']}{$info['path']})");
-
-  // Build replacement.
-  $info = parse_url(file_stream_wrapper_uri_normalize($new));
-  $info['path'] = !empty($info['path']) ? $info['path'] : '';
-  $replacement = "_filefield_paths_replace_path_uri_scheme(\$matches[1], '{$old}', '{$new}') . \$matches[2] . '{$info['host']}{$info['path']}'";
-
-  // Newer versions of the Image module add an 8 character token which is
-  // required if the image style hasn't been generated yet. Look for this token
-  // in the query string and replace it.
-  if (defined('IMAGE_DERIVATIVE_TOKEN')) {
-    $regex .= '(\?(\S+?&|)' . IMAGE_DERIVATIVE_TOKEN . '=(\S{8})|())';
-    $replacement .= " . _filefield_paths_replace_image_derivative_token('{$old}', '{$new}', \$matches[5], \$matches[7], \$matches[3])";
+  $info = parse_url($old);
+  if (isset($info['path'])) {
+    $info['host'] .= $info['path'];
   }
 
+  // Generate all path prefix variations.
+  $prefixes = _filefield_paths_replace_path_get_prefixes($info['scheme'], TRUE);
+  $prefixes = implode('|', $prefixes);
+
+  // Generate all image style path variations.
+  $styles['raw'] = "styles/REGEX/{$info['scheme']}/";
+  $styles['urlencode'] = urlencode($styles['raw']);
+  foreach ($styles as &$style) {
+    $style = str_replace(array('/', 'REGEX'), array('\/', '(.*?)'), $style);
+  }
+  $styles = implode('|', $styles);
+
+  // General all path variations.
+  $paths['raw'] = preg_quote($info['host'], '/');
+  $paths['urlencode'] = preg_quote(urlencode($info['host']), '/');
+  $paths['drupal_encode_path'] = preg_quote(drupal_encode_path($info['host']), '/');
+  $paths = implode('|', $paths);
+
+  // Newer versions of the Image module add an 8 character token which is
+  // required if the image style hasn't been generated yet.
+  $itok = '';
+  if (defined('IMAGE_DERIVATIVE_TOKEN')) {
+    $itok = '((?:\?(?:\S+?&)*|%3F(?:\S+?%26)*)' . IMAGE_DERIVATIVE_TOKEN . '(?:=|%3D)(\S{8}))*';
+  }
+
+  // Build regular expression pattern.
+  $pattern = "/({$prefixes})({$styles})*({$paths}){$itok}/";
+
   // Create an anonymous function for the replacement via preg_replace_callback.
-  $replacement_callback = create_function('$matches', "return {$replacement};");
+  $callback = create_function('$matches', "return filefield_paths_replace_path_callback(\$matches, '{$new}', '{$old}');");
 
   $fields = field_info_fields();
   foreach ($fields as $name => $field) {
     if ($field['module'] == 'text' && isset($entity->{$field['field_name']}) && is_array($entity->{$field['field_name']})) {
       foreach ($entity->{$field['field_name']} as &$language) {
         foreach ($language as &$item) {
-          $item['value'] = preg_replace_callback("/$regex/", $replacement_callback, $item['value']);
-          if (isset($item['summary'])) {
-            $item['summary'] = preg_replace_callback("/$regex/", $replacement_callback, $item['summary']);
+          foreach (array('value', 'summary') as $column) {
+            if (isset($item[$column])) {
+              $item[$column] = preg_replace_callback($pattern, $callback, $item[$column]);
+            }
           }
         }
       }
@@ -353,38 +366,102 @@ function _filefield_paths_replace_path($old, $new, $entity) {
 }
 
 /**
- * Helper function for File (Field) Paths URI updater regular expression.
+ * Helper function; Returns all variations of the file path prefix.
  *
- * Determines what format the old URI prefix was and returns the new URI prefix
- * in the same format.
+ * @param $scheme
+ * @param bool|FALSE $preg_quote
+ * @param bool|FALSE $reset
+ *
+ * @return mixed
  */
-function _filefield_paths_replace_path_uri_scheme($prefix, $old, $new) {
-  switch (TRUE) {
-    case $prefix == file_uri_scheme($old) . '://':
-      return file_uri_scheme($new) . '://';
+function _filefield_paths_replace_path_get_prefixes($scheme, $preg_quote = FALSE, $reset = FALSE) {
+  $prefixes =& drupal_static(__FUNCTION__, array());
 
-    case $prefix == file_create_url(file_uri_scheme($old) . '://'):
-      return file_create_url(file_uri_scheme($new) . '://');
+  $id = $scheme . '::' . (string) $preg_quote;
+  if (!isset($prefixes[$id]) || $reset) {
+    $prefixes[$id]['uri'] = "{$scheme}://";
+    $prefixes[$id]['absolute'] = file_create_url($prefixes[$id]['uri']);
+    $prefixes[$id]['relative'] = parse_url($prefixes[$id]['absolute'], PHP_URL_PATH);
 
-    case $prefix == parse_url(file_create_url(file_uri_scheme($old) . '://'), PHP_URL_PATH):
-      return parse_url(file_create_url(file_uri_scheme($new) . '://'), PHP_URL_PATH);
+    foreach ($prefixes[$id] as $key => $prefix) {
+      $prefixes[$id]["{$key}-urlencode"] = urlencode($prefix);
+      $prefixes[$id]["{$key}-drupal_encode_path"] = drupal_encode_path($prefix);
+    }
+
+    if ($preg_quote) {
+      foreach ($prefixes[$id] as $key => $prefix) {
+        $prefixes[$id][$key] = preg_quote($prefixes[$id][$key], '/');
+      }
+    }
   }
 
-  return $prefix;
+  return $prefixes[$id];
 }
 
 /**
- * Helper function for File (Field) Paths URI updater regular expression.
+ * Callback for regex string replacement functionality.
  *
- * Replaces the image derivative token at the end of a query string with a new
- * one appropriate for the new file URI.
+ * @param $matches
+ * @param $new
+ *
+ * @return string
  */
-function _filefield_paths_replace_image_derivative_token($old_uri, $new_uri, $query_string, $token, $style_name) {
-  // Only replace the token if the old one was valid.
-  if ($query_string && $token && $style_name && $token === image_style_path_token($style_name, $old_uri)) {
-    return substr_replace($query_string, image_style_path_token($style_name, $new_uri), -strlen($token));
+function filefield_paths_replace_path_callback($matches, $new, $old) {
+  $prefix = $matches[1];
+  $styles = $matches[2];
+  $query = isset($matches[6]) ? $matches[6] : '';
+
+  // Get file path info for old file.
+  $old_info = parse_url($old);
+  if (isset($old_info['path'])) {
+    $old_info['host'] .= $old_info['path'];
   }
-  return $query_string;
+
+  // Determine the file path variation type/modifier.
+  $old_prefixes = _filefield_paths_replace_path_get_prefixes($old_info['scheme']);
+  $modifier = NULL;
+  foreach ($old_prefixes as $key => $old_prefix) {
+    if ($prefix == $old_prefix) {
+      $parts = explode('-', $key);
+      $modifier = isset($parts[1]) ? $parts[1] : NULL;
+      break;
+    }
+  }
+
+  // Get file path info for new file.
+  $new_info = parse_url($new);
+  if (isset($new_info['path'])) {
+    $new_info['host'] .= $new_info['path'];
+  }
+
+  // Replace prefix.
+  $prefixes = _filefield_paths_replace_path_get_prefixes($new_info['scheme']);
+  if (isset($prefixes[$key])) {
+    $prefix = $prefixes[$key];
+  }
+
+  // Replace styles directory.
+  if (!empty($styles)) {
+    $styles = str_replace($old_info['scheme'], $new_info['scheme'], $styles);
+
+    // Newer versions of the Image module add an 8 character token which is
+    // required if the image style hasn't been generated yet.
+    if (defined('IMAGE_DERIVATIVE_TOKEN') && isset($matches[7])) {
+      $image_style = !empty($matches[3]) ? $matches[3] : $matches[4];
+      // Only replace the token if the old one was valid.
+      if ($matches[7] == image_style_path_token($image_style, $old)) {
+        $query = substr_replace($query, image_style_path_token($image_style, $new), -strlen($matches[7]));
+      }
+    }
+  }
+
+  // Replace path.
+  $path = $new_info['host'];
+  if (!is_null($modifier) && function_exists($modifier)) {
+    $path = call_user_func($modifier, $path);
+  }
+
+  return $prefix . $styles . $path . $query;
 }
 
 /**

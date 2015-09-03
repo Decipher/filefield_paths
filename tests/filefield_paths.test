@@ -275,37 +275,84 @@ class FileFieldPathsTextReplaceTestCase extends FileFieldPathsTestCase {
   }
 
   /**
-   * Test text replace with a basic file upload.
+   * Generates all variations of the URI for text replacement.
+   *
+   * @param        $uri
+   * @param string $type
+   *
+   * @return mixed
    */
-  public function testUploadFile() {
+  protected function getPathVariations($uri, $type = 'image') {
+    $variations['uri']      = $uri;
+    $variations['absolute'] = urldecode(file_create_url($uri));
+    $variations['relative'] = parse_url($variations['absolute'], PHP_URL_PATH);
+
+    if ($type == 'image') {
+      global $base_url;
+
+      $variations['image_style']          = urldecode(image_style_url('thumbnail', $uri));
+      $variations['image_style_relative'] = str_replace($base_url, '', $variations['image_style']);
+    }
+
+    foreach ($variations as $key => $value) {
+      $variations["{$key}_urlencode"]          = urlencode($value);
+      $variations["{$key}_drupal_encode_path"] = drupal_encode_path($value);
+    }
+
+    return $variations;
+  }
+
+  /**
+   * Test text replace with multiple file uploads.
+   */
+  public function testTextReplace() {
     $langcode = LANGUAGE_NONE;
 
     // Create a File field with 'node/[node:nid]' as the File path and
-    // '[node:nid].txt' as the File name,
+    // '[node:nid].png’ as the File name,
     $field_name                                                 = strtolower($this->randomName());
     $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
-    $instance_settings['filefield_paths']['file_name']['value'] = '[node:nid].txt';
-    $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
+    $instance_settings['filefield_paths']['file_name']['value'] = '[node:nid].png';
+    $this->createImageField($field_name, $this->content_type, array(), $instance_settings);
 
-    // Upload a file and reference the original path to the file in the body
-    // field.
-    $test_file            = $this->getTestFile('text');
-    $original_destination = file_destination($test_file->uri, FILE_EXISTS_RENAME);
-    $edit                 = array(
-      'title'                              => $this->randomName(),
-      "body[{$langcode}][0][value]"        => $original_destination,
-      "files[{$field_name}_{$langcode}_0]" => drupal_realpath($test_file->uri),
-    );
-    $this->drupalPost("node/add/{$this->content_type}", $edit, t('Save'));
+    // Prepare test files.
+    $test_files['basic_image']   = $this->getTestFile('image');
+    $test_files['complex_image'] = $this->getTestFile('image');
+    file_unmanaged_copy($test_files['complex_image']->uri, 'public://test image.png');
+    $files                       = file_scan_directory('public://', '/test image\.png/');
+    $test_files['complex_image'] = current($files);
 
-    // Get created Node ID.
-    $matches = array();
-    preg_match('/node\/([0-9]+)/', $this->getUrl(), $matches);
-    $nid = $matches[1];
+    // Iterate over each test file.
+    foreach ($test_files as $type => $test_file) {
+      // Get the available file paths for the test file.
+      $uri   = file_destination($test_file->uri, FILE_EXISTS_RENAME);
+      $paths = $this->getPathVariations($uri);
 
-    // Ensure body field has updated file path.
-    $node = node_load($nid);
-    $this->assert(strpos($node->body[$langcode][0]['value'], "public://node/{$nid}/{$nid}.txt") !== FALSE, t('File path replaced correctly in text field.'));
+      // Upload a file and reference the original path(s) to the file in the body
+      // field.
+      $edit['title']                              = $this->randomName();
+      $edit["body[{$langcode}][0][value]"]        = '';
+      $edit["files[{$field_name}_{$langcode}_0]"] = drupal_realpath($test_file->uri);
+      foreach ($paths as $key => $value) {
+        $edit["body[{$langcode}][0][value]"] .= "{$key}: {$value}\n";
+      }
+      $this->drupalPost("node/add/{$this->content_type}", $edit, t('Save'));
+
+      // Get created Node ID.
+      $matches = array();
+      preg_match('/node\/([0-9]+)/', $this->getUrl(), $matches);
+      $nid = $matches[1];
+
+      // Ensure body field has updated file path.
+      $node  = node_load($nid);
+      $paths = $this->getPathVariations($node->{$field_name}[$langcode][0]['uri']);
+      foreach ($paths as $key => $value) {
+        $this->assert(strpos($node->body[$langcode][0]['value'], "{$key}: {$value}") !== FALSE, t('@type %key file path replaced successfully.', array(
+          '@type' => str_replace('_', ' ', ucfirst($type)),
+          '%key'  => $key
+        )));
+      }
+    }
   }
 }
 
