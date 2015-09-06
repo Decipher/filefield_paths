@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Tests for the File (Field_) Paths module.
+ * Tests for the File (Field) Paths module.
  */
 
 /**
@@ -17,7 +17,13 @@ class FileFieldPathsTestCase extends FileFieldTestCase {
    */
   function setUp() {
     // Setup required modules.
-    parent::setUp(array('filefield_paths_test', 'image'));
+    $modules = func_get_args();
+    if (isset($modules[0]) && is_array($modules[0])) {
+      $modules = $modules[0];
+    }
+    $modules[] = 'filefield_paths_test';
+    $modules[] = 'image';
+    parent::setUp($modules);
 
     // Create a content type.
     $content_type       = $this->drupalCreateContentType();
