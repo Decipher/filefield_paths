@@ -1,7 +1,9 @@
 name = File (Field) Paths
 description = Adds improved Token based file sorting and renaming functionalities.
 package = Fields
+test_dependencies[] = token
 test_dependencies[] = pathauto
+test_dependencies[] = transliteration
 core = 7.x
 
 ; Core files.
@@ -19,3 +21,4 @@ files[] = modules/video.inc
 ; Simpletest files.
 files[] = tests/filefield_paths.test
 files[] = tests/pathauto.test
+files[] = tests/transliteration.test
