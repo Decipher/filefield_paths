@@ -70,16 +70,8 @@ class FileFieldPathsPathautoCase extends FileFieldPathsTestCase {
     $edit['files[' . $field_name . '_' . $langcode . '_0]'] = drupal_realpath($test_file->uri);
     $this->drupalPost("node/add/{$this->content_type}", $edit, t('Save'));
 
-    // Get created Node ID.
-    $path   = substr(parse_url($this->getUrl(), PHP_URL_PATH), strlen($base_path));
-    $source = drupal_lookup_path('source', $path);
-
-    $matches = array();
-    preg_match('/node\/([0-9]+)/', $source, $matches);
-    $nid = $matches[1];
-
     // Ensure that file path/name have been processed correctly by Pathauto.
-    $node = node_load($nid);
+    $node = node_load(1);
 
     module_load_include('inc', 'pathauto');
     $parts = explode('/', $node->title);
