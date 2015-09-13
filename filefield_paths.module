@@ -104,6 +104,14 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
           ),
         );
         // @TODO - Make this more modular.
+        // Cleanup slashes (/)
+        $form['instance']['settings']['filefield_paths'][$name]['options']['slashes'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Remove slashes (/) from tokens'),
+          '#default_value' => isset($settings[$name]['options']['slashes']) ? $settings[$name]['options']['slashes'] : FALSE,
+          '#description' => t('If checked, any slashes (/) in tokens will be removed from %title.', array('%title' => t($field['title']))),
+        );
+
         // Cleanup field with Pathauto module.
         $form['instance']['settings']['filefield_paths'][$name]['options']['pathauto'] = array(
           '#type' => 'checkbox',
@@ -470,25 +478,49 @@ function filefield_paths_replace_path_callback($matches, $new, $old) {
 function filefield_paths_process_string($value, $data, $settings = array()) {
   $transliterate = module_exists('transliteration') && isset($settings['transliterate']) && $settings['transliterate'];
   $pathauto = module_exists('pathauto') && isset($settings['pathauto']) && $settings['pathauto'] == TRUE;
+  $remove_slashes = !empty($settings['slashes']);
+
   if ($pathauto == TRUE) {
     module_load_include('inc', 'pathauto');
   }
 
-  // Process string tokens.
-  $value = token_replace($value, $data, array('clear' => TRUE));
-
+  // If '/' is to be removed from tokens, token replacement need to happen after
+  // splitting the paths to subdirs, otherwise tokens containing '/' will be
+  // part of the final path.
+  if (!$remove_slashes) {
+    $value = token_replace($value, $data, array('clear' => TRUE));
+  }
   $paths = explode('/', $value);
-  foreach ($paths as $i => &$path) {
 
-    // Cleanup with pathauto.
+  foreach ($paths as $i => &$path) {
+    if ($remove_slashes) {
+      $path = token_replace($path, $data, array('clear' => TRUE));
+    }
     if ($pathauto == TRUE) {
       if ('file_name' == $settings['context'] && count($paths) == $i + 1) {
         $pathinfo = pathinfo($path);
-        $path = str_replace($pathinfo['filename'], pathauto_cleanstring($pathinfo['filename']), $path);
+        if ($remove_slashes) {
+          $path = '';
+          if (!empty($pathinfo['dirname']) and $pathinfo['dirname'] !== '.') {
+            $path .= $pathinfo['dirname'] . '/';
+          }
+          $path .= $pathinfo['filename'];
+          $path = pathauto_cleanstring($path);
+          if (!empty($pathinfo['extension'])) {
+            $path .= '.' . pathauto_cleanstring($pathinfo['extension']);
+          }
+          $path = str_replace('/', '', $path);
+        }
+        else {
+          $path = str_replace($pathinfo['filename'], pathauto_cleanstring($pathinfo['filename']), $path);
+        }
       }
       else {
         $path = pathauto_cleanstring($path);
       }
+    }
+    elseif ($remove_slashes) {
+      $path = str_replace('/', '', $path);
     }
 
     // Transliterate string.
