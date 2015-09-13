@@ -144,12 +144,25 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
           );
         }
 
+        // Redirect
+        $form['instance']['settings']['filefield_paths']['redirect'] = array(
+          '#type' => 'checkbox',
+          '#title' => t('Create Redirect'),
+          '#description' => t('Create a redirect to the new location when a previously uploaded file is moved.'),
+          '#default_value' => isset($settings['redirect']) ? $settings['redirect'] : FALSE,
+          '#weight' => 11,
+        );
+        if (!module_exists('redirect')) {
+          $form['instance']['settings']['filefield_paths']['redirect']['#disabled'] = TRUE;
+          $form['instance']['settings']['filefield_paths']['redirect']['#description'] .= '<br />' . t('Requires the <a href="https://drupal.org/project/redirect" target="_blank">Redirect</a> module.');
+        }
+
         // Retroactive updates.
         $form['instance']['settings']['filefield_paths']['retroactive_update'] = array(
           '#type' => 'checkbox',
           '#title' => t('Retroactive update'),
           '#description' => t('Move and rename previously uploaded files.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
-          '#weight' => 11,
+          '#weight' => 12,
         );
 
         // Active updating.
@@ -158,7 +171,7 @@ function filefield_paths_form_alter(&$form, $form_state, $form_id) {
           '#title' => t('Active updating'),
           '#default_value' => isset($settings['active_updating']) ? $settings['active_updating'] : FALSE,
           '#description' => t('Actively move and rename previously uploaded files as required.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
-          '#weight' => 12
+          '#weight' => 13
         );
       }
     }
@@ -314,6 +327,34 @@ function filefield_paths_file_presave($file) {
   // Store original filename in the database.
   if (empty($file->origname) && isset($file->filename)) {
     $file->origname = $file->filename;
+  }
+}
+
+/**
+ * Creates a redirect for a moved File field.
+ *
+ * @param $source
+ * @param $path
+ *
+ * @throws Exception
+ */
+function _filefield_paths_create_redirect($source, $path) {
+  global $base_path;
+  watchdog('filefield_paths', 'Creating redirect from @source to @path', array('@source' => $source, '@path' => $path), WATCHDOG_DEBUG);
+
+  $redirect = new stdClass();
+  redirect_object_prepare($redirect);
+
+  $parsed_source = parse_url(file_create_url($source), PHP_URL_PATH);
+  $parsed_path   = parse_url(file_create_url($path), PHP_URL_PATH);
+
+  $redirect->source = substr(urldecode($parsed_source), strlen($base_path));
+  $redirect->redirect = substr(urldecode($parsed_path), strlen($base_path));
+
+  // Check if the redirect exists before saving.
+  $hash = redirect_hash($redirect);
+  if (!redirect_load_by_hash($hash)) {
+    redirect_save($redirect);
   }
 }
 

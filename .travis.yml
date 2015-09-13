@@ -109,7 +109,7 @@ install:
 
 before_script:
   - drupal-ti before_script
-  - drush dl pathauto token transliteration --destination="$TRAVIS_BUILD_DIR/../drupal-7/drupal/sites/all/modules"
+  - drush dl pathauto redirect token transliteration --destination="$TRAVIS_BUILD_DIR/../drupal-7/drupal/sites/all/modules"
 
 script:
   - drupal-ti script
