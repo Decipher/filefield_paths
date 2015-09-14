@@ -58,7 +58,17 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
     $wrappers = file_get_stream_wrappers(STREAM_WRAPPERS_WRITE);
     foreach ($items as &$file) {
       $scheme = $field['settings']['uri_scheme'];
-      if (!empty($wrappers[$scheme]) && ($file['timestamp'] == REQUEST_TIME || $settings['active_updating'])) {
+      if (!empty($wrappers[$scheme])) {
+        // Process file if this is a new entity, 'Active updating' is set or
+        // file wasn't previously attached to the entity.
+        if (isset($entity->original) && empty($settings['active_updating']) && !empty($entity->original->{$field['field_name']}[$langcode])) {
+          foreach ($entity->original->{$field['field_name']}[$langcode] as $original_file) {
+            if ($original_file['fid'] == $file['fid']) {
+              continue(2);
+            }
+          }
+        }
+
         $token_data = array(
           'file' => (object) $file,
           $type => $entity

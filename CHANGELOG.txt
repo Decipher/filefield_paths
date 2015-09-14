@@ -25,6 +25,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
     foreach loop.
 - #1942720 by Deciphered, kaare, alex.designworks, pp, BWPanda: Added slash
     cleanup functionality.
+- #1854450: Updated file processing logic.
 - #1495716/#1986472: Fixed issue with D6 -> D7 upgrade path.
 - #1292436 by maximpodorov, InternetDevels: Fixed issue pathinfo and UTF files.
 - Added tests.
