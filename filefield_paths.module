@@ -31,7 +31,7 @@ function filefield_paths_form_alter(&$form) {
         $language = field_language($form['#entity_type'], $form['#entity'], $field_name);
         if (isset($form[$field_name][$language]) && is_array($form[$field_name][$language])) {
           foreach (element_children($form[$field_name][$language]) as $delta) {
-            $form[$field_name][$language][$delta]['#upload_location'] = 'temporary://';
+            $form[$field_name][$language][$delta]['#upload_location'] = 'temporary://filefield_paths';
           }
         }
       }
