@@ -6,6 +6,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
     permissions.
 - #2468547 by Deciphered, smithmilner: Added Redirect module integration.
 - #2398411: Added default value of file_directory to file path.
+- #2395903: Added truncating of long file paths.
 - #2383527: Changed unprocessed destination to temporary://.
 - #2276435 by Deciphered, david_garcia, rajmataj: Fixed issue with retroactive
     updates and instance settings.

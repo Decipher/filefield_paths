@@ -23,10 +23,11 @@ class FileFieldPathsTestCase extends FileFieldTestCase {
     }
     $modules[] = 'filefield_paths_test';
     $modules[] = 'image';
+    $modules[] = 'token';
     parent::setUp($modules);
 
     // Include all optional dependency files.
-    $dirname = dirname(__FILE__) . "/../modules";
+    $dirname  = dirname(__FILE__) . "/../modules";
     $includes = file_scan_directory($dirname, '/.inc$/');
     foreach (array_keys($includes) as $file) {
       require_once $file;
@@ -183,6 +184,24 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
     $this->assertRaw("{$this->public_files_directory}/node/{$nid}/1.txt", t('The first File path has been processed correctly.'));
     $this->assertRaw("{$this->public_files_directory}/node/{$nid}/2.txt", t('The second File path has been processed correctly.'));
     $this->assertRaw("{$this->public_files_directory}/node/{$nid}/3.txt", t('The third File path has been processed correctly.'));
+  }
+
+  /**
+   * Test File (Field) Paths with a very long path.
+   */
+  public function testLongPath() {
+    // Create a File field with 'node/[random:hash:sha256]' as the File path.
+    $field_name                                                 = drupal_strtolower($this->randomName());
+    $instance_settings['filefield_paths']['file_path']['value'] = 'node/[random:hash:sha512]/[random:hash:sha512]';
+    $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
+
+    // Create a node with a test file.
+    $test_file = $this->getTestFile('text');
+    $nid       = $this->uploadNodeFile($test_file, $field_name, $this->content_type);
+
+    // Ensure file path is no more than 255 characters.
+    $node = node_load($nid, NULL, TRUE);
+    $this->assert(drupal_strlen($node->{$field_name}[LANGUAGE_NONE][0]['uri']) <= 255, t('File path is no more than 255 characters'));
   }
 
   /**

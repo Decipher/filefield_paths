@@ -91,6 +91,13 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
         $path                                        = filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
         $file['uri']                                 = file_stream_wrapper_uri_normalize("{$scheme}://{$path}/{$file['filename']}");
 
+        // Ensure file uri is no more than 255 characters.
+        if (drupal_strlen($file['uri']) > 255) {
+          watchdog('filefield_paths', 'File path was truncated.', array(), WATCHDOG_INFO);
+          $pathinfo    = pathinfo($file['uri']);
+          $file['uri'] = drupal_substr($file['uri'], 0, 254 - drupal_strlen($pathinfo['extension'])) . ".{$pathinfo['extension']}";
+        }
+
         // Finalize file if necessary.
         if ($file !== $old_file) {
           $dirname = drupal_dirname($file['uri']);
