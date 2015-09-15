@@ -1,4 +1,4 @@
-File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
+File (Field) Paths 7.x-1.0-rc1, 2015-09-15
 --------------------------------------------------------------------------------
 
 - #2551187: Changed token tree to dialog.
