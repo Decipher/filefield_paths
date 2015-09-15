@@ -33,7 +33,7 @@ class FileFieldPathsRedirectTestCase extends FileFieldPathsTestCase {
    */
   public function testUI() {
     // Create a File field.
-    $field_name = strtolower($this->randomName());
+    $field_name = drupal_strtolower($this->randomName());
     $this->createFileField($field_name, $this->content_type);
 
     // Ensure File (Field) Paths Pathauto settings are present and available.
@@ -53,7 +53,7 @@ class FileFieldPathsRedirectTestCase extends FileFieldPathsTestCase {
     $langcode = LANGUAGE_NONE;
 
     // Create a File field with a random File path.
-    $field_name                                                 = strtolower($this->randomName());
+    $field_name                                                 = drupal_strtolower($this->randomName());
     $instance_settings['filefield_paths']['file_path']['value'] = $this->randomName();
     $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
 
@@ -79,10 +79,10 @@ class FileFieldPathsRedirectTestCase extends FileFieldPathsTestCase {
 
     // Ensure that the source uri redirects to the destination uri.
     $parsed_source   = parse_url(file_create_url($source), PHP_URL_PATH);
-    $redirect_source = substr(urldecode($parsed_source), strlen($base_path));
+    $redirect_source = drupal_substr(urldecode($parsed_source), drupal_strlen($base_path));
 
     $parsed_destination   = parse_url(file_create_url($destination), PHP_URL_PATH);
-    $redirect_destination = substr(urldecode($parsed_destination), strlen($base_path));
+    $redirect_destination = drupal_substr(urldecode($parsed_destination), drupal_strlen($base_path));
 
     $redirect = redirect_load_by_source($redirect_source);
     $this->assert(is_object($redirect) && $redirect->redirect == $redirect_destination, t('Redirect created for relocated file.'));

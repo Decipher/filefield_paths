@@ -99,7 +99,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
    */
   public function testAddField() {
     // Create a File field.
-    $field_name        = strtolower($this->randomName());
+    $field_name        = drupal_strtolower($this->randomName());
     $instance_settings = array('file_directory' => "fields/{$field_name}");
     $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
 
@@ -121,7 +121,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
    */
   public function testNoFile() {
     // Create a File field.
-    $field_name                                                 = strtolower($this->randomName());
+    $field_name                                                 = drupal_strtolower($this->randomName());
     $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $instance_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
     $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
@@ -136,7 +136,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
   public function testUploadFile() {
     // Create a File field with 'node/[node:nid]' as the File path and
     // '[node:nid].[file:ffp-extension-original]' as the File name.
-    $field_name                                                 = strtolower($this->randomName());
+    $field_name                                                 = drupal_strtolower($this->randomName());
     $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $instance_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
     $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
@@ -157,7 +157,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
 
     // Create a multivalue File field with 'node/[node:nid]' as the File path
     // and '[file:fid].txt' as the File name.
-    $field_name                                                 = strtolower($this->randomName());
+    $field_name                                                 = drupal_strtolower($this->randomName());
     $field_settings['cardinality']                              = FIELD_CARDINALITY_UNLIMITED;
     $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $instance_settings['filefield_paths']['file_name']['value'] = '[file:fid].txt';
@@ -191,7 +191,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
   public function testProgrammaticAttach() {
     // Create a File field with 'node/[node:nid]' as the File path and
     // '[node:nid].[file:ffp-extension-original]' as the File name.
-    $field_name                                                 = strtolower($this->randomName());
+    $field_name                                                 = drupal_strtolower($this->randomName());
     $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $instance_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
     $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
@@ -221,7 +221,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
 
     // Ensure that the File path has been processed correctly.
     $node = node_load($node->nid, NULL, TRUE);
-    $this->assertEqual("public://node/{$node->nid}/{$node->nid}.txt", $node->{$field_name}[LANGUAGE_NONE][0]['uri']);
+    $this->assertEqual("public://node/{$node->nid}/{$node->nid}.txt", $node->{$field_name}[LANGUAGE_NONE][0]['uri'], t('The File path has been processed correctly.'));
   }
 
   /**
@@ -232,7 +232,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
 
     // Create a File field with 'node/[node:title]' as the File path and
     // '[node:title].[file:ffp-extension-original]' as the File name.
-    $field_name                                                 = strtolower($this->randomName());
+    $field_name                                                 = drupal_strtolower($this->randomName());
     $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:title]';
     $instance_settings['filefield_paths']['file_name']['value'] = '[node:title].[file:ffp-extension-original]';
     $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
@@ -274,7 +274,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
    */
   public function testFileUsage() {
     // Create a File field with 'node/[node:nid]' as the File path.
-    $field_name                                                 = strtolower($this->randomName());
+    $field_name                                                 = drupal_strtolower($this->randomName());
     $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $this->createFileField($field_name, $this->content_type, array(), $instance_settings);
     $this->drupalPost("admin/structure/types/manage/{$this->content_type}/fields/{$field_name}", array(), t('Save settings'));
@@ -312,7 +312,7 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
    */
   public function testReadOnly() {
     // Create a File field.
-    $field_name        = strtolower($this->randomName());
+    $field_name        = drupal_strtolower($this->randomName());
     $field_settings    = array('uri_scheme' => 'ffp');
     $instance_settings = array('file_directory' => "fields/{$field_name}");
     $this->createFileField($field_name, $this->content_type, $field_settings, $instance_settings);
@@ -407,7 +407,7 @@ class FileFieldPathsTextReplaceTestCase extends FileFieldPathsTestCase {
 
     // Create a File field with 'node/[node:nid]' as the File path and
     // '[node:nid].png’ as the File name,
-    $field_name                                                 = strtolower($this->randomName());
+    $field_name                                                 = drupal_strtolower($this->randomName());
     $instance_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $instance_settings['filefield_paths']['file_name']['value'] = '[node:nid].png';
     $this->createImageField($field_name, $this->content_type, array(), $instance_settings);
@@ -445,7 +445,7 @@ class FileFieldPathsTextReplaceTestCase extends FileFieldPathsTestCase {
       $paths = $this->getPathVariations($node->{$field_name}[$langcode][0]['uri']);
       foreach ($paths as $key => $value) {
         $this->assert(strpos($node->body[$langcode][0]['value'], "{$key}: {$value}") !== FALSE, t('@type %key file path replaced successfully.', array(
-          '@type' => str_replace('_', ' ', ucfirst($type)),
+          '@type' => str_replace('_', ' ', drupal_ucfirst($type)),
           '%key'  => $key
         )));
       }
@@ -570,7 +570,7 @@ class FileFieldPathsUpdatesCase extends FileFieldPathsTestCase {
    */
   public function testRetroEmpty() {
     // Create a File field.
-    $field_name = strtolower($this->randomName());
+    $field_name = drupal_strtolower($this->randomName());
     $this->createFileField($field_name, $this->content_type);
 
     // Trigger retroactive updates.
@@ -588,7 +588,7 @@ class FileFieldPathsUpdatesCase extends FileFieldPathsTestCase {
    */
   public function testRetroBasic() {
     // Create an Image field.
-    $field_name = strtolower($this->randomName());
+    $field_name = drupal_strtolower($this->randomName());
     $this->createImageField($field_name, $this->content_type, array());
 
     // Modify instance settings.

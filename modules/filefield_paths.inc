@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @file
  * File (Field) Paths module integration.
@@ -16,30 +17,27 @@ function filefield_paths_filefield_paths_field_settings($field, $instance) {
   return array(
     'file_path' => array(
       'title' => 'File path',
-      'sql' => 'filepath',
-
-      'form' => array(
+      'sql'   => 'filepath',
+      'form'  => array(
         'value' => array(
-          '#type' => 'textfield',
-          '#title' => t('File path'),
-          '#maxlength' => 512,
-          '#size' => 128,
+          '#type'             => 'textfield',
+          '#title'            => t('File path'),
+          '#maxlength'        => 512,
+          '#size'             => 128,
           '#element_validate' => array('_file_generic_settings_file_directory_validate'),
-          '#default_value' => $instance['settings']['file_directory'],
+          '#default_value'    => $instance['settings']['file_directory'],
         ),
       ),
     ),
-
     'file_name' => array(
       'title' => 'File name',
-      'sql' => 'filename',
-
-      'form' => array(
+      'sql'   => 'filename',
+      'form'  => array(
         'value' => array(
-          '#type' => 'textfield',
-          '#title' => t('File name'),
-          '#maxlength' => 512,
-          '#size' => 128,
+          '#type'          => 'textfield',
+          '#title'         => t('File name'),
+          '#maxlength'     => 512,
+          '#size'          => 128,
           '#default_value' => '[file:ffp-name-only-original].[file:ffp-extension-original]',
         ),
       ),
@@ -49,6 +47,13 @@ function filefield_paths_filefield_paths_field_settings($field, $instance) {
 
 /**
  * Implements hook_filefield_paths_process_file().
+ *
+ * @param $type
+ * @param $entity
+ * @param $field
+ * @param $instance
+ * @param $langcode
+ * @param $items
  */
 function filefield_paths_filefield_paths_process_file($type, $entity, $field, $instance, $langcode, &$items) {
   if (isset($instance['settings']['filefield_paths'])) {
@@ -71,22 +76,20 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
 
         $token_data = array(
           'file' => (object) $file,
-          $type => $entity
+          $type  => $entity
         );
 
-        // Copy the original file for comparision purposes.
+        // Copy the original file for comparison purposes.
         $old_file = $file;
 
         // Process filename.
         $settings['file_name']['options']['context'] = 'file_name';
-        $file['filename'] = !empty($settings['file_name']['value'])
-          ? filefield_paths_process_string($settings['file_name']['value'], $token_data, $settings['file_name']['options'])
-          : $file['filename'];
+        $file['filename']                            = !empty($settings['file_name']['value']) ? filefield_paths_process_string($settings['file_name']['value'], $token_data, $settings['file_name']['options']) : $file['filename'];
 
         // Process filepath.
         $settings['file_path']['options']['context'] = 'file_path';
-        $path = filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
-        $file['uri'] = file_stream_wrapper_uri_normalize("{$scheme}://{$path}/{$file['filename']}");
+        $path                                        = filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
+        $file['uri']                                 = file_stream_wrapper_uri_normalize("{$scheme}://{$path}/{$file['filename']}");
 
         // Finalize file if necessary.
         if ($file !== $old_file) {
@@ -102,7 +105,7 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
 
             // Remove any old empty directories.
             $scheme = file_uri_scheme($old_file['uri']);
-            $paths = explode('/', str_replace("{$scheme}://", '', drupal_dirname($old_file['uri'])));
+            $paths  = explode('/', str_replace("{$scheme}://", '', drupal_dirname($old_file['uri'])));
             while ($paths) {
               if (@drupal_rmdir("{$scheme}://" . implode('/', $paths)) == TRUE) {
                 array_pop($paths);
