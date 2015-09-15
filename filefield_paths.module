@@ -389,7 +389,7 @@ function _filefield_paths_replace_path($old, $new, $entity) {
   // required if the image style hasn't been generated yet.
   $itok = '';
   if (defined('IMAGE_DERIVATIVE_TOKEN')) {
-    $itok = '((?:\?(?:\S+?&)*|%3F(?:\S+?%26)*)' . IMAGE_DERIVATIVE_TOKEN . '(?:=|%3D)(\S{8}))*';
+    $itok = '((?:[\?|&](?:\S+?&)*|(?:%3F|%26)(?:\S+?%26)*)' . IMAGE_DERIVATIVE_TOKEN . '(?:=|%3D)(\S{8}))*';
   }
 
   // Build regular expression pattern.
@@ -431,6 +431,7 @@ function _filefield_paths_replace_path_get_prefixes($scheme, $preg_quote = FALSE
     $prefixes[$id]['uri'] = "{$scheme}://";
     $prefixes[$id]['absolute'] = file_create_url($prefixes[$id]['uri']);
     $prefixes[$id]['relative'] = parse_url($prefixes[$id]['absolute'], PHP_URL_PATH);
+    $prefixes[$id]['unclean'] = '?q=' . substr($prefixes[$id]['relative'], strlen(base_path()));
 
     foreach ($prefixes[$id] as $key => $prefix) {
       $prefixes[$id]["{$key}-urlencode"] = urlencode($prefix);
