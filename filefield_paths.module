@@ -570,10 +570,13 @@ function filefield_paths_process_string($value, $data, $settings = array()) {
     }
     if ($pathauto == TRUE) {
       if ('file_name' == $settings['context'] && count($paths) == $i + 1) {
-        $pathinfo = pathinfo($path);
+        $pathinfo             = pathinfo($path);
+        $basename             = drupal_basename($path);
+        $extension            = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
+        $pathinfo['filename'] = !is_null($extension) ? drupal_substr($basename, 0, drupal_strlen($basename) - drupal_strlen($extension)) : $basename;
         if ($remove_slashes) {
           $path = '';
-          if (!empty($pathinfo['dirname']) and $pathinfo['dirname'] !== '.') {
+          if (!empty($pathinfo['dirname']) && $pathinfo['dirname'] !== '.') {
             $path .= $pathinfo['dirname'] . '/';
           }
           $path .= $pathinfo['filename'];
