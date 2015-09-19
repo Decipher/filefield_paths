@@ -1,3 +1,10 @@
+File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (Development release).
+--------------------------------------------------------------------------------
+
+- #2570127: Added stricter checks for filefield_paths_form_alter().
+
+
+
 File (Field) Paths 7.x-1.0-rc1, 2015-09-15
 --------------------------------------------------------------------------------
 
