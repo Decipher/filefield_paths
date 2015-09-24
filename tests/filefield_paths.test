@@ -465,15 +465,15 @@ class FileFieldPathsTextReplaceTestCase extends FileFieldPathsTestCase {
     // Iterate over each test file.
     foreach ($test_files as $type => $test_file) {
       // Get the available file paths for the test file.
-      $uri   = file_destination($test_file->uri, FILE_EXISTS_RENAME);
-      $paths = $this->getPathVariations($uri);
+      $uri          = str_replace('public://', 'temporary://filefield_paths/', $test_file->uri);
+      $source_paths = $this->getPathVariations($uri);
 
       // Upload a file and reference the original path(s) to the file in the body
       // field.
       $edit['title']                              = $this->randomName();
       $edit["body[{$langcode}][0][value]"]        = '';
       $edit["files[{$field_name}_{$langcode}_0]"] = drupal_realpath($test_file->uri);
-      foreach ($paths as $key => $value) {
+      foreach ($source_paths as $key => $value) {
         $edit["body[{$langcode}][0][value]"] .= "{$key}: {$value}\n";
       }
       $this->drupalPost("node/add/{$this->content_type}", $edit, t('Save'));
@@ -484,10 +484,10 @@ class FileFieldPathsTextReplaceTestCase extends FileFieldPathsTestCase {
       $nid = $matches[1];
 
       // Ensure body field has updated file path.
-      $node  = node_load($nid);
-      $paths = $this->getPathVariations($node->{$field_name}[$langcode][0]['uri']);
-      foreach ($paths as $key => $value) {
-        $this->assert(strpos($node->body[$langcode][0]['value'], "{$key}: {$value}") !== FALSE, t('@type %key file path replaced successfully.', array(
+      $node              = node_load($nid);
+      $destination_paths = $this->getPathVariations($node->{$field_name}[$langcode][0]['uri']);
+      foreach ($destination_paths as $key => $value) {
+        $this->assert($source_paths[$key] !== $destination_paths[$key] && strpos($node->body[$langcode][0]['value'], "{$key}: {$value}") !== FALSE, t('@type %key file path replaced successfully.', array(
           '@type' => str_replace('_', ' ', drupal_ucfirst($type)),
           '%key'  => $key
         )));
