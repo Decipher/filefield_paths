@@ -58,7 +58,7 @@ class FileFieldPathsToken {
     $tokens = \Drupal::token()->getInfo();
 
     // Replace tokens with core Token service.
-    $replaced = \Drupal::token()->replace($string, $data);
+    $replaced = \Drupal::token()->replace($string, $data, $settings);
 
     // Ensure that there are no double-slash sequences due to empty token values.
     $replaced = preg_replace('/\/+/', '/', $replaced);

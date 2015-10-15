@@ -11,6 +11,20 @@ use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
+ * Implements hook_module_implements_alter().
+ */
+function filefield_paths_module_implements_alter(&$implementations, $hook) {
+  switch ($hook) {
+    // Move some of our hook implementations to the end of the list.
+    case 'entity_presave':
+      $group = $implementations['filefield_paths'];
+      unset($implementations['filefield_paths']);
+      $implementations['filefield_paths'] = $group;
+      break;
+  }
+}
+
+/**
  * Implements hook_entity_base_field_info().
  */
 function filefield_paths_entity_base_field_info(EntityTypeInterface $entity_type) {
@@ -44,16 +58,9 @@ function filefield_paths_file_presave(Drupal\file\FileInterface $file) {
 }
 
 /**
- * Implements hook_entity_insert().
+ * Implements hook_entity_presave().
  */
-function filefield_paths_entity_insert(EntityInterface $entity) {
-  filefield_paths_process_entity($entity);
-}
-
-/**
- * Implements hook_entity_update().
- */
-function filefield_paths_entity_update(EntityInterface $entity) {
+function filefield_paths_entity_presave(EntityInterface $entity) {
   filefield_paths_process_entity($entity);
 }
 

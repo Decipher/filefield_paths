@@ -4,6 +4,8 @@ namespace Drupal\filefield_paths;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
+use Drupal\file\Plugin\Field\FieldType\FileItem;
 use Drupal\file\FileInterface;
 
 class FileFieldPathsManager {
@@ -89,25 +91,64 @@ class FileFieldPathsManager {
   /**
    * Finds all the files on the field and sends them to be processed.
    *
-   * @param ThirdPartySettingsInterface $field_info
+   * @param ContentEntityInterface $container_entity
+   *   The entity containing the field to process.
+   * @param ThirdPartySettingsInterface $field_definition
+   *   The field definition to process implementing ThirdPartySettings.
    */
   protected function processField(ContentEntityInterface $container_entity, ThirdPartySettingsInterface $field_definition) {
+    $update_field = FALSE;
+
     // Retrieve the settings we added to the field.
     $this->setFieldPathSettings($field_definition->getThirdPartySettings('filefield_paths'));
 
     // If FFP is enabled on this field, process it.
     if ($this->fieldPathSettings['enabled']) {
-
+      $translated_files = array();
       // Get the machine name of the field.
       $field_name = $field_definition->getName();
 
-      // Go through each item on the field.
-      foreach ($container_entity->{$field_name} as $item) {
-        // Get the file entity associated with the item.
-        $file_entity = $item->entity;
+      // Pre-load all translated file entities.
+      $languages = $container_entity->getTranslationLanguages();
+      foreach ($languages as $language) {
+        $langcode = $language->getId();
+        $translated_files[$langcode] = $container_entity->getTranslation($langcode)->{$field_name}->referencedEntities();
+      }
+
+      // Get the file entities associated with the item.
+      /** @var FileInterface $file_entity */
+      $files = array();
+      foreach ($container_entity->{$field_name}->referencedEntities() as $index => $file_entity) {
+        // If the field is a duplicate of an existing translated file entity
+        // we'll want to make a copy of the file if the path is changed instead
+        // of moving to prevent renaming the translation's file as well.
+        // This is because a translated Field does not make a copy of the File
+        // entity by default.
+        $copy_if_translation = FALSE;
+        foreach ($languages as $language) {
+          $langcode = $language->getId();
+          if ($container_entity->language()->getId() != $langcode && $container_entity->hasTranslation($langcode)) {
+            if (isset($translated_files[$langcode][$index]) && $file_entity->id() == $translated_files[$langcode][$index]->id()) {
+              $copy_if_translation = TRUE;
+              break;
+            }
+          }
+        }
 
         // Process the file.
-        $this->processFile($container_entity, $file_entity);
+        // If the process returns a new file, assign that to the field.
+        /** @var FileItem $file_updated_entity */
+        $file_updated_entity = $this->processFile($container_entity, $file_entity, $copy_if_translation);
+        if ($file_updated_entity && $file_updated_entity->get('uri') != $file_entity->get('uri')) {
+          $update_field = TRUE;
+          $files[$index] = $file_updated_entity;
+        }
+        else {
+          $files[$index] = $file_entity;
+        }
+      }
+      if ($update_field) {
+        $container_entity->set($field_name, $files, FALSE);
       }
     }
   }
@@ -115,9 +156,17 @@ class FileFieldPathsManager {
   /**
    * Cleans up path and name, moves to new location, and renames.
    *
-   * @param $file_entity
+   * @param ContentEntityInterface $container_entity
+   *   The entity containing the file whose field is being processed.
+   * @param FileInterface $file_entity
+   *   The file whose field is being processed.
+   * @param bool $copy
+   *   Create a copy of the file entity if the URI's are different.
+   *
+   * @return FileInterface $file_entity
+   *   The updated or new file.
    */
-  protected function processFile(ContentEntityInterface $container_entity, FileInterface $file_entity) {
+  protected function processFile(ContentEntityInterface $container_entity, FileInterface $file_entity, $copy = FALSE) {
     if ($this->fileNeedsUpdating($file_entity)) {
       // Retrieve the path/name strings with the tokens from settings.
       $tokenized_path = $this->fieldPathSettings['filepath'];
@@ -126,8 +175,11 @@ class FileFieldPathsManager {
       // Replace tokens.
       $entity_type = $container_entity->getEntityTypeId();
       $data = array($entity_type => $container_entity, 'file' => $file_entity);
-      $path = $this->tokenService->tokenReplace($tokenized_path, $data);
-      $filename = $this->tokenService->tokenReplace($tokenized_filename, $data);
+      $settings = array(
+        'langcode' => $container_entity->language()->getId(),
+      );
+      $path = $this->tokenService->tokenReplace($tokenized_path, $data, $settings);
+      $filename = $this->tokenService->tokenReplace($tokenized_filename, $data, $settings);
 
       // Transliterate.
       if ($this->fieldPathSettings['path_options']['transliterate_path']) {
@@ -159,12 +211,25 @@ class FileFieldPathsManager {
       // @TODO: Sanity check to be sure we don't end up with an empty path or name.
       // If path is empty, just change filename?
       // If filename is empty, use original?
-
       // Move the file to its new home.
       $destination = file_build_uri($path);
       file_prepare_directory($destination, FILE_CREATE_DIRECTORY);
-      file_move($file_entity, $destination . DIRECTORY_SEPARATOR . $filename);
+
+      if ($copy) {
+        $file_entity = file_copy($file_entity, $destination, FILE_EXISTS_RENAME);
+      }
+      else {
+        // Move to a temp directory first to prevent conflicts.
+        $tmp_dir = file_stream_wrapper_uri_normalize('temporary://filefield_paths');
+        file_prepare_directory($tmp_dir, FILE_CREATE_DIRECTORY);
+        $file_entity = file_move($file_entity, $tmp_dir . DIRECTORY_SEPARATOR . $filename);
+        // Now move to the new location.
+        if ($file_entity) {
+          $file_entity = file_move($file_entity, $destination . DIRECTORY_SEPARATOR . $filename);
+        }
+      }
     }
+    return $file_entity;
   }
 
   /**
