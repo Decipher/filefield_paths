@@ -459,6 +459,10 @@ function _filefield_paths_replace_path($old, $new, $entity) {
 function _filefield_paths_replace_path_get_prefixes($scheme, $preg_quote = FALSE, $reset = FALSE) {
   $prefixes =& drupal_static(__FUNCTION__, array());
 
+  // Force clean urls on.
+  $clean_url = $GLOBALS['conf']['clean_url'];
+  $GLOBALS['conf']['clean_url'] = TRUE;
+
   $id = $scheme . '::' . (string) $preg_quote;
   if (!isset($prefixes[$id]) || $reset) {
     $prefixes[$id]['uri']      = "{$scheme}://";
@@ -477,6 +481,9 @@ function _filefield_paths_replace_path_get_prefixes($scheme, $preg_quote = FALSE
       }
     }
   }
+
+  // Restore clean url settings.
+  $GLOBALS['conf']['clean_url'] = $clean_url;
 
   return $prefixes[$id];
 }

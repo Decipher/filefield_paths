@@ -423,6 +423,9 @@ class FileFieldPathsTextReplaceTestCase extends FileFieldPathsTestCase {
    * @return mixed
    */
   protected function getPathVariations($uri, $type = 'image') {
+    // Force clean urls on.
+    $GLOBALS['conf']['clean_url'] = TRUE;
+
     $variations['uri']      = $uri;
     $variations['absolute'] = urldecode(file_create_url($uri));
     $variations['relative'] = parse_url($variations['absolute'], PHP_URL_PATH);
