@@ -17,7 +17,6 @@ function filefield_paths_filefield_paths_field_settings($field, $instance) {
   return array(
     'file_path' => array(
       'title' => 'File path',
-      'sql'   => 'filepath',
       'form'  => array(
         'value' => array(
           '#type'             => 'textfield',
@@ -31,7 +30,6 @@ function filefield_paths_filefield_paths_field_settings($field, $instance) {
     ),
     'file_name' => array(
       'title' => 'File name',
-      'sql'   => 'filename',
       'form'  => array(
         'value' => array(
           '#type'          => 'textfield',
