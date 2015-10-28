@@ -1,4 +1,4 @@
-File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (Development release).
+File (Field) Paths 7.x-1.0-rc2, 2015-10-28
 --------------------------------------------------------------------------------
 
 - #2592519: Fixed issue with temporary upload location and field collections.
