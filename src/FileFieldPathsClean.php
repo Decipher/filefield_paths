@@ -34,8 +34,8 @@ class FileFieldPathsClean {
    * @return $string
    */
   protected function pathAutoClean($string) {
-    $pathauto_manager = \Drupal::service('pathauto.manager');
-    $string = $pathauto_manager->cleanString($string);
+    $pathauto_cleaner = \Drupal::service('pathauto.alias_cleaner');
+    $string = $pathauto_cleaner->cleanString($string);
 
     return $string;
   }
