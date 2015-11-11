@@ -2,6 +2,7 @@ File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 --------------------------------------------------------------------------------
 
 - #2612396: Added watchdog message for unmoved files.
+- #2607302: Added configurable temporary file location.
 
 
 

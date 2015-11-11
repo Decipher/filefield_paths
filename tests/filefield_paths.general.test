@@ -76,8 +76,9 @@ class FileFieldPathsGeneralTestCase extends FileFieldPathsTestCase {
     $edit["files[{$field_name}_{$langcode}_0]"] = $test_file->uri;
     $this->drupalPost(NULL, $edit, t('Upload'));
 
-    // Ensure that the file was put into the Temporary file system.
-    $this->assertRaw(file_create_url("temporary://filefield_paths/{$test_file->filename}"), t('File has been uploaded to the temporary file system.'));
+    // Ensure that the file was put into the Temporary file location.
+    $temp_location = variable_get('filefield_paths_temp_location', 'public://filefield_paths');
+    $this->assertRaw(file_create_url("{$temp_location}/{$test_file->filename}"), t('File has been uploaded to the temporary file location.'));
 
     // Save the node.
     $this->drupalPost(NULL, array(), t('Save'));
