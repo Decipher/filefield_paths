@@ -1,6 +1,8 @@
 File (Field) Paths
 ==================
 
+[![Build Status](https://travis-ci.org/Decipher/filefield_paths.svg)](https://travis-ci.org/Decipher/filefield_paths)
+
 The File (Field) Paths module extends the default functionality of Drupal's core
 File module, Image module and many other File upload modules, by adding the
 ability to use entity based tokens in destination paths and file names.
