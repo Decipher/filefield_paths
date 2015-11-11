@@ -1,3 +1,10 @@
+File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
+--------------------------------------------------------------------------------
+
+- #2612396: Added watchdog message for unmoved files.
+
+
+
 File (Field) Paths 7.x-1.0-rc2, 2015-10-28
 --------------------------------------------------------------------------------
 

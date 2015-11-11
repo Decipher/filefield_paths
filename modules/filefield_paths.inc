@@ -119,6 +119,12 @@ function filefield_paths_filefield_paths_process_file($type, $entity, $field, $i
               break;
             }
           }
+          else {
+            watchdog('filefield_paths', 'The file %old could not be moved to the destination of %new. Ensure your permissions are set correctly.', array(
+              '%old' => $old_file['uri'],
+              '%new' => $file['uri'],
+            ));
+          }
         }
       }
     }
