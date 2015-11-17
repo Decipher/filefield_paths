@@ -1,6 +1,7 @@
 File (Field) Paths 7.x-1.x-dev, xxxx-xx-xx (development release)
 --------------------------------------------------------------------------------
 
+- #2615704 by morenstrat: Fixed issue with temporary path and schemes.
 - Added variable module integration.
 
 
