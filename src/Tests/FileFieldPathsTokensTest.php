@@ -2,35 +2,37 @@
 
 /**
  * @file
- * Tests for the File (Field) Paths module.
+ * Contains \Drupal\filefield_paths\Tests\FileFieldPathsUpdateTest.
  */
+
+namespace Drupal\filefield_paths\Tests;
 
 /**
- * Class FileFieldPathsTokensTestCase
+ * Test token functionality.
+ *
+ * @group File (Field) Paths
  */
-class FileFieldPathsTokensTestCase extends FileFieldPathsTestCase {
+class FileFieldPathsTokensTest extends FileFieldPathsTestBase {
   /**
-   * @inheritdoc
-   */
-  public static function getInfo() {
-    return array(
-      'name'        => 'Token functionality',
-      'description' => 'Tests File (Field) Paths tokens.',
-      'group'       => 'File (Field) Paths',
-    );
-  }
-
-  /**
-   * @param $token
-   * @param $value
-   * @param $data
+   * Assert that the provided token matches the provided value.
+   *
+   * @param string $token
+   *   The token to test.
+   * @param string $value
+   *   The value to check against the token.
+   * @param array $data
+   *   The data to process the token with.
+   *
+   * @return bool
+   *   TRUE if the assertion succeeded, FALSE otherwise.
    */
   public function assertToken($token, $value, $data) {
-    $result = token_replace($token, $data);
-    $this->assertEqual($result, $value, t('Token @token equals @value', array(
+    $result = \Drupal::token()->replace($token, $data);
+
+    return $this->assertEqual($result, $value, $this->t('Token @token equals @value', [
       '@token' => $token,
-      '@value' => $value
-    )));
+      '@value' => $value,
+    ]));
   }
 
   /**
@@ -38,11 +40,12 @@ class FileFieldPathsTokensTestCase extends FileFieldPathsTestCase {
    */
   public function testTokensBasic() {
     // Prepare a test text file.
+    /** @var \Drupal\file\Entity\File $text_file */
     $text_file = $this->getTestFile('text');
-    file_save($text_file);
+    $text_file->save();
 
     // Ensure tokens are processed correctly.
-    $data = array('file' => $text_file);
+    $data = ['file' => $text_file];
     $this->assertToken('[file:ffp-name-only]', 'text-0', $data);
     $this->assertToken('[file:ffp-name-only-original]', 'text-0', $data);
     $this->assertToken('[file:ffp-extension-original]', 'txt', $data);
@@ -53,14 +56,15 @@ class FileFieldPathsTokensTestCase extends FileFieldPathsTestCase {
    */
   public function testTokensMoved() {
     // Prepare a test text file.
+    /** @var \Drupal\file\Entity\File $text_file */
     $text_file = $this->getTestFile('text');
-    file_save($text_file);
+    $text_file->save();
 
     // Move the text file.
     $moved_file = file_move($text_file, 'public://moved.diff');
 
     // Ensure tokens are processed correctly.
-    $data = array('file' => $moved_file);
+    $data = ['file' => $moved_file];
     $this->assertToken('[file:ffp-name-only]', 'moved', $data);
     $this->assertToken('[file:ffp-name-only-original]', 'text-0', $data);
     $this->assertToken('[file:ffp-extension-original]', 'txt', $data);
@@ -71,14 +75,19 @@ class FileFieldPathsTokensTestCase extends FileFieldPathsTestCase {
    */
   public function testTokensMultiExtension() {
     // Prepare a test text file.
+    /** @var \Drupal\file\Entity\File $text_file */
     $text_file = $this->getTestFile('text');
-    file_unmanaged_copy($text_file->uri, 'public://text.multiext.txt');
-    $files         = file_scan_directory('public://', '/text\.multiext\.txt/');
+    file_unmanaged_copy($text_file->getFileUri(), 'public://text.multiext.txt');
+    $files = file_scan_directory('public://', '/text\.multiext\.txt/');
     $multiext_file = current($files);
-    file_save($multiext_file);
+    /** @var \Drupal\file\Entity\File $multiext_file */
+    $multiext_file = \Drupal::entityTypeManager()
+      ->getStorage('file')
+      ->create((array) $multiext_file);
+    $multiext_file->save();
 
     // Ensure tokens are processed correctly.
-    $data = array('file' => $multiext_file);
+    $data = ['file' => $multiext_file];
     $this->assertToken('[file:ffp-name-only]', 'text.multiext', $data);
     $this->assertToken('[file:ffp-name-only-original]', 'text.multiext', $data);
     $this->assertToken('[file:ffp-extension-original]', 'txt', $data);
@@ -86,18 +95,25 @@ class FileFieldPathsTokensTestCase extends FileFieldPathsTestCase {
 
   /**
    * Test token value with a UTF file.
+   *
    * @see https://www.drupal.org/node/1292436
    */
-  public function testTokensUTF() {
+  public function testTokensUtf() {
     // Prepare a test text file.
+    /** @var \Drupal\file\Entity\File $text_file */
     $text_file = $this->getTestFile('text');
-    file_unmanaged_copy($text_file->uri, 'public://тест.txt');
-    $files    = file_scan_directory('public://', '/тест\.txt/');
+    file_unmanaged_copy($text_file->getFileUri(), 'public://тест.txt');
+    $files = file_scan_directory('public://', '/тест\.txt/');
     $utf_file = current($files);
-    file_save($utf_file);
+    /** @var \Drupal\file\Entity\File $utf_file */
+    $utf_file = \Drupal::entityTypeManager()
+      ->getStorage('file')
+      ->create((array) $utf_file);
+    $utf_file->save();
 
     // Ensure tokens are processed correctly.
-    $data = array('file' => $utf_file);
+    $data = ['file' => $utf_file];
     $this->assertToken('[file:ffp-name-only]', 'тест', $data);
   }
+
 }

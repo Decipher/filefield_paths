@@ -1,0 +1,7 @@
+name: 'File (Field) Paths tests'
+description: 'Support module for File (Field) Paths related testing.'
+package: Testing
+core: 8.x
+type: module
+dependencies:
+  - filefield_paths

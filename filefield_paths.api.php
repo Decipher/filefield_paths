@@ -20,7 +20,7 @@
  *   - title: The title fo the field.
  *   - form: A keyed array of Form API elements.
  *
- * @see hook_filefield_paths_process_file().
+ * @see hook_filefield_paths_process_file()
  */
 function hook_filefield_paths_field_settings($field, $instance) {
   return array(
@@ -44,6 +44,7 @@ function hook_filefield_paths_field_settings($field, $instance) {
  * Declare a compatible field type for use with File (Field) Paths.
  *
  * @return array
+ *   An array of field types.
  */
 function hook_filefield_paths_field_type_info() {
   return array('file');

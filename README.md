@@ -27,7 +27,6 @@ Features
     * Filter out words and punctuation by taking advantage of the Pathauto
       module.
     * Convert unicode characters into US-ASCII with the Transliteration module.
-* Automatically updates unprocessed file paths in any Text fields on the entity.
 * Retroactive updates - rename and/or move previously uploaded files.
 * Active updating - actively rename and/or move previously uploaded files.
 * Create redirect - automatically create a redirect when moving uploaded files,
@@ -41,7 +40,6 @@ Recommended Modules
 * [Pathauto](https://www.drupal.org/project/pathauto)
 * [Redirect](https://www.drupal.org/project/redirect)
 * [Token](https://www.drupal.org/project/token)
-* [Transliteration](https://www.drupal.org/project/transliteration)
 
 
 

@@ -11,8 +11,6 @@ language: php
 sudo: false
 
 php:
-  - 5.3
-  - 5.4
   - 5.5
   - 5.6
   - 7
@@ -38,7 +36,7 @@ env:
     #- DRUPAL_TI_SCRIPT_DIR_AFTER="./drupal_ti/after"
 
     # The environment to use, supported are: drupal-7, drupal-8
-    - DRUPAL_TI_ENVIRONMENT="drupal-7"
+    - DRUPAL_TI_ENVIRONMENT="drupal-8"
 
     # Drupal specific variables.
     - DRUPAL_TI_DB="drupal_travis_db"
@@ -109,7 +107,7 @@ install:
 
 before_script:
   - drupal-ti before_script
-  - drush dl pathauto redirect token transliteration --destination="$TRAVIS_BUILD_DIR/../drupal-7/drupal/sites/all/modules"
+  #- drush dl pathauto redirect token transliteration --destination="$TRAVIS_BUILD_DIR/../drupal-8/drupal/sites/all/modules"
 
 script:
   - drupal-ti script
