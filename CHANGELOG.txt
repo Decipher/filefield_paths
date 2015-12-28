@@ -1,4 +1,4 @@
-File (Field) Paths 8.x-1.x-dev, xxxx-xx-xx (development release)
+File (Field) Paths 8.x-1.0-beta1, 2015-12-25
 --------------------------------------------------------------------------------
 
--
+- Initial Drupal 8 release.
