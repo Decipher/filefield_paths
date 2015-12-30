@@ -94,12 +94,12 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
         foreach (array_keys($settings_field['form']) as $delta => $key) {
           $form['settings']['filefield_paths']['details'][$name][$key] = $settings_field['form'][$key];
           if (\Drupal::moduleHandler()->moduleExists('token')) {
-            // @TODO - Token reporting Drupal default tokens are invalid.
-            //$form['settings']['filefield_paths']['details'][$name][$key]['#element_validate'][] = 'token_element_validate';
-            //$form['settings']['filefield_paths']['details'][$name][$key]['#token_types'] = array(
-            //  'file',
-            //  $entity_info->get('token type'),
-            //);
+            $form['settings']['filefield_paths']['details'][$name][$key]['#element_validate'][] = 'token_element_validate';
+            $form['settings']['filefield_paths']['details'][$name][$key]['#token_types'] = [
+              'date',
+              'file',
+              $entity_info->get('token type'),
+            ];
           }
 
           // Fetch stored value from instance.
