@@ -1,3 +1,10 @@
+File (Field) Paths 7.x-1.x, xxxx-xx-xx (development release)
+--------------------------------------------------------------------------------
+
+- #2643026: Fixed issue when anonymous function not created.
+
+
+
 File (Field) Paths 7.x-1.0, 2015-11-17
 --------------------------------------------------------------------------------
 
