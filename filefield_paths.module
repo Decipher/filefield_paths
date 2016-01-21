@@ -98,7 +98,7 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
             $form['settings']['filefield_paths']['details'][$name][$key]['#token_types'] = [
               'date',
               'file',
-              $entity_info->get('token type'),
+              $entity_info->get('token_type'),
             ];
           }
 
@@ -156,7 +156,7 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
         if (\Drupal::moduleHandler()->moduleExists('token')) {
           $form['settings']['filefield_paths']['details']['token_tree'] = [
             '#theme'       => 'token_tree',
-            '#token_types' => ['file', $entity_info->get('token type')],
+            '#token_types' => ['file', $entity_info->get('token_type')],
             '#dialog'      => TRUE,
             '#weight'      => 10,
           ];
