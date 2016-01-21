@@ -93,6 +93,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
       ->save();
 
     $this->drupalPostForm("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$name}", [], $this->t('Save settings'));
+    $this->assertText($this->t('Saved @name configuration', ['@name' => $name]));
 
     // Clear field cache in order to avoid stale cache values.
     \Drupal::entityManager()->clearCachedFieldDefinitions();

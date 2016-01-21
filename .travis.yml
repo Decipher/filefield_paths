@@ -105,12 +105,8 @@ install:
 
 before_script:
   - drupal-ti before_script
-  - drush dl token --destination="$TRAVIS_BUILD_DIR/../drupal-8/drupal/modules"
-  # A bug in the Token module causes File (Field) Paths tests to fail.
-  # @see https://www.drupal.org/node/2642160
-  - wget https://www.drupal.org/files/issues/file_field_date_token-2642160-3.patch; patch -p1 -d "$TRAVIS_BUILD_DIR/../drupal-8/drupal/modules/token" < file_field_date_token-2642160-3.patch;
+  - drush dl ctools pathauto token --destination="$TRAVIS_BUILD_DIR/../drupal-8/drupal/modules"
   - wget https://github.com/md-systems/redirect/archive/8.x-1.x.zip; unzip 8.x-1.x.zip -d "$TRAVIS_BUILD_DIR/../drupal-8/drupal/modules"; rm 8.x-1.x.zip
-  - wget https://github.com/md-systems/pathauto/archive/8.x-1.x.zip; unzip 8.x-1.x.zip -d "$TRAVIS_BUILD_DIR/../drupal-8/drupal/modules"; rm 8.x-1.x.zip
   #- drush dl pathauto redirect token --destination="$TRAVIS_BUILD_DIR/../drupal-8/drupal/modules"
 
 script:
