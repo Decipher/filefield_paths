@@ -98,8 +98,12 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
             $form['settings']['filefield_paths']['details'][$name][$key]['#token_types'] = [
               'date',
               'file',
-              $entity_info->get('token_type'),
             ];
+            $token_type = \Drupal::service('token.entity_mapper')
+              ->getTokenTypeForEntityType($entity_info->id());
+            if (!empty($token_type)) {
+              $form['settings']['filefield_paths']['details'][$name][$key]['#token_types'][] = $token_type;
+            }
           }
 
           // Fetch stored value from instance.
@@ -156,10 +160,13 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
         if (\Drupal::moduleHandler()->moduleExists('token')) {
           $form['settings']['filefield_paths']['details']['token_tree'] = [
             '#theme'       => 'token_tree',
-            '#token_types' => ['file', $entity_info->get('token_type')],
+            '#token_types' => ['file'],
             '#dialog'      => TRUE,
             '#weight'      => 10,
           ];
+          if (!empty($token_type)) {
+            $form['settings']['filefield_paths']['details']['token_tree']['#token_types'][] = $token_type;
+          }
         }
 
         // Redirect.
