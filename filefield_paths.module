@@ -6,6 +6,7 @@
  */
 
 use Drupal\Component\Utility\Unicode;
+use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -351,13 +352,16 @@ function filefield_paths_entity_update(EntityInterface $entity) {
       if ($field instanceof FileFieldItemList) {
         /** @var FieldConfig $definition */
         $definition = $field->getFieldDefinition();
-        $settings = $definition->getThirdPartySettings('filefield_paths');
-        if (isset($settings['enabled']) && $settings['enabled']) {
-          // Invoke hook_filefield_paths_process_file().
-          foreach (\Drupal::moduleHandler()
-                     ->getImplementations('filefield_paths_process_file') as $module) {
-            if (function_exists($function = "{$module}_filefield_paths_process_file")) {
-              $function($entity, $field, $settings);
+        // Ignore base fields.
+        if ($definition instanceof ThirdPartySettingsInterface) {
+          $settings = $definition->getThirdPartySettings('filefield_paths');
+          if (isset($settings['enabled']) && $settings['enabled']) {
+            // Invoke hook_filefield_paths_process_file().
+            foreach (\Drupal::moduleHandler()
+                       ->getImplementations('filefield_paths_process_file') as $module) {
+              if (function_exists($function = "{$module}_filefield_paths_process_file")) {
+                $function($entity, $field, $settings);
+              }
             }
           }
         }
