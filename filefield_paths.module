@@ -160,9 +160,8 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
         // Replacement patterns for field.
         if (\Drupal::moduleHandler()->moduleExists('token')) {
           $form['settings']['filefield_paths']['details']['token_tree'] = [
-            '#theme'       => 'token_tree',
+            '#theme'       => 'token_tree_link',
             '#token_types' => ['file'],
-            '#dialog'      => TRUE,
             '#weight'      => 10,
           ];
           if (!empty($token_type)) {

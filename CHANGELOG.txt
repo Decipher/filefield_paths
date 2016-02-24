@@ -3,6 +3,7 @@ File (Field) Paths 8.x-1.x-dev, xxxx-xx-xx (development release)
 
 - #2662420 by jonhattan: Fixed issue with Base fields.
 - Fixed issue with Token validation.
+- Fixed issue with Token tree.
 
 
 
