@@ -40,8 +40,9 @@ function filefield_paths_entity_base_field_info(\Drupal\Core\Entity\EntityTypeIn
 function filefield_paths_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state) {
   /** @var Drupal\field\Entity\FieldConfig $field */
   $field = $form_state->getFormObject()->getEntity();
+  $class = $field->getClass();
 
-  if ($field->getClass() == '\Drupal\file\Plugin\Field\FieldType\FileFieldItemList') {
+  if (class_exists($class) && new $class($field->getItemDefinition()) instanceof FileFieldItemList) {
     $entity_info = \Drupal::entityTypeManager()
       ->getDefinition($field->getTargetEntityTypeId());
     $settings = $field->getThirdPartySettings('filefield_paths');
