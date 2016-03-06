@@ -41,16 +41,6 @@ function hook_filefield_paths_field_settings($field, $instance) {
 }
 
 /**
- * Declare a compatible field type for use with File (Field) Paths.
- *
- * @return array
- *   An array of field types.
- */
-function hook_filefield_paths_field_type_info() {
-  return array('file');
-}
-
-/**
  * Process the uploaded files.
  *
  * @param $type
