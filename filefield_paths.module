@@ -397,20 +397,21 @@ function _filefield_paths_create_redirect($source, $path, Language $language) {
       '@path'   => $path,
     ]));
 
+  /** @var \Drupal\Core\Entity\EntityStorageInterface $redirect_storage */
+  $redirect_storage = \Drupal::entityTypeManager()->getStorage('redirect');
   /** @var \Drupal\redirect\Entity\Redirect $redirect */
-  $redirect = \Drupal::entityTypeManager()->getStorage('redirect')->create([]);
+  $redirect = $redirect_storage->create([]);
 
   $parsed_source = parse_url(file_create_url($source), PHP_URL_PATH);
   $parsed_path = parse_url(file_create_url($path), PHP_URL_PATH);
 
   $redirect->setSource($parsed_source);
   $redirect->setRedirect($parsed_path);
+  $redirect->setStatusCode(\Drupal::config('redirect.settings')->get('default_status_code'));
 
   // Check if the redirect exists before saving.
   $hash = $redirect->generateHash($parsed_path, [], $language->getId());
-  $redirects = \Drupal::entityTypeManager()
-    ->getStorage('redirect')
-    ->loadByProperties(['hash' => $hash]);
+  $redirects = $redirect_storage->loadByProperties(['hash' => $hash]);
   if (empty($redirects)) {
     $redirect->save();
   }
