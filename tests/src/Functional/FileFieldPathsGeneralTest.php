@@ -237,7 +237,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
    */
   public function testFileUsage() {
     /** @var \Drupal\node\NodeStorage $node_storage */
-    $node_storage = $this->container->get('entity.manager')->getStorage('node');
+    $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
     /** @var \Drupal\file\FileUsage\FileUsageInterface $file_usage */
     $file_usage = $this->container->get('file.usage');
 
