@@ -5,7 +5,6 @@
  * Contains core functions for the File (Field) Paths module.
  */
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -455,7 +454,7 @@ function filefield_paths_process_string($value, $data, array $settings = []) {
         $pathinfo = pathinfo($path);
         $basename = \Drupal::service('file_system')->basename($path);
         $extension = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
-        $pathinfo['filename'] = !is_null($extension) ? Unicode::substr($basename, 0, Unicode::strlen($basename) - Unicode::strlen($extension)) : $basename;
+        $pathinfo['filename'] = !is_null($extension) ? mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension)) : $basename;
 
         if ($remove_slashes) {
           $path = '';

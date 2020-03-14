@@ -29,7 +29,7 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
    */
   public function testUi() {
     // Create a File field.
-    $field_name = Unicode::strtolower($this->randomMachineName());
+    $field_name = mb_strtolower($this->randomMachineName());
     $this->createFileField($field_name, 'node', $this->contentType);
 
     // Ensure File (Field) Paths Pathauto settings are present and available.
@@ -47,7 +47,7 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
    */
   public function testPathauto() {
     // Create a File field.
-    $field_name = Unicode::strtolower($this->randomMachineName());
+    $field_name = mb_strtolower($this->randomMachineName());
 
     $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:title]';
     $third_party_settings['filefield_paths']['file_path']['options']['pathauto'] = TRUE;

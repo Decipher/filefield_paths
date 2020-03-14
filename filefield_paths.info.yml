@@ -5,7 +5,7 @@ configure: filefield_paths.admin_settings
 core: 8.x
 type: module
 dependencies:
-  - drupal:file
+  - drupal:file (>= 8.8.0)
 test_dependencies:
   - ctools:ctools
   - pathauto:pathauto

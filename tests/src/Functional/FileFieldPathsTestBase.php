@@ -58,7 +58,9 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    *   A list of widget settings that will be added to the widget defaults.
    */
   public function createFileField($name, $entity_type, $bundle, $storage_settings = [], $field_settings = [], $third_party_settings = [], $widget_settings = []) {
-    $field_storage = entity_create('field_storage_config', [
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $field_storage = $entity_type_manager->getStorage('field_storage_config')
+      ->create([
       'entity_type' => $entity_type,
       'field_name'  => $name,
       'type'        => 'file',
@@ -76,16 +78,21 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
       'settings'             => $field_settings,
       'third_party_settings' => $third_party_settings,
     ];
-    entity_create('field_config', $field)->save();
+    $entity_type_manager->getStorage('field_config')
+      ->create($field)
+      ->save();
 
-    entity_get_form_display($entity_type, $bundle, 'default')
+
+    /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $edr */
+    $edr = \Drupal::service('entity_display.repository');
+    $edr->getFormDisplay($entity_type, $bundle, 'default')
       ->setComponent($name, [
         'type'     => 'file_generic',
         'settings' => $widget_settings,
       ])
       ->save();
     // Assign display settings.
-    entity_get_display($entity_type, $bundle, 'default')
+    $edr->getViewDisplay($entity_type, $bundle, 'default')
       ->setComponent($name, [
         'label' => 'hidden',
         'type'  => 'file_default',
@@ -117,15 +124,18 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    *   A image field configuration entity.
    */
   public function createImageField($name, $type_name, $storage_settings = [], $field_settings = [], $third_party_settings = [], $widget_settings = []) {
-    entity_create('field_storage_config', [
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $field_storage = $entity_type_manager->getStorage('field_storage_config')->create([
       'field_name'  => $name,
       'entity_type' => 'node',
       'type'        => 'image',
       'settings'    => $storage_settings,
       'cardinality' => !empty($storage_settings['cardinality']) ? $storage_settings['cardinality'] : 1,
-    ])->save();
+    ]);
+    $field_storage->save();
 
-    $field_config = entity_create('field_config', [
+    $field_config = $entity_type_manager->getStorage('field_config')
+      ->create([
       'field_name'           => $name,
       'label'                => $name,
       'entity_type'          => 'node',
@@ -136,14 +146,16 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
     ]);
     $field_config->save();
 
-    entity_get_form_display('node', $type_name, 'default')
+    /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $edr */
+    $edr = \Drupal::service('entity_display.repository');
+    $edr->getFormDisplay('node', $type_name, 'default')
       ->setComponent($name, [
         'type'     => 'image_image',
         'settings' => $widget_settings,
       ])
       ->save();
 
-    entity_get_display('node', $type_name, 'default')
+    $edr->getViewDisplay('node', $type_name, 'default')
       ->setComponent($name)
       ->save();
 

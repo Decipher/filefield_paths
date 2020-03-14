@@ -2,8 +2,6 @@
 
 namespace Drupal\Tests\filefield_paths\Functional;
 
-use Drupal\Component\Utility\Unicode;
-
 /**
  * Test update functionality.
  *
@@ -15,7 +13,7 @@ class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
    */
   public function testRetroEmpty() {
     // Create a File field.
-    $field_name = Unicode::strtolower($this->randomMachineName());
+    $field_name = mb_strtolower($this->randomMachineName());
     $this->createFileField($field_name, 'node', $this->contentType);
 
     // Trigger retroactive updates.
@@ -33,7 +31,7 @@ class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
    */
   public function testRetroBasic() {
     // Create an Image field.
-    $field_name = Unicode::strtolower($this->randomMachineName());
+    $field_name = mb_strtolower($this->randomMachineName());
     $this->createImageField($field_name, $this->contentType, []);
 
     // Modify display settings.

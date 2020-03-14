@@ -17,7 +17,7 @@ class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
    */
   public function testUi() {
     // Create a File field.
-    $field_name = Unicode::strtolower($this->randomMachineName());
+    $field_name = mb_strtolower($this->randomMachineName());
     $this->createFileField($field_name, 'node', $this->contentType);
 
     // Ensure File (Field) Paths Transliteration settings are present and
@@ -36,7 +36,7 @@ class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
    */
   public function testTransliteration() {
     // Create a File field.
-    $field_name = Unicode::strtolower($this->randomMachineName());
+    $field_name = mb_strtolower($this->randomMachineName());
 
     $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:title]';
     $third_party_settings['filefield_paths']['file_path']['options']['transliterate'] = TRUE;

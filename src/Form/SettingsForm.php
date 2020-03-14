@@ -2,8 +2,13 @@
 
 namespace Drupal\filefield_paths\Form;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\File\FileSystem;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
@@ -12,6 +17,32 @@ use Symfony\Component\HttpFoundation\Request;
  * @package Drupal\filefield_paths\Form
  */
 class SettingsForm extends ConfigFormBase {
+
+  /**
+   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
+   */
+  protected $streamWrapperManager;
+
+  /**
+   * @var \Drupal\Core\File\FileSystemInterface
+   */
+  protected $fileSystem;
+
+  public function __construct(ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system) {
+    parent::__construct($config_factory);
+    $this->streamWrapperManager = $stream_wrapper_manager;
+    $this->fileSystem = $file_system;
+  }
+
+
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('config.factory'),
+      $container->get('stream_wrapper_manager'),
+      $container->get('file_system')
+    );
+  }
+
 
   /**
    * {@inheritdoc}
@@ -34,11 +65,11 @@ class SettingsForm extends ConfigFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, Request $request = NULL) {
     $form['temp_location'] = array(
-      '#title'         => t('Temporary file location'),
+      '#title'         => $this->t('Temporary file location'),
       '#type'          => 'textfield',
       '#default_value' => $this->config('filefield_paths.settings')
         ->get('temp_location'),
-      '#description'   => t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.<br />It is recommended that you use the temporary file system (temporary://) if your server configuration allows for that.'),
+      '#description'   => $this->t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.<br />It is recommended that you use the temporary file system (temporary://) if your server configuration allows for that.'),
     );
 
     return parent::buildForm($form, $form_state);
@@ -49,22 +80,21 @@ class SettingsForm extends ConfigFormBase {
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
     $values = $form_state->getValues();
-    $scheme = file_uri_scheme($values['temp_location']);
+    $scheme = $this->streamWrapperManager->getScheme($values['temp_location']);
     if (!$scheme) {
-      $form_state->setErrorByName('temp_location', t('Invalid file location. You must include a file stream wrapper (e.g., public://).'));
+      $form_state->setErrorByName('temp_location', $this->t('Invalid file location. You must include a file stream wrapper (e.g., public://).'));
 
       return FALSE;
     }
 
-    $file_system = \Drupal::service('file_system');
-    if (!$file_system->validScheme($scheme)) {
-      $form_state->setErrorByName('temp_location', t('Invalid file stream wrapper.'));
+    if (!$this->streamWrapperManager->isValidScheme($scheme)) {
+      $form_state->setErrorByName('temp_location', $this->t('Invalid file stream wrapper.'));
 
       return FALSE;
     }
 
-    if ((!is_dir($values['temp_location']) || !is_writable($values['temp_location'])) && !file_prepare_directory($values['temp_location'], FILE_CREATE_DIRECTORY | FILE_MODIFY_PERMISSIONS)) {
-      $form_state->setErrorByName('temp_location', t('File location can not be created or is not writable.'));
+    if ((!is_dir($values['temp_location']) || !is_writable($values['temp_location'])) && !$this->fileSystem->prepareDirectory($values['temp_location'], FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
+      $form_state->setErrorByName('temp_location', $this->t('File location can not be created or is not writable.'));
 
       return FALSE;
     }

@@ -5,8 +5,8 @@
  * File (Field) Paths module integration.
  */
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\File\FileSystem;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 
@@ -98,19 +98,20 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
       $settings['file_path']['options']['context'] = 'file_path';
       $path = filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
 
-      $destination = file_stream_wrapper_uri_normalize($field_storage->getSetting('uri_scheme') . '://' . $path . DIRECTORY_SEPARATOR . $name);
+      $destination = \Drupal::service('stream_wrapper_manager')
+          ->normalizeUri($field_storage->getSetting('uri_scheme') . '://' . $path . DIRECTORY_SEPARATOR . $name);
 
       // Ensure file uri is no more than 255 characters.
-      if (Unicode::strlen($destination) > 255) {
+      if (mb_strlen($destination) > 255) {
         \Drupal::logger('filefield_paths')->info(t('File path was truncated'));
         $pathinfo = pathinfo($destination);
-        $destination = Unicode::substr($destination, 0, 254 - Unicode::strlen($pathinfo['extension'])) . ".{$pathinfo['extension']}";
+        $destination = mb_substr($destination, 0, 254 - mb_strlen($pathinfo['extension'])) . ".{$pathinfo['extension']}";
       }
 
       // Finalize file if necessary.
       if ($file->getFileUri() !== $destination) {
         $dirname = $file_system->dirname($destination);
-        if (file_prepare_directory($dirname, FILE_CREATE_DIRECTORY) && $new_file = file_move($file, $destination)) {
+        if (\Drupal::service('file_system')->prepareDirectory($dirname, FileSystem::CREATE_DIRECTORY) && $new_file = file_move($file, $destination)) {
           // Create redirect from old location.
           if (\Drupal::moduleHandler()
               ->moduleExists('redirect') && !empty($settings['redirect']) && $settings['active_updating']

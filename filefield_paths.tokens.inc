@@ -5,7 +5,6 @@
  * Tokens for the File (Field) Paths module.
  */
 
-use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Render\BubbleableMetadata;
 
 /**
@@ -52,13 +51,13 @@ function filefield_paths_tokens($type, $tokens, array $data, array $options, Bub
         case 'ffp-name-only':
           $basename = $file_system->basename($file->filename->value);
           $extension = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
-          $replacements[$original] = !is_null($extension) ? Unicode::substr($basename, 0, Unicode::strlen($basename) - Unicode::strlen($extension)) : $basename;
+          $replacements[$original] = !is_null($extension) ? mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension)) : $basename;
           break;
 
         case 'ffp-name-only-original':
           $basename = $file_system->basename($file->origname->value);
           $extension = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
-          $replacements[$original] = !is_null($extension) ? Unicode::substr($basename, 0, Unicode::strlen($basename) - Unicode::strlen($extension)) : $basename;
+          $replacements[$original] = !is_null($extension) ? mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension)) : $basename;
           break;
 
         case 'ffp-extension-original':
