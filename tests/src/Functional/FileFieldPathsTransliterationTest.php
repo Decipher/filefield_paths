@@ -24,10 +24,11 @@ class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
     // available.
     $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
     foreach (['path', 'name'] as $field) {
-      $this->assertField("third_party_settings[filefield_paths][file_{$field}][options][transliterate]", $this->t('Transliteration checkbox is present in File @field settings.', ['@field' => Unicode::ucfirst($field)]));
+      // Transliteration checkbox is present in File settings.
+      $this->assertField("third_party_settings[filefield_paths][file_{$field}][options][transliterate]");
 
       $element = $this->xpath('//input[@name=:name]/@disabled', [':name' => "third_party_settings[filefield_paths][file_{$field}][options][transliterate]"]);
-      $this->assert(empty($element), $this->t('Transliteration checkbox is not disabled in File @field settings.', ['@field' => Unicode::ucfirst($field)]));
+      $this->assertEmpty($element, 'Transliteration checkbox is not disabled in File ' . Unicode::ucfirst($field) . ' settings.');
     }
   }
 
@@ -52,7 +53,8 @@ class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
 
     $edit['files[' . $field_name . '_0]'] = \Drupal::service('file_system')
       ->realpath($test_file->getFileUri());
-    $this->drupalPostForm("node/add/{$this->contentType}", $edit, $this->t('Save'));
+    $this->drupalGet("node/add/{$this->contentType}");
+    $this->submitForm($edit, 'Save');
 
     // Get created Node ID.
     $matches = [];
@@ -61,8 +63,8 @@ class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
 
     // Ensure that file path/name have been processed correctly by
     // Transliteration.
-    $node = Node::load($nid);
-    $this->assertEqual($node->{$field_name}[0]->entity->getFileUri(), "public://node/test/test.txt", $this->t('File path/name has been processed correctly by Transliteration'));
+    $node = \Drupal::entitytypeManager()->getStorage('node')->load($nid);
+    $this->assertEqual($node->{$field_name}[0]->entity->getFileUri(), "public://node/test/test.txt", 'File path/name has been processed correctly by Transliteration');
   }
 
 }

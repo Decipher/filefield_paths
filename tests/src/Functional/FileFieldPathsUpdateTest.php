@@ -8,6 +8,7 @@ namespace Drupal\Tests\filefield_paths\Functional;
  * @group File (Field) Paths
  */
 class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
+
   /**
    * Test behaviour of Retroactive updates when no updates are needed.
    */
@@ -20,10 +21,13 @@ class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
     $edit = [
       'third_party_settings[filefield_paths][retroactive_update]' => TRUE,
     ];
-    $this->drupalPostForm("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}", $edit, $this->t('Save settings'));
+    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
+    $this->submitForm($edit, 'Save settings');
 
-    // Ensure no errors are thrown.
-    $this->assertNoText('Error', t('No errors were found.'));
+    // Ensure that no errors are thrown.
+    // No errors were found.
+    $this->assertSession()->pageTextNotContains('The website encountered an unexpected error.');
+    $this->assertSession()->pageTextContains("Saved {$field_name} configuration.");
   }
 
   /**
@@ -56,17 +60,19 @@ class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
     /** @var \Drupal\file\Entity\File $test_file */
     $test_file = $this->getTestFile('image');
     $nid = $this->uploadNodeFile($test_file, $field_name, $this->contentType);
-    $this->drupalPostForm(NULL, ["{$field_name}[0][alt]" => $this->randomString()], $this->t('Save'));
+    $this->submitForm(["{$field_name}[0][alt]" => $this->randomString()], 'Save');
 
     // Ensure that the file is in the default path.
     $this->drupalGet("node/{$nid}");
     $date = date('Y-m');
-    $this->assertRaw("{$this->publicFilesDirectory}/styles/thumbnail/public/{$date}/{$test_file->getFilename()}", $this->t('The File is in the default path.'));
+    // The File is in the default path.
+    $this->assertRaw("{$this->publicFilesDirectory}/styles/thumbnail/public/{$date}/{$test_file->getFilename()}");
 
     // Trigger retroactive updates.
+    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
     $edit['third_party_settings[filefield_paths][retroactive_update]'] = TRUE;
     $edit['third_party_settings[filefield_paths][file_path][value]'] = 'node/[node:nid]';
-    $this->drupalPostForm("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}", $edit, $this->t('Save settings'));
+    $this->submitForm($edit, 'Save settings');
 
     // Ensure display settings haven't changed.
     // @see https://www.drupal.org/node/2276435
@@ -74,11 +80,12 @@ class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
     $display = \Drupal::entityTypeManager()
       ->getStorage('entity_view_display')
       ->load("node.{$this->contentType}.default");
-    $this->assert($original_display->getComponent($field_name) === $display->getComponent($field_name), t('Display settings have not changed.'));
+    $this->assertSame($original_display->getComponent($field_name), $display->getComponent($field_name), 'Display settings have not changed.');
 
     // Ensure that the file path has been retroactively updated.
     $this->drupalGet("node/{$nid}");
-    $this->assertRaw("{$this->publicFilesDirectory}/styles/thumbnail/public/node/{$nid}/{$test_file->getFilename()}", $this->t('The File path has been retroactively updated.'));
+    // The File path has been retroactively updated.
+    $this->assertRaw("{$this->publicFilesDirectory}/styles/thumbnail/public/node/{$nid}/{$test_file->getFilename()}");
   }
 
 }

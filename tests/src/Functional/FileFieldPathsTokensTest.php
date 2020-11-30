@@ -17,17 +17,11 @@ class FileFieldPathsTokensTest extends FileFieldPathsTestBase {
    *   The value to check against the token.
    * @param array $data
    *   The data to process the token with.
-   *
-   * @return bool
-   *   TRUE if the assertion succeeded, FALSE otherwise.
    */
   public function assertToken($token, $value, $data) {
     $result = \Drupal::token()->replace($token, $data);
 
-    return $this->assertEqual($result, $value, $this->t('Token @token equals @value', [
-      '@token' => $token,
-      '@value' => $value,
-    ]));
+    $this->assertEquals($value, $result, "Token {$token} equals {$value}");
   }
 
   /**

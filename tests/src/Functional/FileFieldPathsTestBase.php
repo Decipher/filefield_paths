@@ -10,7 +10,7 @@ use Drupal\Tests\TestFileCreationTrait;
  * Base class for File (Field) Paths tests.
  */
 abstract class FileFieldPathsTestBase extends FileFieldTestBase {
-  use StringTranslationTrait;
+
   use TestFileCreationTrait {
     getTestFiles as drupalGetTestFiles;
     compareFiles as drupalCompareFiles;
@@ -23,7 +23,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'filefield_paths_test',
     'file_test',
     'image',
@@ -31,9 +31,14 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
   ];
 
   /**
+   * {@inheritdoc}
+   */
+  protected $defaultTheme = 'stark';
+
+  /**
    * Sets up a Drupal site for running functional and integration tests.
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
 
     // Create a content type.
@@ -99,8 +104,9 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
       ])
       ->save();
 
-    $this->drupalPostForm("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$name}", [], $this->t('Save settings'));
-    $this->assertSession()->pageTextContains($this->t('Saved @name configuration', ['@name' => $name]));
+    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$name}");
+    $this->submitForm([], 'Save settings');
+    $this->assertSession()->pageTextContains("Saved {$name} configuration");
 
     // Clear field cache in order to avoid stale cache values.
     \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
@@ -159,7 +165,8 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
       ->setComponent($name)
       ->save();
 
-    $this->drupalPostForm("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$name}", [], $this->t('Save settings'));
+    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$name}");
+    $this->submitForm([], 'Save settings');
 
     return $field_config;
   }

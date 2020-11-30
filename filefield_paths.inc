@@ -116,7 +116,7 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
           if (\Drupal::moduleHandler()
               ->moduleExists('redirect') && !empty($settings['redirect']) && $settings['active_updating']
           ) {
-            _filefield_paths_create_redirect($file->getFileUri(), $new_file->getFileUri(), $file->language());
+            \Drupal::service('filefield_paths.redirect')->createRedirect($file->getFileUri(), $new_file->getFileUri(), $file->language());
           }
 
           // Remove any old empty directories.

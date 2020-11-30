@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\filefield_paths\Functional;
 
+use Drupal\Core\StreamWrapper\PublicStream;
+
 /**
  * Test redirect module integration.
  *
@@ -13,7 +15,7 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'filefield_paths_test',
     'file_test',
     'image',
@@ -31,7 +33,7 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
   /**
    * {@inheritdoc}
    */
-  protected function setUp() {
+  protected function setUp(): void {
     parent::setUp();
     $this->entityTypeManager = $this->container->get('entity_type.manager');
   }
@@ -50,18 +52,20 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
     $this->assertSession()->fieldExists('third_party_settings[filefield_paths][redirect]');
 
     $element = $this->xpath('//input[@name=:name]/@disabled', [':name' => 'third_party_settings[filefield_paths][redirect]']);
-    $this->assertTrue(empty($element), $this->t('Redirect checkbox is not disabled.'));
+    $this->assertEmpty($element, 'Redirect checkbox is not disabled.');
   }
 
   /**
    * Test File (Field) Paths Redirect functionality.
    */
   public function testRedirect() {
-    global $base_path;
+    // Get the public file path.
+    $public_path = PublicStream::basePath();
 
     // Create a File field with a random File path.
+    $source_dir = $this->randomMachineName();
     $field_name = mb_strtolower($this->randomMachineName());
-    $third_party_settings['filefield_paths']['file_path']['value'] = $this->randomMachineName();
+    $third_party_settings['filefield_paths']['file_path']['value'] = $source_dir;
     $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
 
     // Create a node with a test file.
@@ -69,35 +73,23 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
     $test_file = $this->getTestFile('text');
     $nid = $this->uploadNodeFile($test_file, $field_name, $this->contentType);
 
-    /** @var \Drupal\node\NodeStorageInterface $node_storage */
-    $node_storage = $this->entityTypeManager->getStorage('node');
-    // Get processed source file uri.
-    $node_storage->resetCache([$nid]);
-    $node = $node_storage->load($nid);
-    $source = $node->{$field_name}[0]->entity->getFileUri();
-
     // Update file path and create redirect.
+    $destination_dir = $this->randomMachineName();
     $edit = [
-      'third_party_settings[filefield_paths][file_path][value]'   => $this->randomMachineName(),
+      'third_party_settings[filefield_paths][file_path][value]'   => $destination_dir,
       'third_party_settings[filefield_paths][redirect]'           => TRUE,
       'third_party_settings[filefield_paths][retroactive_update]' => TRUE,
     ];
-    $this->drupalPostForm("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}", $edit, $this->t('Save settings'));
+    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
+    $this->submitForm($edit,'Save settings');
+    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
 
-    // Get processed destination file uri.
-    $node_storage->resetCache([$nid]);
-    $node = $node_storage->load($nid);
-    $destination = $node->{$field_name}[0]->entity->getFileUri();
-
-    // Ensure that the source uri redirects to the destination uri.
-    $parsed_source = parse_url(file_create_url($source), PHP_URL_PATH);
-    $redirect_source = mb_substr(urldecode($parsed_source), mb_strlen($base_path));
-
-    $parsed_destination = parse_url(file_create_url($destination), PHP_URL_PATH);
-    $redirect_destination = mb_substr(urldecode($parsed_destination), mb_strlen($base_path));
-
-    $redirects = redirect_repository()->findBySourcePath($redirect_source);
-    $this->assertTrue(!empty($redirects) && (reset($redirects)->getSource()['path'] === $redirect_destination), $this->t('Redirect created for relocated file.'));
+    // Check if a redirect has been created.
+    $expected_redirect_source = $public_path . '/' . $source_dir . '/text-0.txt';
+    $expected_redirect_destination = 'internal:/' . $public_path . '/' . $destination_dir . '/text-0.txt';
+    $redirects = redirect_repository()->findBySourcePath($expected_redirect_source);
+    $redirect = reset($redirects);
+    $this->assertSame($expected_redirect_destination, $redirect->getRedirect()['uri'], 'Redirect created for relocated file.');
   }
 
 }

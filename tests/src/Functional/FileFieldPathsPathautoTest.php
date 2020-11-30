@@ -16,7 +16,7 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
    *
    * @var array
    */
-  public static $modules = [
+  protected static $modules = [
     'filefield_paths_test',
     'file_test',
     'image',
@@ -34,11 +34,13 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
 
     // Ensure File (Field) Paths Pathauto settings are present and available.
     $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
+    $session = $this->assertSession();
     foreach (['path', 'name'] as $field) {
-      $this->assertField("third_party_settings[filefield_paths][file_{$field}][options][pathauto]", t('Pathauto checkbox is present in File @field settings.', ['@field' => Unicode::ucfirst($field)]));
+      // Pathauto checkbox is present in File settings.
+      $session->fieldExists("third_party_settings[filefield_paths][file_{$field}][options][pathauto]");
 
       $element = $this->xpath('//input[@name=:name]/@disabled', [':name' => "third_party_settings[filefield_paths][file_{$field}][options][pathauto]"]);
-      $this->assert(empty($element), t('Pathauto checkbox is not disabled in File @field settings.', ['@field' => Unicode::ucfirst($field)]));
+      $this->assertEmpty($element, 'Pathauto checkbox is not disabled in File ' . Unicode::ucfirst($field) . ' settings.');
     }
   }
 
@@ -59,15 +61,19 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
     // Create a node with a test file.
     /** @var \Drupal\file\Entity\File $test_file */
     $test_file = $this->getTestFile('text');
-    $edit['title[0][value]'] = $this->randomString() . ' ' . $this->randomString();
+    $node_title = $this->randomString() . ' ' . $this->randomString();
+    $edit['title[0][value]'] = $node_title;
 
     $edit['files[' . $field_name . '_0]'] = \Drupal::service('file_system')
       ->realpath($test_file->getFileUri());
-    $this->drupalPostForm("node/add/{$this->contentType}", $edit, $this->t('Save'));
+    $this->drupalGet("node/add/{$this->contentType}");
+    $this->submitForm($edit, 'Save');
 
     // Ensure that file path/name have been processed correctly by Pathauto.
-    /** @var \Drupal\node\Entity\Node $node */
-    $node = Node::load(1);
+    /** @var \Drupal\node\NodeInterface[] $nodes */
+    $nodes = \Drupal::service('entity_type.manager')->getStorage('node')
+      ->loadByProperties(['title' => $node_title]);
+    $node = reset($nodes);
 
     $parts = explode('/', $node->getTitle());
     foreach ($parts as &$part) {
@@ -75,7 +81,7 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
     }
     $title = implode('/', $parts);
 
-    $this->assertEqual($node->{$field_name}[0]->entity->getFileUri(), "public://node/{$title}/{$title}.txt", $this->t('File path/name has been processed correctly by Pathauto'));
+    $this->assertSame("public://node/{$title}/{$title}.txt", $node->{$field_name}[0]->entity->getFileUri(), 'File path/name has been processed correctly by Pathauto');
   }
 
 }
