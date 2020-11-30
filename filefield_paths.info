@@ -7,6 +7,7 @@ test_dependencies[] = token
 test_dependencies[] = transliteration
 configure = admin/config/media/file-system/filefield-paths
 core = 7.x
+php = 5.3
 
 
 
