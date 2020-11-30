@@ -16,7 +16,7 @@ function filefield_paths_settings_form($form, $form_state) {
     '#title'            => t('Temporary file location'),
     '#type'             => 'textfield',
     '#default_value'    => variable_get('filefield_paths_temp_location', 'public://filefield_paths'),
-    '#description'      => t('The location that unprocessed files will be uploaded priot to being processed by File (Field) Paths.<br />It is recommended that you use the temporary file system (temporary://) if your server configuration allows for that.'),
+    '#description'      => t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.<br />It is recommended that you use the temporary file system (temporary://) if your server configuration allows for that.'),
     '#element_validate' => array('filefield_paths_settings_form_temp_location_validate'),
   );
 
