@@ -8,6 +8,7 @@ namespace Drupal\Tests\filefield_paths\Functional;
  * @group File (Field) Paths
  */
 class FileFieldPathsTokensTest extends FileFieldPathsTestBase {
+
   /**
    * Assert that the provided token matches the provided value.
    *
@@ -18,7 +19,7 @@ class FileFieldPathsTokensTest extends FileFieldPathsTestBase {
    * @param array $data
    *   The data to process the token with.
    */
-  public function assertToken($token, $value, $data) {
+  public function assertToken($token, $value, array $data) {
     $result = \Drupal::token()->replace($token, $data);
 
     $this->assertEquals($value, $result, "Token {$token} equals {$value}");

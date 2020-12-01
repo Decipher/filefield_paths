@@ -17,25 +17,25 @@ function filefield_paths_filefield_paths_field_settings($form) {
   return [
     'file_path' => [
       'title' => 'File path',
-      'form'  => [
+      'form' => [
         'value' => [
-          '#type'             => 'textfield',
-          '#title'            => t('File path'),
-          '#maxlength'        => 512,
-          '#size'             => 128,
+          '#type' => 'textfield',
+          '#title' => t('File path'),
+          '#maxlength' => 512,
+          '#size' => 128,
           '#element_validate' => $form['settings']['file_directory']['#element_validate'],
-          '#default_value'    => $form['settings']['file_directory']['#default_value'],
+          '#default_value' => $form['settings']['file_directory']['#default_value'],
         ],
       ],
     ],
     'file_name' => [
       'title' => 'File name',
-      'form'  => [
+      'form' => [
         'value' => [
-          '#type'          => 'textfield',
-          '#title'         => t('File name'),
-          '#maxlength'     => 512,
-          '#size'          => 128,
+          '#type' => 'textfield',
+          '#title' => t('File name'),
+          '#maxlength' => 512,
+          '#size' => 128,
           '#default_value' => '[file:ffp-name-only-original].[file:ffp-extension-original]',
         ],
       ],
@@ -83,7 +83,7 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
       }
 
       $token_data = [
-        'file'                     => $file,
+        'file' => $file,
         $entity->getEntityTypeId() => $entity,
       ];
 
@@ -99,7 +99,7 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
       $path = filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
 
       $destination = \Drupal::service('stream_wrapper_manager')
-          ->normalizeUri($field_storage->getSetting('uri_scheme') . '://' . $path . DIRECTORY_SEPARATOR . $name);
+        ->normalizeUri($field_storage->getSetting('uri_scheme') . '://' . $path . DIRECTORY_SEPARATOR . $name);
 
       // Ensure file uri is no more than 255 characters.
       if (mb_strlen($destination) > 255) {
@@ -111,12 +111,17 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
       // Finalize file if necessary.
       if ($file->getFileUri() !== $destination) {
         $dirname = $file_system->dirname($destination);
-        if (\Drupal::service('file_system')->prepareDirectory($dirname, FileSystem::CREATE_DIRECTORY) && $new_file = file_move($file, $destination)) {
+        if (
+          \Drupal::service('file_system')->prepareDirectory($dirname, FileSystem::CREATE_DIRECTORY)
+          && $new_file = file_move($file, $destination)
+        ) {
           // Create redirect from old location.
-          if (\Drupal::moduleHandler()
-              ->moduleExists('redirect') && !empty($settings['redirect']) && $settings['active_updating']
+          if (
+            \Drupal::moduleHandler()->moduleExists('redirect')
+            && !empty($settings['redirect']) && $settings['active_updating']
           ) {
-            \Drupal::service('filefield_paths.redirect')->createRedirect($file->getFileUri(), $new_file->getFileUri(), $file->language());
+            \Drupal::service('filefield_paths.redirect')
+              ->createRedirect($file->getFileUri(), $new_file->getFileUri(), $file->language());
           }
 
           // Remove any old empty directories.

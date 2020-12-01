@@ -3,7 +3,6 @@
 namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Component\Utility\Unicode;
-use Drupal\node\Entity\Node;
 
 /**
  * Test pathauto integration.
@@ -11,6 +10,7 @@ use Drupal\node\Entity\Node;
  * @group File (Field) Paths
  */
 class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
+
   /**
    * Modules to enable.
    *

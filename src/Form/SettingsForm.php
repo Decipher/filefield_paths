@@ -19,22 +19,31 @@ use Symfony\Component\HttpFoundation\Request;
 class SettingsForm extends ConfigFormBase {
 
   /**
+   * Stream wrapper manager.
+   *
    * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
    */
   protected $streamWrapperManager;
 
   /**
+   * Fi;esystem service.
+   *
    * @var \Drupal\Core\File\FileSystemInterface
    */
   protected $fileSystem;
 
+  /**
+   * {@inheritdoc}
+   */
   public function __construct(ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system) {
     parent::__construct($config_factory);
     $this->streamWrapperManager = $stream_wrapper_manager;
     $this->fileSystem = $file_system;
   }
 
-
+  /**
+   * {@inheritdoc}
+   */
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
@@ -42,7 +51,6 @@ class SettingsForm extends ConfigFormBase {
       $container->get('file_system')
     );
   }
-
 
   /**
    * {@inheritdoc}
@@ -64,13 +72,13 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, Request $request = NULL) {
-    $form['temp_location'] = array(
-      '#title'         => $this->t('Temporary file location'),
-      '#type'          => 'textfield',
+    $form['temp_location'] = [
+      '#title' => $this->t('Temporary file location'),
+      '#type' => 'textfield',
       '#default_value' => $this->config('filefield_paths.settings')
         ->get('temp_location'),
-      '#description'   => $this->t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.<br />It is recommended that you use the temporary file system (temporary://) if your server configuration allows for that.'),
-    );
+      '#description' => $this->t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.<br />It is recommended that you use the temporary file system (temporary://) if your server configuration allows for that.'),
+    ];
 
     return parent::buildForm($form, $form_state);
   }

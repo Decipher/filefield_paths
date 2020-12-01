@@ -10,6 +10,7 @@ use Drupal\Core\StreamWrapper\PublicStream;
  * @group File (Field) Paths
  */
 class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
+
   /**
    * Modules to enable.
    *
@@ -49,7 +50,8 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
     // Ensure File (Field) Paths Pathauto settings are present and available.
     $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
     // Redirect checkbox is present in File (Field) Path settings.
-    $this->assertSession()->fieldExists('third_party_settings[filefield_paths][redirect]');
+    $this->assertSession()
+      ->fieldExists('third_party_settings[filefield_paths][redirect]');
 
     $element = $this->xpath('//input[@name=:name]/@disabled', [':name' => 'third_party_settings[filefield_paths][redirect]']);
     $this->assertEmpty($element, 'Redirect checkbox is not disabled.');
@@ -76,12 +78,12 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
     // Update file path and create redirect.
     $destination_dir = $this->randomMachineName();
     $edit = [
-      'third_party_settings[filefield_paths][file_path][value]'   => $destination_dir,
-      'third_party_settings[filefield_paths][redirect]'           => TRUE,
+      'third_party_settings[filefield_paths][file_path][value]' => $destination_dir,
+      'third_party_settings[filefield_paths][redirect]' => TRUE,
       'third_party_settings[filefield_paths][retroactive_update]' => TRUE,
     ];
     $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
-    $this->submitForm($edit,'Save settings');
+    $this->submitForm($edit, 'Save settings');
     $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
 
     // Check if a redirect has been created.

@@ -51,7 +51,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
 
     // Create a node without a file attached.
-    $this->drupalGet('node/add/'. $this->contentType);
+    $this->drupalGet('node/add/' . $this->contentType);
     $this->submitForm(
       ['title[0][value]' => $this->randomMachineName(8)],
       'Save'
@@ -116,7 +116,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $this->submitForm(["files[{$field_name}_0][]" => $file_system->realpath($text_files[0]->uri)], 'Upload');
     $this->submitForm(["files[{$field_name}_1][]" => $file_system->realpath($text_files[1]->uri)], 'Upload');
     $edit = [
-      'title[0][value]'          => $this->randomMachineName(),
+      'title[0][value]' => $this->randomMachineName(),
       "files[{$field_name}_2][]" => $file_system->realpath($text_files[1]->uri),
     ];
     $this->submitForm($edit, 'Save');
@@ -222,7 +222,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $edit = [
       'third_party_settings[filefield_paths][file_path][options][slashes]' => TRUE,
       'third_party_settings[filefield_paths][file_name][options][slashes]' => TRUE,
-      'third_party_settings[filefield_paths][retroactive_update]'          => TRUE,
+      'third_party_settings[filefield_paths][retroactive_update]' => TRUE,
     ];
     $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
     $this->submitForm($edit, 'Save settings');
@@ -242,7 +242,8 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
    */
   public function testFileUsage() {
     /** @var \Drupal\node\NodeStorage $node_storage */
-    $node_storage = $this->container->get('entity_type.manager')->getStorage('node');
+    $node_storage = $this->container->get('entity_type.manager')
+      ->getStorage('node');
     /** @var \Drupal\file\FileUsage\FileUsageInterface $file_usage */
     $file_usage = $this->container->get('file.usage');
 
@@ -264,7 +265,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
 
     // Ensure file usage count for new node is correct.
     $this->assertNotEmpty($usage['file']['node'][$nid]);
-    $this->assertSame(1, (int) $usage['file']['node'][$nid],  'File usage count for new node is correct.');
+    $this->assertSame(1, (int) $usage['file']['node'][$nid], 'File usage count for new node is correct.');
 
     // Update node.
     $this->drupalGet("node/{$nid}/edit");
@@ -320,7 +321,9 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
 
     // Ensure file is still in original location.
     $this->drupalGet("node/{$node->id()}");
-    $this->assertSession()->responseContains("{$this->publicFilesDirectory}/{$file->getFilename()}", 'Read-only file not affected by Retroactive updates.');
+    // Read-only file not affected by Retroactive updates.
+    $this->assertSession()
+      ->responseContains("{$this->publicFilesDirectory}/{$file->getFilename()}");
   }
 
 }

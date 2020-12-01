@@ -9,25 +9,25 @@
  * Implements hook_drush_command().
  */
 function filefield_paths_drush_command() {
-  $items = array();
+  $items = [];
 
-  $items['ffp-update'] = array(
+  $items['ffp-update'] = [
     'description' => 'Retroactively updates all File (Field) Paths of a chosen field instance.',
-    'arguments'   => array(
+    'arguments' => [
       'entity_type' => 'Entity type.',
       'bundle_name' => 'Bundle name.',
-      'field_name'  => 'Field name.'
-    ),
-    'options'     => array(
+      'field_name' => 'Field name.',
+    ],
+    'options' => [
       'all' => 'Retroactively update all File (Field) Paths.',
-    ),
-    'examples'    => array(
-      'drush ffp-update'                          => 'Retroactively updates the File (Field) Paths of the instances choosen via an interactive menu.',
+    ],
+    'examples' => [
+      'drush ffp-update' => 'Retroactively updates the File (Field) Paths of the instances choosen via an interactive menu.',
       'drush ffp-update node article field_image' => 'Retroactively updates the File (Field) Paths of all instances of the Article content types Image field.',
-      'drush ffp-update --all'                    => 'Retroactively update all File (Field) Paths.',
-    ),
-    'aliases'     => array('ffpu'),
-  );
+      'drush ffp-update --all' => 'Retroactively update all File (Field) Paths.',
+    ],
+    'aliases' => ['ffpu'],
+  ];
 
   return $items;
 }
@@ -35,32 +35,36 @@ function filefield_paths_drush_command() {
 /**
  * Retroactively updates all File (Field) Paths of a chosen field instance.
  *
- * @param null $entity_type
- * @param null $bundle_name
- * @param null $field_name
+ * @param mixed|null $entity_type
+ *   Entity type.
+ * @param mixed|null $bundle_name
+ *   Bundle name.
+ * @param mixed|null $field_name
+ *   Field name.
  *
  * @return string
+ *   Command result.
  */
 function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NULL, $field_name = NULL) {
   // Build array of information of all entity types, bundle names and field
   // names.
   $field_types = array_keys(_filefield_paths_get_field_types());
-  $info        = array();
+  $info = [];
   foreach (field_info_fields() as $field) {
     if (in_array($field['type'], $field_types)) {
       foreach ($field['bundles'] as $entity_type_name => $bundles) {
         if (!isset($info[$entity_type_name])) {
-          $entity_type_info        = entity_get_info($entity_type_name);
-          $info[$entity_type_name] = array(
+          $entity_type_info = entity_get_info($entity_type_name);
+          $info[$entity_type_name] = [
             '#label' => "{$entity_type_info['label']} ({$entity_type_name})",
-          );
+          ];
         }
         $bundles_info = field_info_bundles($entity_type_name);
         foreach ($bundles as $bundle) {
           if (!isset($info[$entity_type_name][$bundle])) {
-            $info[$entity_type_name][$bundle] = array(
+            $info[$entity_type_name][$bundle] = [
               '#label' => "{$bundles_info[$bundle]['label']} ({$bundle})",
-            );
+            ];
           }
           $field = field_info_instance($entity_type_name, $field['field_name'], $bundle);
 
@@ -71,7 +75,7 @@ function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NU
   }
 
   if (drush_get_option('all')) {
-    $instances = array();
+    $instances = [];
     foreach ($info as $entity_type => $bundles) {
       foreach (element_children($bundles) as $bundle_name) {
         foreach (element_children($info[$entity_type][$bundle_name]) as $field_name) {
@@ -86,7 +90,7 @@ function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NU
 
   // Get entity type.
   if (empty($entity_type)) {
-    $choices = array('all' => dt('All'));
+    $choices = ['all' => dt('All')];
     foreach ($info as $entity_type => $entity_type_info) {
       $choices[$entity_type] = $entity_type_info['#label'];
     }
@@ -96,7 +100,7 @@ function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NU
     return '';
   }
   if ($entity_type == 'all') {
-    $instances = array();
+    $instances = [];
     foreach ($info as $entity_type => $bundles) {
       foreach (element_children($bundles) as $bundle_name) {
         foreach (element_children($info[$entity_type][$bundle_name]) as $field_name) {
@@ -111,7 +115,7 @@ function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NU
 
   // Get bundle.
   if (empty($bundle_name)) {
-    $choices = array('all' => dt('All'));
+    $choices = ['all' => dt('All')];
     foreach (element_children($info[$entity_type]) as $bundle_name) {
       $choices[$bundle_name] = $info[$entity_type][$bundle_name]['#label'];
     }
@@ -121,7 +125,7 @@ function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NU
     return '';
   }
   if ($bundle_name == 'all') {
-    $instances = array();
+    $instances = [];
     foreach (element_children($info[$entity_type]) as $bundle_name) {
       foreach (element_children($info[$entity_type][$bundle_name]) as $field_name) {
         $instances[] = field_info_instance($entity_type, $field_name, $bundle_name);
@@ -134,7 +138,7 @@ function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NU
 
   // Get field.
   if (empty($field_name)) {
-    $choices = array('all' => dt('All'));
+    $choices = ['all' => dt('All')];
     foreach (element_children($info[$entity_type][$bundle_name]) as $field_name) {
       $choices[$field_name] = $info[$entity_type][$bundle_name][$field_name];
     }
@@ -144,7 +148,7 @@ function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NU
     return '';
   }
   if ($field_name == 'all') {
-    $instances = array();
+    $instances = [];
     foreach (element_children($info[$entity_type][$bundle_name]) as $field_name) {
       $instances[] = field_info_instance($entity_type, $field_name, $bundle_name);
     }
@@ -155,21 +159,22 @@ function drush_filefield_paths_ffp_update($entity_type = NULL, $bundle_name = NU
 
   // Invoke Retroactive update.
   $instance = field_info_instance($entity_type, $field_name, $bundle_name);
-  _filefield_paths_drush_ffp_update(array($instance));
+  _filefield_paths_drush_ffp_update([$instance]);
 }
 
 /**
  * Helper function; Invokes File (Field) Paths Retroactive updates.
  *
- * @param $instances
+ * @param array $instances
+ *   Instances collection.
  */
-function _filefield_paths_drush_ffp_update($instances) {
+function _filefield_paths_drush_ffp_update(array $instances) {
   foreach ($instances as $instance) {
     if (filefield_paths_batch_update($instance)) {
-      $batch                =& batch_get();
+      $batch =& batch_get();
       $batch['progressive'] = FALSE;
       drush_backend_batch_process();
-      drush_log(dt('!field_name File (Field) Paths updated.', array('!field_name' => "{$instance['label']} ({$instance['entity_type']}-{$instance['bundle']}-{$instance['field_name']})")), 'success');
+      drush_log(dt('!field_name File (Field) Paths updated.', ['!field_name' => "{$instance['label']} ({$instance['entity_type']}-{$instance['bundle']}-{$instance['field_name']})"]), 'success');
     }
   }
 }
