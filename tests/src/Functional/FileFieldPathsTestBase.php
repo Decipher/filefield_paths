@@ -73,7 +73,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createFileField($name, $entity_type, $bundle, array $storage_settings = [], array $field_settings = [], array $third_party_settings = [], array $widget_settings = []) {
+  public function createFileField($name, $entity_type, $bundle, $storage_settings = [], $field_settings = [], $third_party_settings = [], $widget_settings = []) {
     $entity_type_manager = \Drupal::entityTypeManager();
     $field_storage = $entity_type_manager->getStorage('field_storage_config')
       ->create([
