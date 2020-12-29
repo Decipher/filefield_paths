@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Database\Database;
+use Drupal\Core\Field\BaseFieldDefinition;
 
 /**
  * Implements hook_install().
@@ -16,6 +17,18 @@ function filefield_paths_install() {
     ->update('file_managed')
     ->expression('origname', 'filename')
     ->execute();
+}
+
+/**
+ * Add 'origname' field to 'file' entities.
+ */
+function filefield_paths_update_8001() {
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('Original filename'))
+    ->setDescription(t('Original name of the file with no path components.'));
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('origname', 'file', 'filefield_paths', $storage_definition);
 }
 
 ///**
