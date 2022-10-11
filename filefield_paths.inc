@@ -113,7 +113,7 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
         $dirname = $file_system->dirname($destination);
         if (
           \Drupal::service('file_system')->prepareDirectory($dirname, FileSystem::CREATE_DIRECTORY)
-          && $new_file = file_move($file, $destination)
+          && $new_file = \Drupal::service('file.repository')->move($file, $destination)
         ) {
           // Create redirect from old location.
           if (

@@ -346,25 +346,27 @@ function filefield_paths_entity_insert(EntityInterface $entity) {
  * Implements hook_entity_update().
  */
 function filefield_paths_entity_update(EntityInterface $entity) {
-  if ($entity instanceof ContentEntityInterface) {
-    foreach ($entity->getFields() as $field) {
-      if ($field instanceof FileFieldItemList) {
-        /** @var FieldConfig $definition */
-        $definition = $field->getFieldDefinition();
-        // Ignore base fields.
-        if ($definition instanceof ThirdPartySettingsInterface) {
-          $settings = $definition->getThirdPartySettings('filefield_paths');
-          if (isset($settings['enabled']) && $settings['enabled']) {
-            // Invoke hook_filefield_paths_process_file().
-            foreach (\Drupal::moduleHandler()
-                       ->getImplementations('filefield_paths_process_file') as $module) {
-              if (function_exists($function = "{$module}_filefield_paths_process_file")) {
-                $function($entity, $field, $settings);
-              }
-            }
-          }
-        }
-      }
+  if (!$entity instanceof ContentEntityInterface) {
+    return;
+  }
+  $module_handler = \Drupal::moduleHandler();
+  foreach ($entity->getFields() as $field) {
+    if (!$field instanceof FileFieldItemList) {
+      continue;
+    }
+    /** @var \Drupal\field\FieldConfigInterface $definition */
+    $definition = $field->getFieldDefinition();
+    // Ignore base fields.
+    if (!$definition instanceof ThirdPartySettingsInterface) {
+      continue;
+    }
+    $settings = $definition->getThirdPartySettings('filefield_paths');
+    if (isset($settings['enabled']) && $settings['enabled'] && $module_handler->hasImplementations('filefield_paths_process_file')) {
+      // Invoke hook_filefield_paths_process_file().
+      $module_handler->invokeAll(
+        'filefield_paths_process_file',
+        [$entity, $field, $settings]
+      );
     }
   }
 }
