@@ -5,6 +5,7 @@
  * Contains core functions for the File (Field) Paths module.
  */
 
+use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
@@ -267,16 +268,13 @@ function filefield_paths_batch_update(FieldConfig $field_config) {
   }
 
   // Create batch.
-  $batch = [
-    'title'      => t('Updating File (Field) Paths'),
-    'operations' => [
-      [
-        '_filefield_paths_batch_update_process',
-        [$result, $field_config],
-      ],
-    ],
-  ];
-  batch_set($batch);
+  $batch = (new BatchBuilder())
+    ->setTitle(t('Updating File (Field) Paths'));
+  $batch->addOperation(
+    '_filefield_paths_batch_update_process',
+    [$result, $field_config]
+  );
+  batch_set($batch->toArray());
 
   return TRUE;
 }
