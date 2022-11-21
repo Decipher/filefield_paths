@@ -6,7 +6,6 @@
  */
 
 use Drupal\Core\Batch\BatchBuilder;
-use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
@@ -15,6 +14,7 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
+use Drupal\filefield_paths\Utility\FieldItem;
 use Symfony\Component\HttpFoundation\Response;
 
 // @TODO - Turn this into a plugin.
@@ -212,13 +212,9 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
 function filefield_paths_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
   // Force all File (Field) Paths uploads to go to the temporary file system
   // prior to being processed.
-  if (isset($element['#type']) && $element['#type'] == 'managed_file') {
-    $settings = $context['items']->getFieldDefinition()
-      ->getThirdPartySettings('filefield_paths');
-    if (isset($settings['enabled']) && $settings['enabled']) {
-      $element['#upload_location'] = \Drupal::config('filefield_paths.settings')
-        ->get('temp_location');
-    }
+  if (FieldItem::hasConfigurationEnabled(FieldItem::getFromSupportedWidget($element, $context))) {
+    $element['#upload_location'] = \Drupal::config('filefield_paths.settings')
+      ->get('temp_location');
   }
 }
 
@@ -349,17 +345,8 @@ function filefield_paths_entity_update(EntityInterface $entity) {
   }
   $module_handler = \Drupal::moduleHandler();
   foreach ($entity->getFields() as $field) {
-    if (!$field instanceof FileFieldItemList) {
-      continue;
-    }
-    /** @var \Drupal\field\FieldConfigInterface $definition */
-    $definition = $field->getFieldDefinition();
-    // Ignore base fields.
-    if (!$definition instanceof ThirdPartySettingsInterface) {
-      continue;
-    }
-    $settings = $definition->getThirdPartySettings('filefield_paths');
-    if (isset($settings['enabled']) && $settings['enabled'] && $module_handler->hasImplementations('filefield_paths_process_file')) {
+    if (FieldItem::hasConfigurationEnabled($field)) {
+      $settings = FieldItem::getConfiguration($field);
       // Invoke hook_filefield_paths_process_file().
       $module_handler->invokeAll(
         'filefield_paths_process_file',
