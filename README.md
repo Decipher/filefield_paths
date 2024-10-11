@@ -51,7 +51,7 @@ you wish to use. Settings can be found on the settings form of any supported
 file based field.
 
   *Example:*
-  
+
     Administration > Structure > Content types > Article > Manage fields > Image
     http://example.com/admin/structure/types/manage/article/fields/field_image
 

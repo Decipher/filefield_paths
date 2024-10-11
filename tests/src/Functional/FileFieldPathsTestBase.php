@@ -63,17 +63,17 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    *   A list of field storage settings that will be added to the defaults.
    * @param array $field_settings
    *   A list of instance settings that will be added to the instance defaults.
-   * @param array $third_party_settings
-   *   Third party settings.
    * @param array $widget_settings
    *   A list of widget settings that will be added to the widget defaults.
+   * @param array $third_party_settings
+   *   Third party settings.
    *
    * @throws \Behat\Mink\Exception\ResponseTextException
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createFileField($name, $entity_type, $bundle, $storage_settings = [], $field_settings = [], $third_party_settings = [], $widget_settings = []) {
+  public function createFileField($name, $entity_type, $bundle, $storage_settings = [], $field_settings = [], $widget_settings = [], $third_party_settings = []) {
     $entity_type_manager = \Drupal::entityTypeManager();
     $field_storage = $entity_type_manager->getStorage('field_storage_config')
       ->create([

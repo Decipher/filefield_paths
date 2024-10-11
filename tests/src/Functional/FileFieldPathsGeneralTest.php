@@ -29,7 +29,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
 
     // Ensure that 'Enable File (Field) Paths?' is a direct sibling of
     // 'File (Field) Path settings'.
-    /* @var \Behat\Mink\Element\NodeElement[] $element */
+    /** @var \Behat\Mink\Element\NodeElement[] $element */
     $element = $this->xpath('//div[contains(@class, :class)]/following-sibling::*[1][@id=\'edit-third-party-settings-filefield-paths--2\']', [':class' => 'form-item-third-party-settings-filefield-paths-enabled']);
     $this->assertNotEmpty($element, 'Enable checkbox is next to settings fieldset.');
 
@@ -48,7 +48,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $field_name = mb_strtolower($this->randomMachineName());
     $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $third_party_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
-    $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
 
     // Create a node without a file attached.
     $this->drupalGet('node/add/' . $this->contentType);
@@ -70,7 +70,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $field_name = mb_strtolower($this->randomMachineName());
     $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $third_party_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
-    $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
 
     // Create a node with a test file.
     /** @var \Drupal\file\Entity\File $test_file */
@@ -108,7 +108,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $storage_settings['cardinality'] = FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED;
     $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $third_party_settings['filefield_paths']['file_name']['value'] = '[file:fid].txt';
-    $this->createFileField($field_name, 'node', $this->contentType, $storage_settings, [], $third_party_settings);
+    $this->createFileField($field_name, 'node', $this->contentType, $storage_settings, [], [], $third_party_settings);
 
     // Create a node with three (3) test files.
     $text_files = $this->drupalGetTestFiles('text');
@@ -140,7 +140,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     // Create a File field with 'node/[random:hash:sha256]' as the File path.
     $field_name = mb_strtolower($this->randomMachineName());
     $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[random:hash:sha512]/[random:hash:sha512]';
-    $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
 
     // Create a node with a test file.
     /** @var \Drupal\file\Entity\File $test_file */
@@ -161,7 +161,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $field_name = mb_strtolower($this->randomMachineName());
     $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
     $third_party_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
-    $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
 
     // Create a node without an attached file.
     /** @var \Drupal\node\Entity\Node $node */
@@ -196,7 +196,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $field_name = mb_strtolower($this->randomMachineName());
     $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:title]';
     $third_party_settings['filefield_paths']['file_name']['value'] = '[node:title].[file:ffp-extension-original]';
-    $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
 
     // Create a node with a test file.
     /** @var \Drupal\file\Entity\File $test_file */
@@ -250,7 +250,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     // Create a File field with 'node/[node:nid]' as the File path.
     $field_name = mb_strtolower($this->randomMachineName());
     $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
-    $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
 
     // Create a node with a test file.
     /** @var \Drupal\file\Entity\File $test_file */

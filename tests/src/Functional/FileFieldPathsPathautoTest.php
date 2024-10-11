@@ -56,7 +56,7 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
     $third_party_settings['filefield_paths']['file_name']['value'] = '[node:title].[file:ffp-extension-original]';
     $third_party_settings['filefield_paths']['file_name']['options']['pathauto'] = TRUE;
 
-    $this->createFileField($field_name, 'node', $this->contentType, [], [], $third_party_settings);
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
 
     // Create a node with a test file.
     /** @var \Drupal\file\Entity\File $test_file */

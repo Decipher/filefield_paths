@@ -125,7 +125,7 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
           }
 
           // Remove any old empty directories.
-          // @TODO - Add test for this.
+          // @todo Add test for this.
           $paths = explode('/', str_replace("{$source_scheme_name}://", '', $file_system->dirname($file->getFileUri())));
           while ($paths) {
             if (@$file_system->rmdir("{$source_scheme_name}://" . implode('/', $paths)) == TRUE) {
