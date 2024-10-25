@@ -2,6 +2,6 @@ name: 'File (Field) Paths tests'
 description: 'Support module for File (Field) Paths related testing.'
 package: Testing
 type: module
-core_version_requirement: ^9 || ^10
 dependencies:
   - filefield_paths:filefield_paths
+  - drupal:file_test

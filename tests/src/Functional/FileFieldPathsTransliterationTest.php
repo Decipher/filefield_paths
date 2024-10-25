@@ -62,7 +62,7 @@ class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
 
     // Ensure that file path/name have been processed correctly by
     // Transliteration.
-    $node = \Drupal::entitytypeManager()->getStorage('node')->load($nid);
+    $node = \Drupal::entityTypeManager()->getStorage('node')->load($nid);
     $this->assertEquals("public://node/test/test.txt", $node->{$field_name}[0]->entity->getFileUri(), 'File path/name has been processed correctly by Transliteration');
   }
 

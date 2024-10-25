@@ -4,9 +4,9 @@ namespace Drupal\filefield_paths;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Language\Language;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
-use Drupal\Core\Language\Language;
 use Psr\Log\LoggerInterface;
 
 /**

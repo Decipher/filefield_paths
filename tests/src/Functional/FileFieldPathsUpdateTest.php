@@ -10,7 +10,7 @@ namespace Drupal\Tests\filefield_paths\Functional;
 class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
 
   /**
-   * Test behaviour of Retroactive updates when no updates are needed.
+   * Test behavior of Retroactive updates when no updates are needed.
    */
   public function testRetroEmpty() {
     // Create a File field.

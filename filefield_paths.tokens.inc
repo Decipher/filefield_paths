@@ -33,14 +33,9 @@ function filefield_paths_token_info() {
  * Implements hook_tokens().
  */
 function filefield_paths_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {
-  $url_options = ['absolute' => TRUE];
-  if (isset($language)) {
-    $url_options['language'] = $language;
-  }
-
   $replacements = [];
 
-  if ($type == 'file' && !empty($data['file'])) {
+  if ($type === 'file' && !empty($data['file'])) {
     $file_system = \Drupal::service('file_system');
 
     /** @var \Drupal\file\Entity\File $file */

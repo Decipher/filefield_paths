@@ -22,7 +22,7 @@ function filefield_paths_drush_command() {
       'all' => 'Retroactively update all File (Field) Paths.',
     ],
     'examples' => [
-      'drush ffp-update' => 'Retroactively updates the File (Field) Paths of the instances choosen via an interactive menu.',
+      'drush ffp-update' => 'Retroactively updates the File (Field) Paths of the instances chosen via an interactive menu.',
       'drush ffp-update node article field_image' => 'Retroactively updates the File (Field) Paths of all instances of the Article content types Image field.',
       'drush ffp-update --all' => 'Retroactively update all File (Field) Paths.',
     ],

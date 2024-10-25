@@ -2,8 +2,8 @@
 
 namespace Drupal\Tests\filefield_paths\Functional;
 
-use Drupal\Tests\file\Functional\FileFieldTestBase;
 use Drupal\Tests\TestFileCreationTrait;
+use Drupal\Tests\file\Functional\FileFieldTestBase;
 
 /**
  * Base class for File (Field) Paths tests.
@@ -68,6 +68,9 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    * @param array $third_party_settings
    *   Third party settings.
    *
+   * @return \Drupal\field\FieldStorageConfigInterface
+   *    The file field.
+   *
    * @throws \Behat\Mink\Exception\ResponseTextException
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
@@ -75,6 +78,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    */
   public function createFileField($name, $entity_type, $bundle, $storage_settings = [], $field_settings = [], $widget_settings = [], $third_party_settings = []) {
     $entity_type_manager = \Drupal::entityTypeManager();
+    /** @var \Drupal\field\FieldStorageConfigInterface $field_storage */
     $field_storage = $entity_type_manager->getStorage('field_storage_config')
       ->create([
         'entity_type' => $entity_type,
@@ -120,6 +124,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
 
     // Clear field cache in order to avoid stale cache values.
     \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
+    return $field_storage;
   }
 
   /**

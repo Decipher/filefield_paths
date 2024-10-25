@@ -375,12 +375,13 @@ function filefield_paths_file_presave($file) {
  * @param \Drupal\Core\Language\Language $language
  *   The language of the source file.
  *
- * @deprecated in filefield_paths:1.0.0 and will be removed before
+ * @deprecated in filefield_paths:1.0.0 and is removed from
  *   filefield_paths:2.0.0. Use
  *   \Drupal\filefield_paths\RedirectInterface::createRedirect() instead.
+ * @see https://www.drupal.org/project/filefield_paths/issues/2923206
  */
 function _filefield_paths_create_redirect($source, $path, Language $language) {
-  @trigger_error('_filefield_paths_create_redirect() is deprecated in filefield_paths:1.0.0 and will be removed before filefield_paths:2.0.0. Use \\Drupal\filefield_paths\RedirectInterface::createRedirect() instead.', E_USER_DEPRECATED);
+  @trigger_error('_filefield_paths_create_redirect() is deprecated in filefield_paths:1.0.0 and is removed from filefield_paths:2.0.0. Use \\Drupal\filefield_paths\RedirectInterface::createRedirect() instead. See https://www.drupal.org/project/filefield_paths/issues/2923206', E_USER_DEPRECATED);
   \Drupal::service('filefield_paths.redirect')->createRedirect($source, $path, $language);
 }
 
@@ -414,8 +415,8 @@ function filefield_paths_process_string($value, array $data, array $settings = [
   $remove_slashes = !empty($settings['slashes']);
 
   // If '/' is to be removed from tokens, token replacement need to happen after
-  // splitting the paths to subdirs, otherwise tokens containing '/' will be
-  // part of the final path.
+  // splitting the paths to subdirectories, otherwise tokens containing '/' will
+  // be part of the final path.
   if (!$remove_slashes) {
     $value = \Drupal::service('token')
       ->replace($value, $data, ['clear' => TRUE]);

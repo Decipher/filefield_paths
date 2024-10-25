@@ -45,16 +45,16 @@ final class FieldItem {
   /**
    * Field widget helper.
    *
-   * @param $element
+   * @param array $element
    *   Widget element.
-   * @param $context
+   * @param array $context
    *   Widget context.
    *
    * @return \Drupal\file\Plugin\Field\FieldType\FileFieldItemList|null
    *   Returns Field Item List instance. Null if widget type is not supported.
    */
   public static function getFromSupportedWidget(array $element, array $context): ?FileFieldItemList {
-    if(isset($element['#type']) && $element['#type'] === 'managed_file') {
+    if (isset($element['#type']) && $element['#type'] === 'managed_file') {
       return $context['items'] ?? NULL;
     }
     return NULL;

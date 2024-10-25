@@ -26,7 +26,7 @@ class SettingsForm extends ConfigFormBase {
   protected $streamWrapperManager;
 
   /**
-   * Fi;esystem service.
+   * Filesystem service.
    *
    * @var \Drupal\Core\File\FileSystemInterface
    */
@@ -71,7 +71,7 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, Request $request = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, ?Request $request = NULL) {
     $form['temp_location'] = [
       '#title' => $this->t('Temporary file location'),
       '#type' => 'textfield',

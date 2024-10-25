@@ -5,16 +5,18 @@
  * Hooks provided by the File (Field) Paths module.
  */
 
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\file\FileInterface;
+use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
+
 /**
  * Form settings hook.
  *
  * Define field(s) to be displayed on the File (Field) Paths settings form and
  * used during the processing of uploaded files.
  *
- * @param $field
- *   The field definition this File (Field) Paths settings field applies to.
- * @param $instance
- *   The field instance this File (Field) Paths settings field applies to.
+ * @param array $form
+ *   The form File (Field) Paths settings field applies to.
  *
  * @return array
  *   An array whose keys are field names and whose values are arrays defining
@@ -24,7 +26,7 @@
  *
  * @see hook_filefield_paths_process_file()
  */
-function hook_filefield_paths_field_settings($field, $instance) {
+function hook_filefield_paths_field_settings(array $form) {
   return [
     'file_path' => [
       'title' => 'File path',
@@ -35,7 +37,7 @@ function hook_filefield_paths_field_settings($field, $instance) {
           '#maxlength' => 512,
           '#size' => 128,
           '#element_validate' => ['_file_generic_settings_file_directory_validate'],
-          '#default_value' => $instance['settings']['file_directory'],
+          '#default_value' => $form['settings']['file_directory'],
         ],
       ],
     ],
@@ -45,20 +47,44 @@ function hook_filefield_paths_field_settings($field, $instance) {
 /**
  * Process the uploaded files.
  *
- * @param $type
- *   The entity type containing the files for processing.
- * @param $entity
- *   The entity containing the files for processing.
- * @param $field
- *   The definition of the field containing the files for processing.
- * @param $instance
- *   The instance of the field containing the files for processing.
- * @param $langcode
- *   The language code of the field containing the files for processing.
- * @param $items
- *   A pass-by-reference array of all the files for processing.
+ * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+ *   The entity containing field with the files for processing.
+ * @param \Drupal\Core\Field\FieldItemListInterface $field
+ *   File field item.
+ * @param array $settings
+ *   Contains filefield_paths field settings.
  *
  * @see filefield_paths_filefield_paths_process_file()
  */
-function hook_filefield_paths_process_file($type, $entity, $field, $instance, $langcode, &$items) {
+function hook_filefield_paths_process_file(ContentEntityInterface $entity, \Drupal\Core\Field\FieldItemListInterface $field, array $settings = []) {
+  // Only process files if Active Updating is on.
+  if (empty($settings['active_updating'])) {
+    return;
+  }
+  foreach ($field->referencedEntities() as $file) {
+    if ($file instanceof FileInterface) {
+      // Process file if this is a new entity with a new file attached.
+      $original_field = NULL;
+      if (
+        isset($entity->original)
+        && $entity->original instanceof ContentEntityInterface
+        && !$entity->isNew()
+      ) {
+        $original_field = $entity->{'original'}->{$field->getName()};
+      }
+      if ($original_field instanceof FileFieldItemList
+        && !$original_field->isEmpty()
+      ) {
+        $original_files = $original_field->referencedEntities();
+        foreach ($original_files as $original_file) {
+          if ($original_file instanceof FileInterface
+            && $original_file->id() != $file->id()
+          ) {
+            \Drupal::logger('filefield_paths')
+              ->notice(t('The file is new, do some processing.'));
+          }
+        }
+      }
+    }
+  }
 }
