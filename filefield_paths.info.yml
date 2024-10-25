@@ -2,7 +2,7 @@ name: 'File (Field) Paths'
 description: 'Adds improved Token based file sorting and renaming functionalities.'
 package: Fields
 configure: filefield_paths.admin_settings
-core_version_requirement: ^10.3
+core_version_requirement: ^10.3 || ^11
 type: module
 dependencies:
   - drupal:file

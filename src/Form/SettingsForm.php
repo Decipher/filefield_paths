@@ -10,6 +10,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 
 /**
  * Administration settings form for File (Field) Paths.
@@ -35,8 +36,8 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system, TypedConfigManagerInterface $typed_configmanager) {
+    parent::__construct($config_factory, $typed_configmanager);
     $this->streamWrapperManager = $stream_wrapper_manager;
     $this->fileSystem = $file_system;
   }
@@ -48,7 +49,8 @@ class SettingsForm extends ConfigFormBase {
     return new static(
       $container->get('config.factory'),
       $container->get('stream_wrapper_manager'),
-      $container->get('file_system')
+      $container->get('file_system'),
+      $container->get('config.typed')
     );
   }
 
