@@ -4,6 +4,7 @@ namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\node\Entity\Node;
+use Drupal\node\NodeInterface;
 
 /**
  * Test general functionality.
@@ -148,8 +149,8 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $nid = $this->uploadNodeFile($test_file, $field_name, $this->contentType);
 
     // Ensure file path is no more than 255 characters.
-    $node = Node::load($nid);
-    $this->assertLessThanOrEqual(255, mb_strlen($node->{$field_name}->uri), 'File path is no more than 255 characters');
+    $node = $this->reloadNode($nid);
+    $this->assertLessThanOrEqual(255, mb_strlen($node->{$field_name}[0]->entity->getFileUri()), 'File path is no more than 255 characters');
   }
 
   /**
@@ -180,7 +181,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $node->save();
 
     // Ensure that the File path has been processed correctly.
-    $node = Node::load($node->id());
+    $node = $this->reloadNode($node->id());
     $this->assertSame("public://node/{$node->id()}/{$node->id()}.txt", $node->{$field_name}[0]->entity->getFileUri(), 'The File path has been processed correctly.');
   }
 
@@ -290,6 +291,7 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
    * Test File (Field) Paths works with read-only stream wrappers.
    */
   public function testReadOnly() {
+    $this->markTestIncomplete('A readonly stream wrapper is no longer a valid choice as upload destination. See \Drupal\file\Plugin\Field\FieldType\FileItem::storageSettingsForm().');
     // Create a File field.
     $field_name = mb_strtolower($this->randomMachineName());
     $field_settings = ['uri_scheme' => 'ffp-dummy-readonly'];
@@ -324,6 +326,23 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     // Read-only file not affected by Retroactive updates.
     $this->assertSession()
       ->responseContains("{$this->publicFilesDirectory}/{$file->getFilename()}");
+  }
+
+  /**
+   * Loads the node from the database.
+   *
+   * On the node storage, caches are cleared to ensure the data is loaded from
+   * the database instead of from memory.
+   *
+   * @param int $nid
+   *   The ID from the node to load.
+   *
+   * @return \Drupal\node\NodeInterface
+   *   The loaded node.
+   */
+  protected function reloadNode(int $nid): NodeInterface {
+    $this->container->get('entity_type.manager')->getStorage('node')->resetCache();
+    return Node::load($nid);
   }
 
 }

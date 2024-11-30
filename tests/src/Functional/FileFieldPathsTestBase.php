@@ -69,7 +69,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    *   Third party settings.
    *
    * @return \Drupal\field\FieldStorageConfigInterface
-   *    The file field.
+   *   The file field.
    *
    * @throws \Behat\Mink\Exception\ResponseTextException
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
