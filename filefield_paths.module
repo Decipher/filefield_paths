@@ -187,7 +187,7 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
         $form['settings']['filefield_paths']['details']['retroactive_update'] = [
           '#type'        => 'checkbox',
           '#title'       => t('Retroactive update'),
-          '#description' => t('Move and rename previously uploaded files.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
+          '#description' => t('Move and rename previously uploaded files. After saving the field settings, the paths of all previously uploaded files will be updated immediately. This will only occur once. So after the operation is done, this option will be disabled again.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
           '#weight'      => 12,
         ];
 
@@ -196,7 +196,7 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
           '#type'          => 'checkbox',
           '#title'         => t('Active updating'),
           '#default_value' => $settings['active_updating'] ?? FALSE,
-          '#description'   => t('Actively move and rename previously uploaded files as required.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
+          '#description'   => t('Actively move and rename previously uploaded files as required. If necessary, the paths of previously uploaded files are updated each time the entity they belong to gets saved.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
           '#weight'        => 13,
         ];
       }
