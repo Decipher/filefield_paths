@@ -5,7 +5,6 @@
  * Contains core functions for the File (Field) Paths module.
  */
 
-use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -228,7 +227,9 @@ function filefield_paths_form_submit(array $form, FormStateInterface $form_state
   $settings = $form_state->getValue('third_party_settings')['filefield_paths'];
   // Retroactive updates.
   if ($settings['enabled'] && $settings['retroactive_update']) {
-    if (filefield_paths_batch_update($form_state->getFormObject()
+    /** @var \Drupal\filefield_paths\Batch\Updater $updater */
+    $updater = \Drupal::service('filefield_paths.batch.updater');
+    if ($updater->batchUpdate($form_state->getFormObject()
       ->getEntity())) {
       $response = batch_process($form_state->getRedirect());
       if ($response instanceof Response) {
@@ -246,86 +247,17 @@ function filefield_paths_form_submit(array $form, FormStateInterface $form_state
  *
  * @return bool
  *   True if there were paths to update, false otherwise.
+ *
+ * @deprecated in filefield_paths:8.x-1.0 and is removed from
+ *   filefield_paths:2.0.0. Use
+ *   \Drupal\filefield_paths\Batch\Updater::batchUpdate() instead.
+ * @see https://www.drupal.org/project/filefield_paths/issues/2930945
  */
 function filefield_paths_batch_update(FieldConfigInterface $field_config) {
-  $entity_info = \Drupal::entityTypeManager()
-    ->getDefinition($field_config->getTargetEntityTypeId());
-  $query = \Drupal::entityQuery($field_config->getTargetEntityTypeId());
-  $result = $query->condition($entity_info->getKey('bundle'), $field_config->getTargetBundle())
-    ->accessCheck(FALSE)
-    ->condition("{$field_config->getName()}.target_id", '', '<>')
-    ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT')
-    ->execute();
-
-  // If there are no results, do not set a batch as there is nothing to process.
-  if (empty($result)) {
-    return FALSE;
-  }
-
-  // Create batch.
-  $batch = (new BatchBuilder())
-    ->setTitle(t('Updating File (Field) Paths'));
-  $batch->addOperation(
-    '_filefield_paths_batch_update_process',
-    [$result, $field_config]
-  );
-  batch_set($batch->toArray());
-
-  return TRUE;
-}
-
-/**
- * Batch callback for File (Field) Paths retroactive updates.
- *
- * @param int[] $objects
- *   A list of entity ID's for the entity type that the field is attached to.
- * @param Drupal\field\FieldConfigInterface $field_config
- *   The file field for which to update paths.
- * @param array $context
- *   The batch context.
- */
-function _filefield_paths_batch_update_process(array $objects, FieldConfigInterface $field_config, array &$context) {
-  if (!isset($context['sandbox']['progress'])) {
-    $context['sandbox']['progress'] = 0;
-    $context['sandbox']['max'] = count($objects);
-    $context['sandbox']['objects'] = $objects;
-  }
-  /** @var Drupal\Core\Entity\ContentEntityStorageBase $entity_storage */
-  $entity_storage = \Drupal::entityTypeManager()
-    ->getStorage($field_config->getTargetEntityTypeId());
-
-  // Process nodes by groups of 5.
-  $count = min(5, count($context['sandbox']['objects']));
-  for ($i = 1; $i <= $count; $i++) {
-    // For each oid, load the object, update the files and save it.
-    $oid = array_shift($context['sandbox']['objects']);
-    $entity = $entity_storage->load($oid);
-
-    // Enable active updating if it isn't already enabled.
-    $active_updating = $field_config->getThirdPartySetting('filefield_paths', 'active_updating');
-    if (!$active_updating) {
-      $field_config->setThirdPartySetting('filefield_paths', 'active_updating', TRUE);
-      $field_config->save();
-    }
-
-    $entity->original = $entity;
-    filefield_paths_entity_update($entity);
-
-    // Restore active updating to it's previous state if necessary.
-    if (!$active_updating) {
-      $field_config->setThirdPartySetting('filefield_paths', 'active_updating', $active_updating);
-      $field_config->save();
-    }
-
-    // Update our progress information.
-    $context['sandbox']['progress']++;
-  }
-
-  // Inform the batch engine that we are not finished,
-  // and provide an estimation of the completion level we reached.
-  if ($context['sandbox']['progress'] != $context['sandbox']['max']) {
-    $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
-  }
+  @trigger_error('filefield_paths_batch_update() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\Batch\Updater::batchUpdate() instead. See https://www.drupal.org/project/filefield_paths/issues/2930945', E_USER_DEPRECATED);
+  /** @var \Drupal\filefield_paths\Batch\Updater $updater */
+  $updater = \Drupal::service('filefield_paths.batch.updater');
+  return $updater->batchUpdate($field_config);
 }
 
 /**
@@ -375,13 +307,13 @@ function filefield_paths_file_presave($file) {
  * @param \Drupal\Core\Language\Language $language
  *   The language of the source file.
  *
- * @deprecated in filefield_paths:1.0.0 and is removed from
+ * @deprecated in filefield_paths:8.x-1.0 and is removed from
  *   filefield_paths:2.0.0. Use
  *   \Drupal\filefield_paths\RedirectInterface::createRedirect() instead.
  * @see https://www.drupal.org/project/filefield_paths/issues/2923206
  */
 function _filefield_paths_create_redirect($source, $path, Language $language) {
-  @trigger_error('_filefield_paths_create_redirect() is deprecated in filefield_paths:1.0.0 and is removed from filefield_paths:2.0.0. Use \\Drupal\filefield_paths\RedirectInterface::createRedirect() instead. See https://www.drupal.org/project/filefield_paths/issues/2923206', E_USER_DEPRECATED);
+  @trigger_error('_filefield_paths_create_redirect() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\RedirectInterface::createRedirect() instead. See https://www.drupal.org/project/filefield_paths/issues/2923206', E_USER_DEPRECATED);
   \Drupal::service('filefield_paths.redirect')->createRedirect($source, $path, $language);
 }
 

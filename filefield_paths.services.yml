@@ -5,3 +5,6 @@ services:
   logger.channel.filefield_paths:
     parent: logger.channel_base
     arguments: ['filefield_paths']
+  filefield_paths.batch.updater:
+    class: 'Drupal\filefield_paths\Batch\Updater'
+    arguments: ['@entity_type.manager']

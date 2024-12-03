@@ -8,6 +8,10 @@
         "drupal/ctools": "*",
         "drupal/pathauto": "*",
         "drupal/token": "*",
-        "drupal/redirect": "*"
+        "drupal/redirect": "*",
+        "drush/drush": ">=12.5.0"
+    },
+    "conflict": {
+        "drush/drush": "<12.5.0"
     }
 }
