@@ -8,6 +8,7 @@
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\File\FileSystem;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 
 /**
@@ -52,24 +53,27 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
   /** @var \Drupal\field\Entity\FieldStorageConfig $field_storage */
   $field_storage = $field_config->getFieldStorageDefinition();
 
+  /** @var \Drupal\Core\Config\ImmutableConfig $config */
+  $config = \Drupal::config('filefield_paths.settings');
+  /** @var \Psr\Log\LoggerInterface $logger */
+  $logger = \Drupal::logger('filefield_paths');
+  /** @var \Drupal\Core\File\FileSystemInterface $file_system */
   $file_system = \Drupal::service('file_system');
+  /** @var \Drupal\file\FileRepositoryInterface $file_repository */
+  $file_repository = \Drupal::service('file.repository');
 
   // Check that the destination is writeable.
+  /** @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager */
   $stream_wrapper_manager = \Drupal::service('stream_wrapper_manager');
   $wrappers = $stream_wrapper_manager->getWrappers(StreamWrapperInterface::WRITE);
 
   $destination_scheme_name = $field_storage->getSetting('uri_scheme');
-  /** @var \Drupal\Core\StreamWrapper\StreamWrapperInterface $temporary_scheme */
-  $temporary_scheme = $stream_wrapper_manager->getViaUri(\Drupal::config('filefield_paths.settings')
-    ->get('temp_location'));
-  $temporary_scheme_name = key($stream_wrapper_manager->getWrappers($temporary_scheme->getType()));
+  $temporary_scheme_name = StreamWrapperManager::getScheme($config->get('temp_location'));
   $schemas = [$temporary_scheme_name, $destination_scheme_name];
 
   /** @var \Drupal\file\Entity\File $file */
   foreach ($field->referencedEntities() as $file) {
-    /** @var \Drupal\Core\StreamWrapper\StreamWrapperInterface $source_scheme */
-    $source_scheme = $stream_wrapper_manager->getViaUri($file->getFileUri());
-    $source_scheme_name = key($stream_wrapper_manager->getWrappers($source_scheme->getType()));
+    $source_scheme_name = StreamWrapperManager::getScheme($file->getFileUri());
     if (in_array($source_scheme_name, $schemas) && !empty($wrappers[$destination_scheme_name])) {
       // Process file if this is a new entity, 'Active updating' is set or
       // file wasn't previously attached to the entity.
@@ -77,7 +81,7 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
         /** @var \Drupal\file\Entity\File $original_file */
         foreach ($entity->original->{$field->getName()}->referencedEntities() as $original_file) {
           if ($original_file->id() == $file->id()) {
-            continue(2);
+            continue 2;
           }
         }
       }
@@ -98,12 +102,11 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
       $settings['file_path']['options']['context'] = 'file_path';
       $path = filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
 
-      $destination = \Drupal::service('stream_wrapper_manager')
-        ->normalizeUri($field_storage->getSetting('uri_scheme') . '://' . $path . '/' . $name);
+      $destination = $stream_wrapper_manager->normalizeUri($field_storage->getSetting('uri_scheme') . '://' . $path . '/' . $name);
 
       // Ensure file uri is no more than 255 characters.
       if (mb_strlen($destination) > 255) {
-        \Drupal::logger('filefield_paths')->info(t('File path was truncated'));
+        $logger->info('File path was truncated');
         $pathinfo = pathinfo($destination);
         $destination = mb_substr($destination, 0, 254 - mb_strlen($pathinfo['extension'])) . ".{$pathinfo['extension']}";
       }
@@ -111,36 +114,42 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
       // Finalize file if necessary.
       if ($file->getFileUri() !== $destination) {
         $dirname = $file_system->dirname($destination);
-        if (
-          \Drupal::service('file_system')->prepareDirectory($dirname, FileSystem::CREATE_DIRECTORY)
-          && $new_file = \Drupal::service('file.repository')->move($file, $destination)
-        ) {
-          // Create redirect from old location.
-          if (
-            \Drupal::moduleHandler()->moduleExists('redirect')
-            && !empty($settings['redirect']) && $settings['active_updating']
-          ) {
-            \Drupal::service('filefield_paths.redirect')
-              ->createRedirect($file->getFileUri(), $new_file->getFileUri(), $file->language());
-          }
-
-          // Remove any old empty directories.
-          // @todo Fix problem of missing test for the line below here.
-          $paths = explode('/', str_replace("{$source_scheme_name}://", '', $file_system->dirname($file->getFileUri())));
-          while ($paths) {
-            if (@$file_system->rmdir("{$source_scheme_name}://" . implode('/', $paths)) == TRUE) {
-              array_pop($paths);
-              continue;
-            }
-            break;
-          }
+        $dir_exists = $file_system->prepareDirectory($dirname, FileSystem::CREATE_DIRECTORY);
+        if (!$dir_exists) {
+          $logger->notice('The directory %directory could not be created.', ['%directory' => $dirname]);
+          continue;
         }
-        else {
-          \Drupal::logger('filefield_paths')
-            ->notice(t('The file %old could not be moved to the destination of %new. Ensure your permissions are set correctly.', [
-              '%old' => $file->getFileUri(),
-              '%new' => $file->getFileUri(),
-            ]));
+
+        try {
+          $new_file = $file_repository->move($file, $destination);
+        }
+        catch (\Exception $e) {
+          $logger->notice('The file %old could not be moved to the destination of %new. Ensure your permissions are set correctly.', [
+            '%old' => $file->getFileUri(),
+            '%new' => $destination,
+          ]);
+          continue;
+        }
+
+        // Create redirect from old location.
+        if (
+          \Drupal::moduleHandler()->moduleExists('redirect')
+          && !empty($settings['redirect']) && $settings['active_updating']
+        ) {
+          /** @var \Drupal\filefield_paths\Redirect $redirect */
+          $redirect = \Drupal::service('filefield_paths.redirect');
+          $redirect->createRedirect($file->getFileUri(), $new_file->getFileUri(), $file->language());
+        }
+
+        // Remove any old empty directories.
+        // @todo Fix problem of missing test for the line below here.
+        $paths = explode('/', str_replace("{$source_scheme_name}://", '', $file_system->dirname($file->getFileUri())));
+        while ($paths) {
+          if (@$file_system->rmdir("{$source_scheme_name}://" . implode('/', $paths)) == TRUE) {
+            array_pop($paths);
+            continue;
+          }
+          break;
         }
       }
     }
