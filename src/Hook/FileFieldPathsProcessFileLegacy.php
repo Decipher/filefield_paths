@@ -165,9 +165,11 @@ final readonly class FileFieldPathsProcessFileLegacy {
       }
       $this->processOutcome->recordUpdated($file->id());
 
-      // Create redirect from old location.
+      // Create redirect from old location, unless the entity is new. Nothing
+      // can link to a file's path before the entity's first save.
       if (
         !empty($settings['redirect']) && $settings['active_updating'] &&
+        $original_entity instanceof ContentEntityInterface &&
         $this->moduleHandler->moduleExists('redirect')
       ) {
         $redirect = $this->getRedirect();
