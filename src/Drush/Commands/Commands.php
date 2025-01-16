@@ -6,7 +6,10 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeBundleInfoInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\filefield_paths\Batch\Updater;
-use Drush\Attributes as CLI;
+use Drush\Attributes\Argument;
+use Drush\Attributes\Command;
+use Drush\Attributes\Option;
+use Drush\Attributes\Usage;
 use Drush\Commands\DrushCommands;
 use Drush\Exceptions\UserAbortException;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -67,14 +70,14 @@ final class Commands extends DrushCommands {
    * @param array|null $options
    *   Command options.
    */
-  #[CLI\Command(name: 'filefield_paths:update', aliases: ['ffpu', 'ffp-update'])]
-  #[CLI\Argument(name: 'entity_type', description: 'Entity type. (e.g. node, user, etc.)')]
-  #[CLI\Argument(name: 'bundle_name', description: 'Bundle name. (e.g. article, page, user, etc.)')]
-  #[CLI\Argument(name: 'field_name', description: 'Field name. (e.g. field_image, field_file, etc.)')]
-  #[CLI\Option(name: self::ALL_OPTION, description: 'Retroactively update all File (Field) Paths.')]
-  #[CLI\Usage(name: 'drush ffp:update', description: 'Retroactively updates the File (Field) Paths of the instances chosen via an interactive menu.')]
-  #[CLI\Usage(name: 'drush ffp:update node article field_image', description: 'Retroactively updates the File (Field) Paths of the instances chosen via an interactive menu.')]
-  #[CLI\Usage(name: 'drush ffp:update --all', description: 'Retroactively updates the File (Field) Paths of all instances of the Article content types Image field.')]
+  #[Command(name: 'filefield_paths:update', aliases: ['ffpu', 'ffp-update'])]
+  #[Argument(name: 'entity_type', description: 'Entity type. (e.g. node, user, etc.)')]
+  #[Argument(name: 'bundle_name', description: 'Bundle name. (e.g. article, page, user, etc.)')]
+  #[Argument(name: 'field_name', description: 'Field name. (e.g. field_image, field_file, etc.)')]
+  #[Option(name: self::ALL_OPTION, description: 'Retroactively update all File (Field) Paths.')]
+  #[Usage(name: 'drush ffp:update', description: 'Retroactively updates the File (Field) Paths of the instances chosen via an interactive menu.')]
+  #[Usage(name: 'drush ffp:update node article field_image', description: 'Retroactively updates the File (Field) Paths of the instances chosen via an interactive menu.')]
+  #[Usage(name: 'drush ffp:update --all', description: 'Retroactively updates the File (Field) Paths of all instances of the Article content types Image field.')]
   public function updateFileFieldPaths(
     ?string $entity_type = NULL,
     ?string $bundle_name = NULL,

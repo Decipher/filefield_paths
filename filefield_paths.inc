@@ -112,7 +112,7 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
       }
 
       // Finalize file if necessary.
-      if ($file->getFileUri() !== $destination) {
+      if ($file->getFileUri() !== $destination && file_exists($file->getFileUri())) {
         $dirname = $file_system->dirname($destination);
         $dir_exists = $file_system->prepareDirectory($dirname, FileSystem::CREATE_DIRECTORY);
         if (!$dir_exists) {

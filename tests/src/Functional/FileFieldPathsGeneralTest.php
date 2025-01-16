@@ -329,6 +329,48 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
   }
 
   /**
+   * Test case that creates an entity with a pre-uploaded file.
+   */
+  public function testPreUploadedFile() {
+    // Enable file field paths functionality.
+    $field_name = mb_strtolower($this->randomMachineName());
+    $third_party_settings['filefield_paths']['enabled'] = TRUE;
+    $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
+    $third_party_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
+    $third_party_settings['filefield_paths']['active_updating'] = TRUE;
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
+
+    // Create a temporary test file (simulating a pre-uploaded file).
+    $test_file = $this->getTestFile('text');
+    $test_file->setPermanent();
+    $test_file->save();
+
+    // Now that the file is saved, we use its ID to associate it with the node.
+    // create a node with the pre-uploaded file.
+    $node = $this->drupalCreateNode([
+      'type' => $this->contentType,
+      'title' => $this->randomMachineName(),
+      $field_name => [
+        'target_id' => $test_file->id(),
+        'display' => 1,
+      ],
+    ]);
+
+    // Reload the node to verify the file path.
+    $node = $this->reloadNode($node->id());
+    $expected_uri = "public://node/{$node->id()}/{$node->id()}.txt";
+    $this->assertSame($expected_uri, $node->{$field_name}[0]->entity->getFileUri(), 'The pre-uploaded file path has been processed correctly.');
+
+    // Update the node to ensure the file remains in the correct location.
+    $node->setTitle($this->randomMachineName());
+    $node->save();
+
+    // Reload the node again and verify the file path remains the same.
+    $node = $this->reloadNode($node->id());
+    $this->assertSame($expected_uri, $node->{$field_name}[0]->entity->getFileUri(), 'The file path remains correct after node update.');
+  }
+
+  /**
    * Loads the node from the database.
    *
    * On the node storage, caches are cleared to ensure the data is loaded from
