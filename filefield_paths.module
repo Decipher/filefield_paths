@@ -292,7 +292,7 @@ function filefield_paths_entity_update(EntityInterface $entity) {
  */
 function filefield_paths_file_presave($file) {
   // Store original filename in the database.
-  if ($file->origname->isEmpty() && !$file->filename->isEmpty()) {
+  if (isset($file->origname) && $file->origname->isEmpty() && isset($file->filename) && !$file->filename->isEmpty()) {
     $file->origname = $file->filename;
   }
 }
