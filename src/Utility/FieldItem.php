@@ -54,8 +54,12 @@ final class FieldItem {
    *   Returns Field Item List instance. Null if widget type is not supported.
    */
   public static function getFromSupportedWidget(array $element, array $context): ?FileFieldItemList {
-    if (isset($element['#type']) && $element['#type'] === 'managed_file') {
-      return $context['items'] ?? NULL;
+    if (
+      isset($element['#type'], $context['items']) &&
+      $element['#type'] === 'managed_file' &&
+      $context['items'] instanceof FileFieldItemList
+    ) {
+      return $context['items'];
     }
     return NULL;
   }
