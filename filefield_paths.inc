@@ -120,6 +120,8 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
           continue;
         }
 
+        $file->setPermanent();
+
         try {
           $new_file = $file_repository->move($file, $destination);
         }
