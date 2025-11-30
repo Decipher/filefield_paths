@@ -13,6 +13,13 @@ use Drupal\Core\Url;
  * Implements hook_install().
  */
 function filefield_paths_install() {
+  $storage_definition = BaseFieldDefinition::create('string')
+    ->setLabel(t('Original filename'))
+    ->setDescription(t('Original name of the file with no path components.'));
+
+  \Drupal::entityDefinitionUpdateManager()
+    ->installFieldStorageDefinition('origname', 'file', 'filefield_paths', $storage_definition);
+
   // Populate the origname field with the current filenames.
   Database::getConnection()
     ->update('file_managed')
@@ -26,7 +33,7 @@ function filefield_paths_install() {
 function filefield_paths_requirements($phase) {
   $requirements = [];
 
-  if ($phase == 'runtime') {
+  if ($phase === 'runtime') {
     $temporary_path = \Drupal::config('filefield_paths.settings')->get('temp_location');
 
     // If it's not set, we don't need to do anything because the default will
@@ -91,7 +98,7 @@ function filefield_paths_update_9001() {
 
   // If the scheme is 'public://' but the recommended scheme is NOT, then
   // we need to update to the variable to use the recommended scheme.
-  if ($scheme == 'public://' && $recommended_scheme != 'public://') {
+  if ($scheme === 'public://' && $recommended_scheme !== 'public://') {
     $temporary_path = $recommended_scheme . substr($temporary_path, 9);
     $config->set('temp_location', $temporary_path)->save();
   }
