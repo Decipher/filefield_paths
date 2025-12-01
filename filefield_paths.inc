@@ -47,7 +47,7 @@ function filefield_paths_filefield_paths_field_settings($form) {
 /**
  * Implements hook_filefield_paths_process_file().
  */
-function filefield_paths_filefield_paths_process_file(ContentEntityInterface $entity, FileFieldItemList $field, array $settings = []) {
+function filefield_paths_filefield_paths_process_file(ContentEntityInterface $entity, FileFieldItemList $field, array &$settings = []) {
   /** @var \Drupal\field\Entity\FieldConfig $field_config */
   $field_config = $field->getFieldDefinition();
   /** @var \Drupal\field\Entity\FieldStorageConfig $field_storage */

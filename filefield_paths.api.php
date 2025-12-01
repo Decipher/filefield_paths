@@ -56,7 +56,7 @@ function hook_filefield_paths_field_settings(array $form) {
  *
  * @see filefield_paths_filefield_paths_process_file()
  */
-function hook_filefield_paths_process_file(ContentEntityInterface $entity, \Drupal\Core\Field\FieldItemListInterface $field, array $settings = []) {
+function hook_filefield_paths_process_file(\Drupal\Core\Entity\ContentEntityInterface $entity, \Drupal\Core\Field\FieldItemListInterface $field, array &$settings = []) {
   // Only process files if Active Updating is on.
   if (empty($settings['active_updating'])) {
     return;

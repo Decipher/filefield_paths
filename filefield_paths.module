@@ -281,7 +281,7 @@ function filefield_paths_entity_update(EntityInterface $entity) {
       // Invoke hook_filefield_paths_process_file().
       $module_handler->invokeAll(
         'filefield_paths_process_file',
-        [$entity, $field, $settings]
+        [$entity, $field, &$settings]
       );
     }
   }
