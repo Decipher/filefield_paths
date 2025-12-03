@@ -3,6 +3,7 @@
 namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
 
@@ -95,6 +96,53 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
 
     // Ensure that the File path has been processed correctly.
     $session->responseContains("{$this->publicFilesDirectory}/node/{$nid}/{$nid}.txt", 'The File path has been processed correctly.');
+  }
+
+  /**
+   * Test a file upload using a custom temporary location set on the field.
+   */
+  public function testUploadFileWithCustomTempLocation() {
+    $session = $this->assertSession();
+    $custom_dir = 'private://filefield_paths_custom';
+    /** @var \Drupal\Core\File\FileSystemInterface $file_system */
+    $file_system = \Drupal::service('file_system');
+
+    // Create a File field with 'node/[node:nid]' as the File path and
+    // '[node:nid].[file:ffp-extension-original]' as the File name.
+    // Additionally, set a custom temporary upload location on the field
+    // configuration to ensure it overrides the global setting.
+    $field_name = mb_strtolower($this->randomMachineName());
+    $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
+    $third_party_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
+    $third_party_settings['filefield_paths']['temp_location'] = $custom_dir;
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
+
+    // Ensure the custom temporary directory exists and is writable.
+    $file_system->prepareDirectory($custom_dir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+
+    // Create a node with a test file.
+    /** @var \Drupal\file\Entity\File $test_file */
+    $test_file = $this->getTestFile('text');
+    $this->drupalGet("node/add/{$this->contentType}");
+    $edit['title[0][value]'] = $this->randomMachineName();
+    $edit["files[{$field_name}_0]"] = $file_system->realpath($test_file->getFileUri());
+    $this->submitForm($edit, 'Upload');
+
+    // Ensure that the file was put into the custom Temporary file location
+    // defined on the field configuration (not the global setting).
+    $generated_url = \Drupal::service('file_url_generator')->generateString($custom_dir . '/' . $test_file->getFilename());
+    $session->responseContains($generated_url, 'File has been uploaded to the field-level temporary file location.');
+
+    // Save the node.
+    $this->submitForm([], 'Save');
+
+    // Get created Node ID.
+    $matches = [];
+    preg_match('/node\/(\d+)/', $this->getUrl(), $matches);
+    $nid = $matches[1];
+
+    // Ensure that the File path has been processed correctly after save.
+    $session->responseContains("{$this->publicFilesDirectory}/node/{$nid}/{$nid}.txt", 'The File path has been processed correctly with custom temp location.');
   }
 
   /**

@@ -170,6 +170,24 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
           }
         }
 
+        $description = t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.');
+        $description .= '<br />';
+        $description .= t('It is recommended to use the temporary file system (temporary://) whenever possible, especially for files that do not require previewing before form submission. Alternatively, if your server configuration permits, the private file system (private://) is preferred for situations where file previews — such as image previews — are needed before the form is submitted, as it provides secure and appropriate access for this functionality.');
+        $description .= '<br />';
+        $description .= '<strong>' . t('Never use the public directory (public://) if the site supports private files, or private files can be temporarily exposed publicly.') . '</strong>';
+        $description .= '<br />';
+        $description .= t('Leave blank to use <a href=":url">global setting</a>.', [':url' => Url::fromRoute('filefield_paths.admin_settings')->toString()]);
+        // Temporary file path.
+        $form['settings']['filefield_paths']['details']['temp_location'] = [
+          '#type' => 'textfield',
+          '#title' => t('Temporary file location'),
+          '#description' => $description,
+          '#default_value' => $settings['temp_location'] ?? FALSE,
+          '#element_validate' => ['filefield_paths_element_temp_location_validate'],
+          '#weight' => 10,
+          '#attributes' => ['placeholder' => \Drupal::config('filefield_paths.settings')->get('temp_location')],
+        ];
+
         // Redirect.
         $form['settings']['filefield_paths']['details']['redirect'] = [
           '#type'          => 'checkbox',
@@ -213,7 +231,10 @@ function filefield_paths_field_widget_single_element_form_alter(&$element, FormS
   // Force all File (Field) Paths uploads to go to the temporary file system
   // prior to being processed.
   if (FieldItem::hasConfigurationEnabled(FieldItem::getFromSupportedWidget($element, $context))) {
-    $element['#upload_location'] = \Drupal::config('filefield_paths.settings')
+    $settings = $context['items']->getFieldDefinition()
+      ->getThirdPartySettings('filefield_paths');
+    $temp_location = $settings['temp_location'] ?? NULL;
+    $element['#upload_location'] = $temp_location ?: \Drupal::config('filefield_paths.settings')
       ->get('temp_location');
   }
 }
@@ -235,6 +256,19 @@ function filefield_paths_form_submit(array $form, FormStateInterface $form_state
       if ($response instanceof Response) {
         $response->send();
       }
+    }
+  }
+}
+
+/**
+ * Validate the temporary upload location.
+ */
+function filefield_paths_element_temp_location_validate($element, FormStateInterface $form_state) {
+  if ($value = $element['#value'] ?? $element['#default_value']) {
+    /** @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager */
+    $stream_wrapper_manager = \Drupal::service('stream_wrapper_manager');
+    if (!$stream_wrapper_manager->getViaUri($value)) {
+      $form_state->setError($element, t('Invalid temporary file location.'));
     }
   }
 }

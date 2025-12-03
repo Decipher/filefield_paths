@@ -74,12 +74,17 @@ class SettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, ?Request $request = NULL) {
+    $description = $this->t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.');
+    $description .= '<br />';
+    $description .= $this->t('It is recommended to use the temporary file system (temporary://) whenever possible, especially for files that do not require previewing before form submission. Alternatively, if your server configuration permits, the private file system (private://) is preferred for situations where file previews — such as image previews — are needed before the form is submitted, as it provides secure and appropriate access for this functionality.');
+    $description .= '<br />';
+    $description .= '<strong>' . $this->t('Never use the public directory (public://) if the site supports private files, or private files can be temporarily exposed publicly.') . '</strong>';
     $form['temp_location'] = [
       '#title' => $this->t('Temporary file location'),
       '#type' => 'textfield',
       '#default_value' => $this->config('filefield_paths.settings')
         ->get('temp_location') ?: filefield_paths_recommended_temporary_scheme() . 'filefield_paths',
-      '#description'   => t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.<br />It is recommended that you use the temporary file system (temporary://) or, as a 2nd choice, the private file system (private://) if your server configuration allows for one of those.<br /><strong>Never use the public directory (public://) if the site supports private files, or private files can be temporarily exposed publicly.</strong>'),
+      '#description' => $description,
     ];
 
     return parent::buildForm($form, $form_state);

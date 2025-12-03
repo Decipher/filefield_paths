@@ -68,7 +68,8 @@ function filefield_paths_filefield_paths_process_file(ContentEntityInterface $en
   $wrappers = $stream_wrapper_manager->getWrappers(StreamWrapperInterface::WRITE);
 
   $destination_scheme_name = $field_storage->getSetting('uri_scheme');
-  $temporary_scheme_name = StreamWrapperManager::getScheme($config->get('temp_location'));
+  $temp_location = !empty($settings['temp_location']) ? $settings['temp_location'] : $config->get('temp_location');
+  $temporary_scheme_name = StreamWrapperManager::getScheme($temp_location);
   $schemas = [$temporary_scheme_name, $destination_scheme_name];
 
   /** @var \Drupal\file\Entity\File $file */

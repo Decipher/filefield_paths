@@ -53,6 +53,9 @@ field.field.*.*.*.third_party.filefield_paths:
             transliterate:
               type: boolean
               label: 'Transliterate'
+    temp_location:
+      type: string
+      label: 'Temporary file location'
     redirect:
       type: boolean
       label: 'Create Redirect'
