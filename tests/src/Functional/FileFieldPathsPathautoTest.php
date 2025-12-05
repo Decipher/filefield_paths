@@ -7,7 +7,8 @@ use Drupal\Component\Utility\Unicode;
 /**
  * Test pathauto integration.
  *
- * @group File (Field) Paths
+ * @group filefield_paths
+ * @runTestsInSeparateProcesses
  */
 class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
 

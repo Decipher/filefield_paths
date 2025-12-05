@@ -11,14 +11,15 @@ use Drupal\Tests\UnitTestCase;
  * Tests the FieldItem utility class.
  *
  * @group filefield_paths
- * @coversDefaultClass \Drupal\filefield_paths\Utility\FieldItem
+ * @runTestsInSeparateProcesses
+ * @covers \Drupal\filefield_paths\Utility\FieldItem
  */
 class FieldItemTest extends UnitTestCase {
 
   /**
    * Tests the getFromSupportedWidget method.
    *
-   * @covers ::getFromSupportedWidget
+   * @covers \Drupal\filefield_paths\Utility\FieldItem::getFromSupportedWidget
    * @dataProvider providerGetFromSupportedWidget
    */
   public function testGetFromSupportedWidget(array $element, array $context, $expected_result) {

@@ -7,7 +7,8 @@ use Drupal\Component\Utility\Unicode;
 /**
  * Test transliteration functionality.
  *
- * @group File (Field) Paths
+ * @group filefield_paths
+ * @runTestsInSeparateProcesses
  */
 class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
 

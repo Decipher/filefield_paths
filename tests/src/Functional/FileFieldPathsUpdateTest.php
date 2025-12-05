@@ -5,7 +5,8 @@ namespace Drupal\Tests\filefield_paths\Functional;
 /**
  * Test update functionality.
  *
- * @group File (Field) Paths
+ * @group filefield_paths
+ * @runTestsInSeparateProcesses
  */
 class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
 

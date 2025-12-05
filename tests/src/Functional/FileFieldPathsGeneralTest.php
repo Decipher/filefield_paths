@@ -10,7 +10,8 @@ use Drupal\node\NodeInterface;
 /**
  * Test general functionality.
  *
- * @group File (Field) Paths
+ * @group filefield_paths
+ * @runTestsInSeparateProcesses
  */
 class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
 

@@ -7,7 +7,8 @@ use Drupal\Core\StreamWrapper\PublicStream;
 /**
  * Test redirect module integration.
  *
- * @group File (Field) Paths
+ * @group filefield_paths
+ * @runTestsInSeparateProcesses
  */
 class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
 
