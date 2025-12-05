@@ -4,8 +4,8 @@ namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\node\Entity\Node;
 use Drupal\node\NodeInterface;
+use Drupal\image\Entity\ImageStyle;
 
 /**
  * Test general functionality.
@@ -292,10 +292,10 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
    */
   public function testFileUsage() {
     /** @var \Drupal\node\NodeStorage $node_storage */
-    $node_storage = $this->container->get('entity_type.manager')
+    $node_storage = \Drupal::service('entity_type.manager')
       ->getStorage('node');
     /** @var \Drupal\file\FileUsage\FileUsageInterface $file_usage */
-    $file_usage = $this->container->get('file.usage');
+    $file_usage = \Drupal::service('file.usage');
 
     // Create a File field with 'node/[node:nid]' as the File path.
     $field_name = mb_strtolower($this->randomMachineName());
@@ -420,6 +420,82 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
   }
 
   /**
+   * Test that an image style derivative is generated for an uploaded image.
+   */
+  public function testImageStyleDerivativeGeneration() {
+    $file_system = \Drupal::service('file_system');
+
+    // Create a simple image style programmatically to avoid relying on
+    // pre-existing configuration.
+    $style_id = 'ffp_test_style';
+    if (!ImageStyle::load($style_id)) {
+      $style = ImageStyle::create([
+        'name' => $style_id,
+        'label' => 'FFP Test style',
+      ]);
+      $style->addImageEffect([
+        'id' => 'image_scale',
+        'data' => ['width' => 50, 'height' => 50, 'upscale' => FALSE],
+        'weight' => 0,
+      ]);
+      $style->save();
+    }
+
+    // Create an Image field and enable File (Field) Paths to move the file on
+    // save, to ensure derivatives work with the finalized URI.
+    $field_name = mb_strtolower($this->randomMachineName());
+    $third_party_settings['filefield_paths']['enabled'] = TRUE;
+    $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
+    $third_party_settings['filefield_paths']['file_name']['value'] = '[node:nid].[file:ffp-extension-original]';
+    $this->createImageField($field_name, $this->contentType, [], [], $third_party_settings);
+
+    // Configure the view display to use the created image style.
+    /** @var \Drupal\Core\Entity\EntityDisplayRepositoryInterface $edr */
+    $edr = \Drupal::service('entity_display.repository');
+    $edr->getViewDisplay('node', $this->contentType, 'default')
+      ->setComponent($field_name, [
+        'type' => 'image',
+        'settings' => [
+          'image_style' => $style_id,
+        ],
+      ])
+      ->save();
+
+    // Upload an image via the node add form and save the node.
+    /** @var \Drupal\file\Entity\File $test_image */
+    $test_image = $this->getTestFile('image');
+    $this->drupalGet('node/add/' . $this->contentType);
+    $edit = [
+      'title[0][value]' => $this->randomMachineName(),
+      "files[{$field_name}_0]" => $file_system->realpath($test_image->getFileUri()),
+    ];
+    $this->submitForm($edit, 'Upload');
+    // Provide required ALT text for the uploaded image to allow saving.
+    $this->submitForm([
+      $field_name . '[0][alt]' => 'Test alt',
+    ], 'Save');
+
+    // Load the node and resolve the original image URI.
+    $matches = [];
+    preg_match('/node\/([0-9]+)/', $this->getUrl(), $matches);
+    $this->assertNotEmpty($matches[1] ?? NULL, 'A node was created and its ID could be detected from the URL: ' . $this->getUrl());
+    $nid = (int) $matches[1];
+    $node = $this->reloadNode($nid);
+    $image_file = $node->{$field_name}[0]->entity;
+    $original_uri = $image_file->getFileUri();
+
+    // Build the derivative URL and request it to trigger generation.
+    $style = ImageStyle::load($style_id);
+    $derivative_url = $style->buildUrl($original_uri);
+    $this->drupalGet($derivative_url);
+    $this->assertSession()->statusCodeEquals(200);
+
+    $derivative_uri = $style->buildUri($original_uri);
+    // Ensure the derivative file exists on disk.
+    $this->assertFileExists($derivative_uri, 'Image style derivative has been generated.');
+  }
+
+  /**
    * Loads the node from the database.
    *
    * On the node storage, caches are cleared to ensure the data is loaded from
@@ -432,8 +508,11 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
    *   The loaded node.
    */
   protected function reloadNode(int $nid): NodeInterface {
-    $this->container->get('entity_type.manager')->getStorage('node')->resetCache();
-    return Node::load($nid);
+    $storage = \Drupal::entityTypeManager()->getStorage('node');
+    $storage->resetCache();
+    $node = $storage->load($nid);
+    $this->assertInstanceOf(NodeInterface::class, $node);
+    return $node;
   }
 
 }
