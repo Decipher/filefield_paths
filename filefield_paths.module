@@ -162,8 +162,9 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
         if (\Drupal::moduleHandler()->moduleExists('token')) {
           $form['settings']['filefield_paths']['details']['token_tree'] = [
             '#theme'       => 'token_tree_link',
-            '#token_types' => ['file'],
+            '#token_types' => ['file', $entity_info->id()],
             '#weight'      => 10,
+            '#text' => t('Browse available tokens.') . ' ' . t('List of tokens available for replacement by File Field Paths.'),
           ];
           if (!empty($token_type)) {
             $form['settings']['filefield_paths']['details']['token_tree']['#token_types'][] = $token_type;
