@@ -4,6 +4,7 @@ namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\file\Entity\File;
 use Drupal\node\NodeInterface;
 use Drupal\image\Entity\ImageStyle;
 
@@ -232,6 +233,69 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     // Ensure that the File path has been processed correctly.
     $node = $this->reloadNode($node->id());
     $this->assertSame("public://node/{$node->id()}/{$node->id()}.txt", $node->{$field_name}[0]->entity->getFileUri(), 'The File path has been processed correctly.');
+  }
+
+  /**
+   * Verifies URI update on programmatically saved files with timestamped names.
+   *
+   * This reproduces a scenario where the originally saved file has a name
+   * containing a timestamp that differs from the timestamp used by
+   * File (Field) Paths tokens at entity save time. The file should be moved to
+   * the processed destination and the referenced file entity's URI should
+   * reflect the new location.
+   */
+  public function testProgrammaticAttachWithTimestampedFilename() {
+    // Configure a File field so that both path and filename are based on the
+    // current timestamp at processing time.
+    $field_name = mb_strtolower($this->randomMachineName());
+    $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[date:custom:YmdHis]';
+    $third_party_settings['filefield_paths']['file_name']['value'] = '[date:custom:YmdHis].[file:ffp-extension-original]';
+    $this->createFileField($field_name, 'node', $this->contentType, [], [], [], $third_party_settings);
+
+    // Create a node without an attached file.
+    /** @var \Drupal\node\Entity\Node $node */
+    $node = $this->drupalCreateNode(['type' => $this->contentType]);
+
+    // Programmatically create and save a file whose name contains an older
+    // timestamp to ensure it differs from the token-evaluated timestamp.
+    $older_ts = (string) (\Drupal::time()->getRequestTime() - 5);
+    $original_filename = "manual-{$older_ts}.txt";
+    $original_uri = "public://{$original_filename}";
+    // Ensure the directory exists and write the file.
+    /** @var \Drupal\Core\File\FileSystemInterface $fs */
+    $fs = \Drupal::service('file_system');
+    $public_dir = 'public://';
+    $fs->prepareDirectory($public_dir, FileSystemInterface::CREATE_DIRECTORY);
+    file_put_contents($fs->realpath($original_uri), 'Test content');
+
+    /** @var \Drupal\file\Entity\File $file */
+    $file = File::create([
+      'uri' => $original_uri,
+    ]);
+    $file->setPermanent();
+    $file->save();
+
+    // Attach the pre-saved file to the node and save the node to trigger
+    // File (Field) Paths processing.
+    $node->{$field_name}->setValue([
+      'target_id' => $file->id(),
+    ]);
+    $node->save();
+
+    // Reload and verify that the file was moved and the URI updated to match
+    // the processed timestamped path and filename.
+    $node = $this->reloadNode($node->id());
+    $moved_uri = $node->{$field_name}[0]->entity->getFileUri();
+
+    // It should be under public://node/<timestamp>/<timestamp>.txt and not the
+    // original location.
+    $this->assertNotSame($original_uri, $moved_uri, 'File URI changed from the original programmatic save.');
+
+    $this->assertMatchesRegularExpression(
+      '/^public:\/\/node\/(\d{14})\/\1\.txt$/',
+      $moved_uri,
+      'File moved to a timestamped directory and filename with matching timestamps.'
+    );
   }
 
   /**
