@@ -19,6 +19,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Utility\Token;
 use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
+use Drupal\filefield_paths\Hook\File as FileHook;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Utility\FieldItem;
 use Symfony\Component\HttpFoundation\Response;
@@ -329,16 +330,6 @@ function filefield_paths_entity_update(EntityInterface $entity) {
 }
 
 /**
- * Implements hook_file_presave().
- */
-function filefield_paths_file_presave($file) {
-  // Store original filename in the database.
-  if (isset($file->origname) && $file->origname->isEmpty() && isset($file->filename) && !$file->filename->isEmpty()) {
-    $file->origname = $file->filename;
-  }
-}
-
-/**
  * Creates a redirect for a moved File field.
  *
  * @param string $source
@@ -483,6 +474,12 @@ function filefield_paths_recommended_temporary_scheme() {
     }
   }
   return $scheme;
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_file_presave($file) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  \Drupal::service(FileHook::class)->filePresave($file);
 }
 
 // @phpstan-ignore-next-line
