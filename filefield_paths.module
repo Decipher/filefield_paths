@@ -10,10 +10,12 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Hook\Attribute\LegacyHook;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Url;
 use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
+use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Utility\FieldItem;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -469,17 +471,9 @@ function filefield_paths_recommended_temporary_scheme() {
 /**
  * Implements hook_local_tasks_alter().
  */
+// @phpstan-ignore-next-line
+#[LegacyHook]
 function filefield_paths_local_tasks_alter(&$local_tasks) {
-  foreach ($local_tasks as $task_id => $definition) {
-    if ($definition['route_name'] === 'system.file_system_settings') {
-      return;
-    }
-  }
-  // Provide filesystem route if it not exists.
-  $local_tasks['system.file_system_settings'] = [
-    'route_name' => 'system.file_system_settings',
-    'base_route' => 'system.file_system_settings',
-    'title' => t('Settings'),
-    'id' => 'system.file_system_settings',
-  ] + $local_tasks['filefield_paths.admin_settings'];
+  \Drupal::service(LocalTaskAlter::class)
+    ->localTasksAlterImplementation($local_tasks);
 }
