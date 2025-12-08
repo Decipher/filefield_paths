@@ -468,12 +468,9 @@ function filefield_paths_recommended_temporary_scheme() {
   return $scheme;
 }
 
-/**
- * Implements hook_local_tasks_alter().
- */
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_local_tasks_alter(&$local_tasks) {
+function filefield_paths_local_tasks_alter(&$local_tasks) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(LocalTaskAlter::class)
     ->localTasksAlterImplementation($local_tasks);
 }
