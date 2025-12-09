@@ -8,7 +8,6 @@
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\LegacyHook;
 use Drupal\Core\Language\Language;
@@ -19,27 +18,13 @@ use Drupal\Core\Url;
 use Drupal\Core\Utility\Token;
 use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
-use Drupal\filefield_paths\Hook\File as FileHook;
+use Drupal\filefield_paths\Hook\File;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Utility\FieldItem;
 use Symfony\Component\HttpFoundation\Response;
 
 // @todo Turn this into a plugin.
 require_once __DIR__ . '/filefield_paths.inc';
-
-/**
- * Implements hook_entity_base_field_info().
- */
-function filefield_paths_entity_base_field_info(EntityTypeInterface $entity_type) {
-  $fields = [];
-  if ($entity_type->id() == 'file') {
-    $fields['origname'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Original filename'))
-      ->setDescription(t('Original name of the file with no path components.'));
-  }
-
-  return $fields;
-}
 
 /**
  * Implements hook_form_FORM_ID_alter().
@@ -478,8 +463,14 @@ function filefield_paths_recommended_temporary_scheme() {
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
+function filefield_paths_entity_base_field_info(EntityTypeInterface $entity_type) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  return \Drupal::service(File::class)->entityBaseFieldInfo($entity_type);
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
 function filefield_paths_file_presave($file) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
-  \Drupal::service(FileHook::class)->filePresave($file);
+  \Drupal::service(File::class)->filePresave($file);
 }
 
 // @phpstan-ignore-next-line
