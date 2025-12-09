@@ -10,6 +10,9 @@ services:
     arguments: ['@entity_type.manager']
 
   # Legacy hook support
+  Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm:
+    class: Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm
+    autowire: true
   Drupal\filefield_paths\Hook\File:
     class: Drupal\filefield_paths\Hook\File
     autowire: true

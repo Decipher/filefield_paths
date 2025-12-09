@@ -18,6 +18,7 @@ use Drupal\Core\Url;
 use Drupal\Core\Utility\Token;
 use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
+use Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm;
 use Drupal\filefield_paths\Hook\File;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Hook\Tokens;
@@ -215,21 +216,6 @@ function filefield_paths_form_field_config_edit_form_alter(array &$form, FormSta
     }
 
     $form['actions']['submit']['#submit'][] = 'filefield_paths_form_submit';
-  }
-}
-
-/**
- * Implements hook_field_widget_single_element_form_alter().
- */
-function filefield_paths_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context) {
-  // Force all File (Field) Paths uploads to go to the temporary file system
-  // prior to being processed.
-  if (FieldItem::hasConfigurationEnabled(FieldItem::getFromSupportedWidget($element, $context))) {
-    $settings = $context['items']->getFieldDefinition()
-      ->getThirdPartySettings('filefield_paths');
-    $temp_location = $settings['temp_location'] ?? NULL;
-    $element['#upload_location'] = $temp_location ?: \Drupal::config('filefield_paths.settings')
-      ->get('temp_location');
   }
 }
 
@@ -464,6 +450,13 @@ function filefield_paths_recommended_temporary_scheme() {
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
+function filefield_paths_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  \Drupal::service(FieldWidgetSingleElementForm::class)
+    ->formAlter($element, $form_state, $context);
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
 function filefield_paths_entity_base_field_info(EntityTypeInterface $entity_type) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   return \Drupal::service(File::class)->entityBaseFieldInfo($entity_type);
 }
@@ -490,5 +483,6 @@ function filefield_paths_token_info() {// phpcs:ignore Drupal.Commenting.Functio
 // @phpstan-ignore-next-line
 #[LegacyHook]
 function filefield_paths_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
-  return \Drupal::service(Tokens::class)->tokensProvider($type, $tokens, $data, $options, $bubbleable_metadata);
+  return \Drupal::service(Tokens::class)
+    ->tokensProvider($type, $tokens, $data, $options, $bubbleable_metadata);
 }
