@@ -19,6 +19,7 @@ use Drupal\filefield_paths\Hook\EntityWithFileField;
 use Drupal\filefield_paths\Hook\FieldConfigEditForm;
 use Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm;
 use Drupal\filefield_paths\Hook\File;
+use Drupal\filefield_paths\Hook\FileFieldPathsFieldSettingsLegacy;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Hook\Tokens;
 
@@ -222,6 +223,12 @@ function filefield_paths_recommended_temporary_scheme() {
     }
   }
   return $scheme;
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_filefield_paths_field_settings($form) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  return \Drupal::service(FileFieldPathsFieldSettingsLegacy::class)->fileFieldPathsFieldSettings($form);
 }
 
 // @phpstan-ignore-next-line

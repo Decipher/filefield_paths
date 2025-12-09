@@ -27,6 +27,9 @@ services:
   Drupal\filefield_paths\Hook\File:
     class: Drupal\filefield_paths\Hook\File
     autowire: true
+  Drupal\filefield_paths\Hook\FileFieldPathsFieldSettingsLegacy:
+    class: Drupal\filefield_paths\Hook\FileFieldPathsFieldSettingsLegacy
+    autowire: true
   Drupal\filefield_paths\Hook\LocalTaskAlter:
     class: Drupal\filefield_paths\Hook\LocalTaskAlter
     autowire: true

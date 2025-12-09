@@ -12,39 +12,6 @@ use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 
 /**
- * Implements hook_filefield_paths_field_settings().
- */
-function filefield_paths_filefield_paths_field_settings($form) {
-  return [
-    'file_path' => [
-      'title' => 'File path',
-      'form' => [
-        'value' => [
-          '#type' => 'textfield',
-          '#title' => t('File path'),
-          '#maxlength' => 512,
-          '#size' => 128,
-          '#element_validate' => $form['settings']['file_directory']['#element_validate'] ?? [],
-          '#default_value' => $form['settings']['file_directory']['#default_value'] ?? NULL,
-        ],
-      ],
-    ],
-    'file_name' => [
-      'title' => 'File name',
-      'form' => [
-        'value' => [
-          '#type' => 'textfield',
-          '#title' => t('File name'),
-          '#maxlength' => 512,
-          '#size' => 128,
-          '#default_value' => '[file:ffp-name-only-original].[file:ffp-extension-original]',
-        ],
-      ],
-    ],
-  ];
-}
-
-/**
  * Implements hook_filefield_paths_process_file().
  */
 function filefield_paths_filefield_paths_process_file(ContentEntityInterface $entity, FileFieldItemList $field, array &$settings = []) {
