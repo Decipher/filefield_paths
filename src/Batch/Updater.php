@@ -11,7 +11,7 @@ use Drupal\field\FieldConfigInterface;
 /**
  * File (Field) Paths Batch Updater service.
  */
-class Updater {
+class Updater implements BatchUpdaterInterface {
 
   use StringTranslationTrait;
   use DependencySerializationTrait;
@@ -27,13 +27,7 @@ class Updater {
   ) {}
 
   /**
-   * Set batch process to update File (Field) Paths.
-   *
-   * @param \Drupal\field\FieldConfigInterface $field_config
-   *   The file field for which to update paths.
-   *
-   * @return bool
-   *   True if there were paths to update, false otherwise.
+   * {@inheritdoc}
    */
   public function batchUpdate(FieldConfigInterface $field_config): bool {
     $entity_info = $this->entityTypeManager->getDefinition($field_config->getTargetEntityTypeId());
@@ -64,16 +58,7 @@ class Updater {
   }
 
   /**
-   * Batch callback for File (Field) Paths retroactive updates.
-   *
-   * @param int[] $objects
-   *   A list of entity ID's for the entity type that the field is attached to.
-   * @param \Drupal\field\FieldConfigInterface $field_config
-   *   The file field for which to update paths.
-   * @param array $context
-   *   The batch context.
-   *
-   * @internal
+   * {@inheritdoc}
    */
   public function batchProcess(array $objects, FieldConfigInterface $field_config, array &$context): void {
     if (!isset($context['sandbox']['progress'])) {

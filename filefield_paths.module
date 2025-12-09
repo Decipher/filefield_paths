@@ -13,243 +13,47 @@ use Drupal\Core\Language\Language;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Url;
 use Drupal\Core\Utility\Token;
 use Drupal\field\FieldConfigInterface;
-use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Hook\EntityWithFileField;
+use Drupal\filefield_paths\Hook\FieldConfigEditForm;
 use Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm;
 use Drupal\filefield_paths\Hook\File;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Hook\Tokens;
-use Symfony\Component\HttpFoundation\Response;
 
 // @todo Turn this into a plugin.
 require_once __DIR__ . '/filefield_paths.inc';
 
 /**
- * Implements hook_form_FORM_ID_alter().
- */
-function filefield_paths_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state) {
-  /** @var Drupal\field\Entity\FieldConfig $field */
-  $field = $form_state->getFormObject()->getEntity();
-  $class = $field->getClass();
-
-  if (class_exists($class) && new $class($field->getItemDefinition()) instanceof FileFieldItemList) {
-    $entity_info = \Drupal::entityTypeManager()
-      ->getDefinition($field->getTargetEntityTypeId());
-    $settings = $field->getThirdPartySettings('filefield_paths');
-
-    $form['settings']['filefield_paths'] = [
-      '#type'    => 'container',
-      '#tree'    => TRUE,
-      '#weight'  => 2,
-      '#parents' => ['third_party_settings', 'filefield_paths'],
-    ];
-
-    $form['settings']['filefield_paths']['enabled'] = [
-      '#type'          => 'checkbox',
-      '#title'         => t('Enable File (Field) Paths?'),
-      '#default_value' => $settings['enabled'] ?? TRUE,
-      '#description'   => t('File (Field) Paths provides advanced file path and naming options.'),
-    ];
-
-    // Hide standard File directory field.
-    $form['settings']['file_directory']['#states'] = [
-      'visible' => [
-        ':input[name="third_party_settings[filefield_paths][enabled]"]' => ['checked' => FALSE],
-      ],
-    ];
-
-    // File (Field) Paths details element.
-    $form['settings']['filefield_paths']['details'] = [
-      '#type'    => 'details',
-      '#title'   => t('File (Field) Path settings'),
-      '#weight'  => 3,
-      '#tree'    => TRUE,
-      '#states'  => [
-        'visible' => [
-          ':input[name="third_party_settings[filefield_paths][enabled]"]' => ['checked' => TRUE],
-        ],
-      ],
-      '#parents' => ['third_party_settings', 'filefield_paths'],
-    ];
-
-    // Additional File (Field) Paths widget fields.
-    $settings_fields = \Drupal::moduleHandler()
-      ->invokeAll('filefield_paths_field_settings', [$form]);
-    foreach ($settings_fields as $name => $settings_field) {
-      // Attach widget fields.
-      $form['settings']['filefield_paths']['details'][$name] = [
-        '#type' => 'container',
-      ];
-
-      // Attach widget field form elements.
-      if (isset($settings_field['form']) && is_array($settings_field['form'])) {
-        foreach (array_keys($settings_field['form']) as $delta => $key) {
-          $form['settings']['filefield_paths']['details'][$name][$key] = $settings_field['form'][$key];
-          if (\Drupal::moduleHandler()->moduleExists('token')) {
-            $form['settings']['filefield_paths']['details'][$name][$key]['#element_validate'][] = 'token_element_validate';
-            $form['settings']['filefield_paths']['details'][$name][$key]['#token_types'] = [
-              'date',
-              'file',
-            ];
-            $token_type = \Drupal::service('token.entity_mapper')
-              ->getTokenTypeForEntityType($entity_info->id());
-            if (!empty($token_type)) {
-              $form['settings']['filefield_paths']['details'][$name][$key]['#token_types'][] = $token_type;
-            }
-          }
-
-          // Fetch stored value from instance.
-          if (isset($settings[$name][$key])) {
-            $form['settings']['filefield_paths']['details'][$name][$key]['#default_value'] = $settings[$name][$key];
-          }
-        }
-
-        // Field options.
-        $form['settings']['filefield_paths']['details'][$name]['options'] = [
-          '#type'       => 'details',
-          '#title'      => t('@title options', ['@title' => $settings_field['title']]),
-          '#weight'     => 1,
-          '#attributes' => [
-            'class' => ["{$name} cleanup"],
-          ],
-        ];
-        // Cleanup slashes (/).
-        $form['settings']['filefield_paths']['details'][$name]['options']['slashes'] = [
-          '#type'          => 'checkbox',
-          '#title'         => t('Remove slashes (/) from tokens'),
-          '#default_value' => $settings[$name]['options']['slashes'] ?? FALSE,
-          '#description'   => t('If checked, any slashes (/) in tokens will be removed from %title.', ['%title' => $settings_field['title']]),
-        ];
-
-        // Cleanup field with Pathauto module.
-        $form['settings']['filefield_paths']['details'][$name]['options']['pathauto'] = [
-          '#type'          => 'checkbox',
-          '#title'         => t('Cleanup using Pathauto'),
-          '#default_value' => isset($settings[$name]['options']['pathauto']) && \Drupal::moduleHandler()
-            ->moduleExists('pathauto') ? $settings[$name]['options']['pathauto'] : FALSE,
-          '#description'   => t('Cleanup %title using Pathauto.', [
-            '%title' => $settings_field['title'],
-          ]),
-          '#disabled'      => TRUE,
-        ];
-        if (\Drupal::moduleHandler()->moduleExists('pathauto')) {
-          unset($form['settings']['filefield_paths']['details'][$name]['options']['pathauto']['#disabled']);
-          $form['settings']['filefield_paths']['details'][$name]['options']['pathauto']['#description'] = t('Cleanup %title using <a href="@pathauto">Pathauto settings</a>.', [
-            '%title'    => $settings_field['title'],
-            '@pathauto' => Url::fromRoute('pathauto.settings.form')->toString(),
-          ]);
-        }
-
-        // Transliterate field.
-        $form['settings']['filefield_paths']['details'][$name]['options']['transliterate'] = [
-          '#type'          => 'checkbox',
-          '#title'         => t('Transliterate'),
-          '#default_value' => $settings[$name]['options']['transliterate'] ?? 0,
-          '#description'   => t('Provides one-way string transliteration (romanization) and cleans the %title during upload by replacing unwanted characters.', ['%title' => $settings_field['title']]),
-        ];
-
-        // Replacement patterns for field.
-        if (\Drupal::moduleHandler()->moduleExists('token')) {
-          $form['settings']['filefield_paths']['details']['token_tree'] = [
-            '#theme'       => 'token_tree_link',
-            '#token_types' => ['file', $entity_info->id()],
-            '#weight'      => 10,
-            '#text' => t('Browse available tokens.') . ' ' . t('List of tokens available for replacement by File Field Paths.'),
-          ];
-          if (!empty($token_type)) {
-            $form['settings']['filefield_paths']['details']['token_tree']['#token_types'][] = $token_type;
-          }
-        }
-
-        $description = t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.');
-        $description .= '<br />';
-        $description .= t('It is recommended to use the temporary file system (temporary://) whenever possible, especially for files that do not require previewing before form submission. Alternatively, if your server configuration permits, the private file system (private://) is preferred for situations where file previews — such as image previews — are needed before the form is submitted, as it provides secure and appropriate access for this functionality.');
-        $description .= '<br />';
-        $description .= '<strong>' . t('Never use the public directory (public://) if the site supports private files, or private files can be temporarily exposed publicly.') . '</strong>';
-        $description .= '<br />';
-        $description .= t('Leave blank to use <a href=":url">global setting</a>.', [':url' => Url::fromRoute('filefield_paths.admin_settings')->toString()]);
-        // Temporary file path.
-        $form['settings']['filefield_paths']['details']['temp_location'] = [
-          '#type' => 'textfield',
-          '#title' => t('Temporary file location'),
-          '#description' => $description,
-          '#default_value' => $settings['temp_location'] ?? FALSE,
-          '#element_validate' => ['filefield_paths_element_temp_location_validate'],
-          '#weight' => 10,
-          '#attributes' => ['placeholder' => \Drupal::config('filefield_paths.settings')->get('temp_location')],
-        ];
-
-        // Redirect.
-        $form['settings']['filefield_paths']['details']['redirect'] = [
-          '#type'          => 'checkbox',
-          '#title'         => t('Create Redirect'),
-          '#description'   => t('Create a redirect to the new location when a previously uploaded file is moved.'),
-          '#default_value' => $settings['redirect'] ?? FALSE,
-          '#weight'        => 11,
-        ];
-        if (!\Drupal::moduleHandler()->moduleExists('redirect')) {
-          $form['settings']['filefield_paths']['details']['redirect']['#disabled'] = TRUE;
-          $form['settings']['filefield_paths']['details']['redirect']['#description'] .= '<br />' . t('Requires the <a href="https://drupal.org/project/redirect" target="_blank">Redirect</a> module.');
-        }
-
-        // Retroactive updates.
-        $form['settings']['filefield_paths']['details']['retroactive_update'] = [
-          '#type'        => 'checkbox',
-          '#title'       => t('Retroactive update'),
-          '#description' => t('Move and rename previously uploaded files. After saving the field settings, the paths of all previously uploaded files will be updated immediately. This will only occur once. So after the operation is done, this option will be disabled again.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
-          '#weight'      => 12,
-        ];
-
-        // Active updating.
-        $form['settings']['filefield_paths']['details']['active_updating'] = [
-          '#type'          => 'checkbox',
-          '#title'         => t('Active updating'),
-          '#default_value' => $settings['active_updating'] ?? FALSE,
-          '#description'   => t('Actively move and rename previously uploaded files as required. If necessary, the paths of previously uploaded files are updated each time the entity they belong to gets saved.') . '<div>' . t('<strong class="warning">Warning:</strong> This feature should only be used on developmental servers or with extreme caution.') . '</div>',
-          '#weight'        => 13,
-        ];
-      }
-    }
-
-    $form['actions']['submit']['#submit'][] = 'filefield_paths_form_submit';
-  }
-}
-
-/**
  * Form submission handler for the File (Field) Paths settings form.
  *
- * @see filefield_paths_form_field_config_edit_form_alter()
+ * @deprecated in filefield_paths:8.x-1.0 and is removed from
+ *   filefield_paths:2.0.0. Use
+ *   \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::submit()
+ *   instead.
+ *
+ * @see https://www.drupal.org/node/3562160
  */
 function filefield_paths_form_submit(array $form, FormStateInterface $form_state) {
-  $settings = $form_state->getValue('third_party_settings')['filefield_paths'];
-  // Retroactive updates.
-  if ($settings['enabled'] && $settings['retroactive_update']) {
-    /** @var \Drupal\filefield_paths\Batch\Updater $updater */
-    $updater = \Drupal::service('filefield_paths.batch.updater');
-    if ($updater->batchUpdate($form_state->getFormObject()
-      ->getEntity())) {
-      $response = batch_process($form_state->getRedirect());
-      if ($response instanceof Response) {
-        $response->send();
-      }
-    }
-  }
+  @trigger_error(__FUNCTION__ . '() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::submit() instead. See https://www.drupal.org/node/3562160', E_USER_DEPRECATED);
+  FieldConfigEditForm::submit($form, $form_state);
 }
 
 /**
  * Validate the temporary upload location.
+ *
+ * @deprecated in filefield_paths:8.x-1.0 and is removed from
+ *    filefield_paths:2.0.0. Use
+ *    \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::elementTempLocationValidate()
+ *    instead.
+ *
+ * @see https://www.drupal.org/node/3562160
+ * @see \Drupal\filefield_paths\Hook\FieldConfigEditForm::elementTempLocationValidate
  */
 function filefield_paths_element_temp_location_validate($element, FormStateInterface $form_state) {
-  if ($value = $element['#value'] ?? $element['#default_value']) {
-    /** @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager */
-    $stream_wrapper_manager = \Drupal::service('stream_wrapper_manager');
-    if (!$stream_wrapper_manager->getViaUri($value)) {
-      $form_state->setError($element, t('Invalid temporary file location.'));
-    }
-  }
+  @trigger_error(__FUNCTION__ . '() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::elementTempLocationValidate() instead. See https://www.drupal.org/node/3562160', E_USER_DEPRECATED);
+  FieldConfigEditForm::elementTempLocationValidate($element, $form_state);
 }
 
 /**
@@ -418,6 +222,12 @@ function filefield_paths_recommended_temporary_scheme() {
     }
   }
   return $scheme;
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  \Drupal::service(FieldConfigEditForm::class)->formAlter($form, $form_state);
 }
 
 // @phpstan-ignore-next-line
