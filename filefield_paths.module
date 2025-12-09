@@ -5,7 +5,6 @@
  * Contains core functions for the File (Field) Paths module.
  */
 
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -18,11 +17,11 @@ use Drupal\Core\Url;
 use Drupal\Core\Utility\Token;
 use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
+use Drupal\filefield_paths\Hook\EntityWithFileField;
 use Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm;
 use Drupal\filefield_paths\Hook\File;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Hook\Tokens;
-use Drupal\filefield_paths\Utility\FieldItem;
 use Symfony\Component\HttpFoundation\Response;
 
 // @todo Turn this into a plugin.
@@ -275,33 +274,6 @@ function filefield_paths_batch_update(FieldConfigInterface $field_config) {
 }
 
 /**
- * Implements hook_entity_insert().
- */
-function filefield_paths_entity_insert(EntityInterface $entity) {
-  filefield_paths_entity_update($entity);
-}
-
-/**
- * Implements hook_entity_update().
- */
-function filefield_paths_entity_update(EntityInterface $entity) {
-  if (!$entity instanceof ContentEntityInterface) {
-    return;
-  }
-  $module_handler = \Drupal::moduleHandler();
-  foreach ($entity->getFields() as $field) {
-    if (FieldItem::hasConfigurationEnabled($field)) {
-      $settings = FieldItem::getConfiguration($field);
-      // Invoke hook_filefield_paths_process_file().
-      $module_handler->invokeAll(
-        'filefield_paths_process_file',
-        [$entity, $field, &$settings]
-      );
-    }
-  }
-}
-
-/**
  * Creates a redirect for a moved File field.
  *
  * @param string $source
@@ -446,6 +418,18 @@ function filefield_paths_recommended_temporary_scheme() {
     }
   }
   return $scheme;
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_entity_insert(EntityInterface $entity) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  \Drupal::service(EntityWithFileField::class)->handleProcessFile($entity);
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_entity_update(EntityInterface $entity) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  \Drupal::service(EntityWithFileField::class)->handleProcessFile($entity);
 }
 
 // @phpstan-ignore-next-line
