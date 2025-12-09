@@ -20,6 +20,7 @@ use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Hook\File;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
+use Drupal\filefield_paths\Hook\Tokens;
 use Drupal\filefield_paths\Utility\FieldItem;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -478,4 +479,16 @@ function filefield_paths_file_presave($file) {// phpcs:ignore Drupal.Commenting.
 function filefield_paths_local_tasks_alter(&$local_tasks) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(LocalTaskAlter::class)
     ->localTasksAlterImplementation($local_tasks);
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_token_info() {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  return \Drupal::service(Tokens::class)->tokenInfo();
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  return \Drupal::service(Tokens::class)->tokensProvider($type, $tokens, $data, $options, $bubbleable_metadata);
 }

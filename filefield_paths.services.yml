@@ -16,3 +16,6 @@ services:
   Drupal\filefield_paths\Hook\LocalTaskAlter:
     class: Drupal\filefield_paths\Hook\LocalTaskAlter
     autowire: true
+  Drupal\filefield_paths\Hook\Tokens:
+    class: Drupal\filefield_paths\Hook\Tokens
+    autowire: true
