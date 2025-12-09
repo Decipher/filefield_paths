@@ -5,6 +5,7 @@
  * Contains core functions for the File (Field) Paths module.
  */
 
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -15,16 +16,15 @@ use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\Token;
 use Drupal\field\FieldConfigInterface;
+use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Hook\EntityWithFileField;
 use Drupal\filefield_paths\Hook\FieldConfigEditForm;
 use Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm;
 use Drupal\filefield_paths\Hook\File;
 use Drupal\filefield_paths\Hook\FileFieldPathsFieldSettingsLegacy;
+use Drupal\filefield_paths\Hook\FileFieldPathsProcessFileLegacy;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Hook\Tokens;
-
-// @todo Turn this into a plugin.
-require_once __DIR__ . '/filefield_paths.inc';
 
 /**
  * Form submission handler for the File (Field) Paths settings form.
@@ -229,6 +229,13 @@ function filefield_paths_recommended_temporary_scheme() {
 #[LegacyHook]
 function filefield_paths_filefield_paths_field_settings($form) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   return \Drupal::service(FileFieldPathsFieldSettingsLegacy::class)->fileFieldPathsFieldSettings($form);
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_filefield_paths_process_file(ContentEntityInterface $entity, FileFieldItemList $field, array &$settings = []) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  \Drupal::service(FileFieldPathsProcessFileLegacy::class)
+    ->fileFieldPathsProcessFile($entity, $field, $settings);
 }
 
 // @phpstan-ignore-next-line
