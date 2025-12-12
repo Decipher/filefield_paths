@@ -9,6 +9,7 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Drupal\filefield_paths\MoveFileProcessorInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -36,10 +37,21 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, StreamWrapperManagerInterface $stream_wrapper_manager, FileSystemInterface $file_system, TypedConfigManagerInterface $typed_config_manager) {
+  public function __construct(
+    ConfigFactoryInterface $config_factory,
+    StreamWrapperManagerInterface $stream_wrapper_manager,
+    FileSystemInterface $file_system,
+    TypedConfigManagerInterface $typed_config_manager,
+    protected /*readonly*/ ?MoveFileProcessorInterface $moveFileProcessor = NULL,
+  ) {
     parent::__construct($config_factory, $typed_config_manager);
     $this->streamWrapperManager = $stream_wrapper_manager;
     $this->fileSystem = $file_system;
+    if ($this->moveFileProcessor === NULL) {
+      @trigger_error('Calling ' . __METHOD__ . '() without the $moveFileProcessor argument is deprecated in filefield_paths:8.x-1.0 and it will be required in filefield_paths:2.0.0. See https://www.drupal.org/node/3562442', E_USER_DEPRECATED);
+      // @phpstan-ignore-next-line
+      $this->moveFileProcessor = \Drupal::service(MoveFileProcessorInterface::class);
+    }
   }
 
   /**
@@ -50,7 +62,8 @@ class SettingsForm extends ConfigFormBase {
       $container->get('config.factory'),
       $container->get('stream_wrapper_manager'),
       $container->get('file_system'),
-      $container->get('config.typed')
+      $container->get('config.typed'),
+      $container->get(MoveFileProcessorInterface::class),
     );
   }
 
@@ -83,7 +96,7 @@ class SettingsForm extends ConfigFormBase {
       '#title' => $this->t('Temporary file location'),
       '#type' => 'textfield',
       '#default_value' => $this->config('filefield_paths.settings')
-        ->get('temp_location') ?: filefield_paths_recommended_temporary_scheme() . 'filefield_paths',
+        ->get('temp_location') ?: $this->moveFileProcessor->recommendedTemporaryScheme() . 'filefield_paths',
       '#description' => $description,
     ];
 

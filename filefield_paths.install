@@ -8,6 +8,7 @@
 use Drupal\Core\Database\Database;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Url;
+use Drupal\filefield_paths\MoveFileProcessorInterface;
 
 /**
  * Returns the recommended temporary scheme for the site.
@@ -22,9 +23,9 @@ function filefield_paths_update_temporary_location_configuration() {
     return;
   }
 
-  \Drupal::moduleHandler()->load('filefield_paths');
   $scheme = substr($temporary_path, 0, 9);
-  $recommended_scheme = filefield_paths_recommended_temporary_scheme();
+  $recommended_scheme = \Drupal::service(MoveFileProcessorInterface::class)
+    ->recommendedTemporaryScheme();
 
   // If the scheme is 'public://' but the recommended scheme is NOT, then
   // we need to update to the variable to use the recommended scheme.
@@ -50,8 +51,15 @@ function filefield_paths_install() {
     ->update('file_managed')
     ->expression('origname', 'filename')
     ->execute();
+}
 
-  filefield_paths_update_temporary_location_configuration();
+/**
+ * Implements hook_modules_installed().
+ */
+function filefield_paths_modules_installed($modules, $is_syncing) {
+  if (!$is_syncing && in_array('filefield_paths', $modules, TRUE)) {
+    filefield_paths_update_temporary_location_configuration();
+  }
 }
 
 /**

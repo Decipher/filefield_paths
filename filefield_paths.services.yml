@@ -13,6 +13,9 @@ services:
   Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface:
     class: Drupal\filefield_paths\Utility\FieldConfigEditFormHandler
     autowire: true
+  Drupal\filefield_paths\MoveFileProcessorInterface:
+    class: Drupal\filefield_paths\MoveFileProcessor
+    autowire: true
 
   # Legacy hook support
   Drupal\filefield_paths\Hook\EntityWithFileField:

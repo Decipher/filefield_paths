@@ -25,6 +25,7 @@ use Drupal\filefield_paths\Hook\FileFieldPathsFieldSettingsLegacy;
 use Drupal\filefield_paths\Hook\FileFieldPathsProcessFileLegacy;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Hook\Tokens;
+use Drupal\filefield_paths\MoveFileProcessorInterface;
 
 /**
  * Form submission handler for the File (Field) Paths settings form.
@@ -203,26 +204,18 @@ function filefield_paths_process_string($value, array $data, array $settings = [
 
 /**
  * Get the recommended file scheme based on which file systems are enabled.
+ *
+ * @deprecated in filefield_paths:8.x-1.0 and is removed from
+ *   filefield_paths:2.0.0. Use
+ *   \Drupal\filefield_paths\MoveFileProcessorInterface::recommendedFileScheme()
+ *   instead.
+ *
+ * @see https://www.drupal.org/project/filefield_paths/issues/2930945
  */
 function filefield_paths_recommended_temporary_scheme() {
-  $scheme =& drupal_static(__FUNCTION__);
-  if (!$scheme) {
-    /** @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper */
-    $stream_wrapper = \Drupal::service('stream_wrapper_manager');
-    $scheme = 'public://';
-    $recommended = ['temporary', 'private'];
-    $wrappers = array_keys($stream_wrapper->getWrappers());
-    foreach ($recommended as $wrapper) {
-      if (in_array($wrapper, $wrappers, TRUE)) {
-        $path = $wrapper . '://';
-        if (is_writable($path)) {
-          $scheme = $path;
-          break;
-        }
-      }
-    }
-  }
-  return $scheme;
+  @trigger_error('filefield_paths_recommended_temporary_scheme() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\MoveFileProcessorInterface::recommendedFileScheme() instead. See https://www.drupal.org/node/3562442', E_USER_DEPRECATED);
+  return \Drupal::service(MoveFileProcessorInterface::class)
+    ->recommendedTemporaryScheme();
 }
 
 // @phpstan-ignore-next-line
