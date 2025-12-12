@@ -7,7 +7,6 @@ type: module
 dependencies:
   - drupal:file
 test_dependencies:
-  - ctools:ctools
   - pathauto:pathauto
   - token:token
   - redirect:redirect
