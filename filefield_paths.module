@@ -12,9 +12,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\LegacyHook;
 use Drupal\Core\Language\Language;
 use Drupal\Core\Render\BubbleableMetadata;
-use Drupal\Core\Render\RenderContext;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Utility\Token;
 use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Hook\EntityWithFileField;
@@ -26,6 +23,7 @@ use Drupal\filefield_paths\Hook\FileFieldPathsProcessFileLegacy;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Hook\Tokens;
 use Drupal\filefield_paths\MoveFileProcessorInterface;
+use Drupal\filefield_paths\PathProcessorInterface;
 
 /**
  * Form submission handler for the File (Field) Paths settings form.
@@ -121,85 +119,17 @@ function _filefield_paths_create_redirect($source, $path, Language $language) {
  * @return string
  *   The cleaned string, in which tokens are replaced and other alterations may
  *   have been applied, depending on the settings.
+ *
+ * @deprecated in filefield_paths:8.x-1.0 and is removed from
+ *   filefield_paths:2.0.0. Use
+ *   \Drupal\filefield_paths\PathProcessorInterface::processString() instead.
+ *
+ * @see https://www.drupal.org/node/3562822
  */
 function filefield_paths_process_string($value, array $data, array $settings = []) {
-  $context = new RenderContext();
-  /** @var \Drupal\Core\Cache\CacheableDependencyInterface $result */
-  $result = \Drupal::service(RendererInterface::class)->executeInRenderContext($context, function () use ($value, $data, $settings) {
-    $transliterate = (bool) $settings['transliterate'];
-    $pathauto = (isset($settings['pathauto']) && $settings['pathauto']) &&
-      \Drupal::moduleHandler()->moduleExists('pathauto');
-    $remove_slashes = !empty($settings['slashes']);
-
-    // If '/' is to be removed from tokens, token replacement needs to happen
-    // after splitting the paths to subdirectories. Otherwise,
-    // tokens containing '/' will be part of the final path.
-    if (!$remove_slashes) {
-      $value = \Drupal::service(Token::class)
-        ->replace($value, $data, ['clear' => TRUE]);
-    }
-    $paths = explode('/', $value);
-
-    foreach ($paths as $i => &$path) {
-      if ($remove_slashes) {
-        $path = \Drupal::service(Token::class)
-          ->replace($path, $data, ['clear' => TRUE]);
-      }
-      if ($pathauto) {
-        if (('file_name' === $settings['context']) && (count($paths) === $i + 1)) {
-          $pathinfo = pathinfo($path);
-          $basename = basename($path);
-          $extension = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
-          $pathinfo['filename'] = !is_null($extension) ? mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension)) : $basename;
-
-          if ($remove_slashes) {
-            $path = '';
-            if (!empty($pathinfo['dirname']) && $pathinfo['dirname'] !== '.') {
-              $path .= $pathinfo['dirname'] . '/';
-            }
-            $path .= $pathinfo['filename'];
-            $path = \Drupal::service('pathauto.alias_cleaner')
-              ->cleanstring($path);
-            if (!empty($pathinfo['extension'])) {
-              $path .= '.' . \Drupal::service('pathauto.alias_cleaner')
-                ->cleanstring($pathinfo['extension']);
-            }
-            $path = str_replace('/', '', $path);
-          }
-          else {
-            $path = str_replace($pathinfo['filename'], \Drupal::service('pathauto.alias_cleaner')
-              ->cleanstring($pathinfo['filename']), $path);
-          }
-        }
-        else {
-          $path = \Drupal::service('pathauto.alias_cleaner')
-            ->cleanstring($path);
-        }
-      }
-      elseif ($remove_slashes) {
-        $path = str_replace('/', '', $path);
-      }
-
-      // Transliterate string.
-      if ($transliterate) {
-        $path = \Drupal::service('transliteration')->transliterate($path);
-      }
-    }
-    $value = implode('/', $paths);
-
-    // Ensure that there are no double-slash sequences due to empty token
-    // values.
-    return preg_replace('/\/+/', '/', $value);
-  });
-
-  // Handle any bubbled cacheability metadata.
-  if (!$context->isEmpty()) {
-    $bubbleable_metadata = $context->pop();
-    BubbleableMetadata::createFromObject($result)
-      ->merge($bubbleable_metadata);
-  }
-
-  return $result;
+  @trigger_error('filefield_paths_process_string() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\PathProcessorInterface::processString() instead. See https://www.drupal.org/node/3562822', E_USER_DEPRECATED);
+  return \Drupal::service(PathProcessorInterface::class)
+    ->processString($value, $data, $settings);
 }
 
 /**

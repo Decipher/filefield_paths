@@ -12,6 +12,7 @@ use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\file\FileRepositoryInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
+use Drupal\filefield_paths\PathProcessorInterface;
 use Drupal\filefield_paths\RedirectInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\AutowireServiceClosure;
@@ -29,6 +30,7 @@ final class FileFieldPathsProcessFileLegacy {
     private readonly StreamWrapperManagerInterface $streamWrapperManager,
     private readonly ModuleHandlerInterface $moduleHandler,
     private readonly ConfigFactoryInterface $configFactory,
+    private readonly PathProcessorInterface $pathProcessor,
     #[Autowire(service: 'logger.channel.filefield_paths')]
     private readonly LoggerChannelInterface $logger,
     #[AutowireServiceClosure(RedirectInterface::class)]
@@ -83,12 +85,12 @@ final class FileFieldPathsProcessFileLegacy {
       $settings['file_name']['options']['context'] = 'file_name';
       $name = $file->getFilename();
       if (!empty($settings['file_name']['value'])) {
-        $name = filefield_paths_process_string($settings['file_name']['value'], $token_data, $settings['file_name']['options']);
+        $name = $this->pathProcessor->processString($settings['file_name']['value'], $token_data, $settings['file_name']['options']);
       }
 
       // Process filepath.
       $settings['file_path']['options']['context'] = 'file_path';
-      $path = filefield_paths_process_string($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
+      $path = $this->pathProcessor->processString($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
 
       $destination = $this->streamWrapperManager->normalizeUri($field_storage->getSetting('uri_scheme') . '://' . $path . '/' . $name);
 

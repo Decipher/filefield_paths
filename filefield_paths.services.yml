@@ -16,6 +16,9 @@ services:
   Drupal\filefield_paths\MoveFileProcessorInterface:
     class: Drupal\filefield_paths\MoveFileProcessor
     autowire: true
+  Drupal\filefield_paths\PathProcessorInterface:
+    class: Drupal\filefield_paths\PathProcessor
+    autowire: true
 
   # Legacy hook support
   Drupal\filefield_paths\Hook\EntityWithFileField:
