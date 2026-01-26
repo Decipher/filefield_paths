@@ -56,7 +56,7 @@ class Updater implements BatchUpdaterInterface {
     }
     $result = $query->accessCheck(FALSE)
       ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT')
-      ->condition($field_config->getName() . '.target_id', '', '<>')
+      ->condition($field_config->getName() . '.target_id', 0, '>')
       ->execute();
 
     // If there are no results, do not set a batch as there is nothing
