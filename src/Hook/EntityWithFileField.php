@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\filefield_paths\Hook;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -21,10 +23,14 @@ final readonly class EntityWithFileField {
    *
    * @param \Closure $moduleHandlerClosure
    *   The module handler closure.
+   * @param \Closure $configFactoryClosure
+   *   The config factory closure.
    */
   public function __construct(
     #[AutowireServiceClosure(ModuleHandlerInterface::class)]
     private \Closure $moduleHandlerClosure,
+    #[AutowireServiceClosure(ConfigFactoryInterface::class)]
+    private \Closure $configFactoryClosure,
   ) {}
 
   /**
@@ -33,6 +39,9 @@ final readonly class EntityWithFileField {
   // @phpstan-ignore-next-line
   #[Hook('entity_insert'), Hook('entity_update')]
   public function handleProcessFile(EntityInterface $entity): void {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
+    if (!$this->getSettings()->get('enabled')) {
+      return;
+    }
     if (!$entity instanceof ContentEntityInterface) {
       return;
     }
@@ -57,6 +66,16 @@ final readonly class EntityWithFileField {
    */
   private function getModuleHandler(): ModuleHandlerInterface {
     return ($this->moduleHandlerClosure)();
+  }
+
+  /**
+   * Retrieves the configuration settings for filefield paths.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   The configuration settings object.
+   */
+  private function getSettings(): ImmutableConfig {
+    return ($this->configFactoryClosure)()->get('filefield_paths.settings');
   }
 
 }

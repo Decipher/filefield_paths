@@ -81,6 +81,15 @@ class SettingsForm extends ConfigFormBase {
    */
   #[\Override]
   public function buildForm(array $form, FormStateInterface $form_state, ?Request $request = NULL) {
+    $config = $this->config('filefield_paths.settings');
+
+    $form['enabled'] = [
+      '#title' => $this->t('Enable the processing of file field items'),
+      '#type' => 'textfield',
+      '#default_value' => $config->get('enabled') ?? TRUE,
+      '#description' => $this->t('Disable this to skip processing all fields. This can also be configured per field.'),
+    ];
+
     $description = $this->t('Files are uploaded here first. They move to their final path when the entity is saved.');
     $description .= '<br />';
     $description .= $this->t('Use the temporary file system (temporary://) where you can. Files there have no public URL, and image previews still work. If temporary:// does not suit your server, use the private file system (private://).');
@@ -89,7 +98,7 @@ class SettingsForm extends ConfigFormBase {
     $form['temp_location'] = [
       '#title' => $this->t('Temporary file location'),
       '#type' => 'textfield',
-      '#default_value' => $this->config('filefield_paths.settings')
+      '#default_value' => $config
         ->get('temp_location') ?: $this->moveFileProcessor->recommendedTemporaryScheme() . 'filefield_paths',
       '#description' => $description,
     ];
@@ -129,6 +138,7 @@ class SettingsForm extends ConfigFormBase {
     $values = $form_state->getValues();
     $this->config('filefield_paths.settings')
       ->set('temp_location', $values['temp_location'])
+      ->set('enabled', $values['enabled'])
       ->save();
   }
 

@@ -123,3 +123,13 @@ function filefield_paths_update_8001(): void {
 function filefield_paths_update_9001(): void {
   filefield_paths_update_temporary_location_configuration();
 }
+
+/**
+ * Add the 'enabled' setting.
+ */
+function filefield_paths_update_9002() {
+  $config = \Drupal::configFactory()->getEditable('filefield_paths.settings');
+  if ($config->get('enabled') === NULL) {
+    $config->set('enabled', TRUE)->save();
+  }
+}
