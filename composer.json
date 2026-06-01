@@ -3,7 +3,7 @@
     "description": "File (Field) Paths. Adds improved Token based file sorting and renaming functionalities.",
     "keywords": ["file", "field", "path", "token", "drupal"],
     "type": "drupal-module",
-    "license": "GPL-2.0+",
+    "license": "GPL-2.0-or-later",
     "require-dev": {
         "drupal/ctools": "*",
         "drupal/pathauto": "*",

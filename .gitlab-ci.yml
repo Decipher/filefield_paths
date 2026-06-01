@@ -25,7 +25,7 @@ include:
 ################
 variables:
 #   SKIP_ESLINT: '1'
-  OPT_IN_TEST_NEXT_MAJOR: '1'
+#   OPT_IN_TEST_NEXT_MAJOR: 0
 #   _CURL_TEMPLATES_REF: 'main'
   _CSPELL_WORDS: 'cleanstring, ctools, ffpu, multiext, origname, тест'
   OPT_IN_TEST_PREVIOUS_MAJOR: '1'
