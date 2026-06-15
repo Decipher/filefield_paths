@@ -2,6 +2,7 @@
 
 namespace Drupal\filefield_paths\Hook;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -67,9 +68,9 @@ final class FileFieldPathsProcessFileLegacy {
       }
       // Process file if this is a new entity, 'Active updating' is set or
       // file wasn't previously attached to the entity.
-      if (isset($entity->original) && empty($settings['active_updating']) && !$entity->isNew() && !$entity->original->{$field->getName()}->isEmpty()) {
+      if (DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal() !== NULL, fn() => isset($entity->original)) && empty($settings['active_updating']) && !$entity->isNew() && !DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal(), fn() => $entity->original)->{$field->getName()}->isEmpty()) {
         /** @var \Drupal\file\Entity\File $original_file */
-        foreach ($entity->original->{$field->getName()}->referencedEntities() as $original_file) {
+        foreach (DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal(), fn() => $entity->original)->{$field->getName()}->referencedEntities() as $original_file) {
           if ((string) $original_file->id() === (string) $file->id()) {
             continue 2;
           }

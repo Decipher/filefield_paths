@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the File (Field) Paths module.
  */
 
+use Drupal\Component\Utility\DeprecationHelper;
+use Drupal\Core\Extension\Requirement\RequirementSeverity;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Url;
@@ -92,7 +94,7 @@ function filefield_paths_requirements($phase) {
           'title' => t('File (Field) Paths temporary path'),
           'value' => t('Insecure!'),
           'description' => t('This site supports private files but the File (Field) Paths temporary path is under public:// which could lead to private files being temporarily exposed publicly. <a href=":url">Change the temporary path</a> to be under temporary:// or private:// in order to secure your files.', [':url' => Url::fromRoute('filefield_paths.admin_settings')->toString()]),
-          'severity' => REQUIREMENT_ERROR,
+          'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::Error, fn() => REQUIREMENT_ERROR),
         ];
       }
     }

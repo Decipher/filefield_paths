@@ -2,6 +2,7 @@
 
 namespace Drupal\filefield_paths\Batch;
 
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -84,7 +85,7 @@ class Updater implements BatchUpdaterInterface {
         $field_config->save();
       }
 
-      $entity->original = $entity;
+      DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->setOriginal($entity), fn() => $entity->original = $entity);
       filefield_paths_entity_update($entity);
 
       // Restore active updating to it's previous state if necessary.

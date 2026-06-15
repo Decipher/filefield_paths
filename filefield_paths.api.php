@@ -5,6 +5,8 @@
  * Hooks provided by the File (Field) Paths module.
  */
 
+use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\file\FileInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
@@ -56,7 +58,7 @@ function hook_filefield_paths_field_settings(array $form) {
  *
  * @see filefield_paths_filefield_paths_process_file()
  */
-function hook_filefield_paths_process_file(\Drupal\Core\Entity\ContentEntityInterface $entity, \Drupal\Core\Field\FieldItemListInterface $field, array &$settings = []) {
+function hook_filefield_paths_process_file(ContentEntityInterface $entity, FieldItemListInterface $field, array &$settings = []) {
   // Only process files if Active Updating is on.
   if (empty($settings['active_updating'])) {
     return;
@@ -66,8 +68,8 @@ function hook_filefield_paths_process_file(\Drupal\Core\Entity\ContentEntityInte
       // Process file if this is a new entity with a new file attached.
       $original_field = NULL;
       if (
-        isset($entity->original)
-        && $entity->original instanceof ContentEntityInterface
+        DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal() !== NULL, fn() => isset($entity->original))
+        && DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal(), fn() => $entity->original) instanceof ContentEntityInterface
         && !$entity->isNew()
       ) {
         $original_field = $entity->{'original'}->{$field->getName()};
