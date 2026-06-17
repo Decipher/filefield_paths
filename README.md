@@ -1,5 +1,9 @@
 # File (Field) Paths
 
+[![Pipeline](https://git.drupalcode.org/project/filefield_paths/badges/8.x-1.x/pipeline.svg)](https://git.drupalcode.org/project/filefield_paths/-/pipelines)
+[![Test](https://github.com/Decipher/filefield_paths/actions/workflows/test.yml/badge.svg?branch=8.x-1.x)](https://github.com/Decipher/filefield_paths/actions/workflows/test.yml?query=branch%3A8.x-1.x)
+[![Coverage](https://codecov.io/gh/Decipher/filefield_paths/branch/8.x-1.x/graph/badge.svg)](https://codecov.io/gh/Decipher/filefield_paths/branch/8.x-1.x)
+
 The File (Field) Paths module extends the default functionality of Drupal's core
 File module, Image module and many other File upload modules, by adding the
 ability to use entity based tokens in destination paths and file names.
