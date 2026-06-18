@@ -119,6 +119,16 @@ class FileFieldPathsImageStyleTemporaryTest extends BrowserTestBase {
   }
 
   /**
+   * Tests that a path traversal attempt in ?file= returns 403.
+   */
+  public function testPathTraversalReturns403(): void {
+    $url = $this->style->buildUrl($this->imageUri);
+    $url_traversal = preg_replace('#(\?|&)file=filefield_paths/#', '$1file=filefield_paths/../', $url);
+    $this->drupalGet($url_traversal);
+    $this->assertSession()->statusCodeEquals(403);
+  }
+
+  /**
    * Tests that non-temporary temp_location does not trigger URL rewriting.
    *
    * When temp_location uses private://, the alter hook must not intercept
