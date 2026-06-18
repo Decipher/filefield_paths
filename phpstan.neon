@@ -19,6 +19,7 @@ parameters:
     - vendor/*
     - node_modules/*
     - ../*/node_modules/*
+    - rector.php
 
   ignoreErrors:
     -
@@ -27,9 +28,6 @@ parameters:
       messages:
         - '#.* no value type specified in iterable type array#'
         - '#.* has no return type specified#'
-      paths:
-        - web/modules/custom/*
-        - web/themes/custom/*
       reportUnmatched: false
 
     -
