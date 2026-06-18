@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Hook;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -12,7 +14,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireServiceClosure;
 /**
  * Field Widget Single Element Form Alter hook implementation.
  */
-final class FieldWidgetSingleElementForm {
+final readonly class FieldWidgetSingleElementForm {
 
   /**
    * Constructor.
@@ -22,7 +24,7 @@ final class FieldWidgetSingleElementForm {
    */
   public function __construct(
     #[AutowireServiceClosure(ConfigFactoryInterface::class)]
-    private readonly \Closure $configFactoryClosure,
+    private \Closure $configFactoryClosure,
   ) {}
 
   /**

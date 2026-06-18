@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Hook;
 
 use Drupal\Component\Utility\DeprecationHelper;
@@ -23,19 +25,19 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireServiceClosure;
  *
  * @todo Convert this to a plugin.
  */
-final class FileFieldPathsProcessFileLegacy {
+final readonly class FileFieldPathsProcessFileLegacy {
 
   public function __construct(
-    private readonly FileSystemInterface $fileSystem,
-    private readonly FileRepositoryInterface $fileRepository,
-    private readonly StreamWrapperManagerInterface $streamWrapperManager,
-    private readonly ModuleHandlerInterface $moduleHandler,
-    private readonly ConfigFactoryInterface $configFactory,
-    private readonly PathProcessorInterface $pathProcessor,
+    private FileSystemInterface $fileSystem,
+    private FileRepositoryInterface $fileRepository,
+    private StreamWrapperManagerInterface $streamWrapperManager,
+    private ModuleHandlerInterface $moduleHandler,
+    private ConfigFactoryInterface $configFactory,
+    private PathProcessorInterface $pathProcessor,
     #[Autowire(service: 'logger.channel.filefield_paths')]
-    private readonly LoggerChannelInterface $logger,
+    private LoggerChannelInterface $loggerChannel,
     #[AutowireServiceClosure(RedirectInterface::class)]
-    private readonly \Closure $redirectClosure,
+    private \Closure $redirectClosure,
   ) {}
 
   /**
@@ -55,7 +57,7 @@ final class FileFieldPathsProcessFileLegacy {
     $wrappers = $this->streamWrapperManager->getWrappers(StreamWrapperInterface::WRITE);
 
     $destination_scheme_name = $field_storage->getSetting('uri_scheme');
-    $temp_location = !empty($settings['temp_location']) ? $settings['temp_location'] : $config->get('temp_location');
+    $temp_location = empty($settings['temp_location']) ? $config->get('temp_location') : $settings['temp_location'];
     $temporary_scheme_name = $this->streamWrapperManager::getScheme($temp_location);
     $schemas = [$temporary_scheme_name, $destination_scheme_name];
 
@@ -68,9 +70,9 @@ final class FileFieldPathsProcessFileLegacy {
       }
       // Process file if this is a new entity, 'Active updating' is set or
       // file wasn't previously attached to the entity.
-      if (DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal() !== NULL, fn() => isset($entity->original)) && empty($settings['active_updating']) && !$entity->isNew() && !DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal(), fn() => $entity->original)->{$field->getName()}->isEmpty()) {
+      if (DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): bool => $entity->getOriginal() instanceof ContentEntityInterface, fn(): bool => property_exists($entity, 'original') && $entity->original !== NULL) && empty($settings['active_updating']) && !$entity->isNew() && !DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): ?ContentEntityInterface => $entity->getOriginal(), fn() => $entity->original)->{$field->getName()}->isEmpty()) {
         /** @var \Drupal\file\Entity\File $original_file */
-        foreach (DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal(), fn() => $entity->original)->{$field->getName()}->referencedEntities() as $original_file) {
+        foreach (DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): ?ContentEntityInterface => $entity->getOriginal(), fn() => $entity->original)->{$field->getName()}->referencedEntities() as $original_file) {
           if ((string) $original_file->id() === (string) $file->id()) {
             continue 2;
           }
@@ -97,9 +99,10 @@ final class FileFieldPathsProcessFileLegacy {
 
       // Ensure file uri is no more than 255 characters.
       if (mb_strlen($destination) > 255) {
-        $this->logger->info('File path was truncated');
+        $this->loggerChannel->info('File path was truncated');
         $pathinfo = pathinfo($destination);
-        $destination = mb_substr($destination, 0, 254 - mb_strlen($pathinfo['extension'])) . ".{$pathinfo['extension']}";
+        $ext = $pathinfo['extension'] ?? '';
+        $destination = mb_substr($destination, 0, 254 - mb_strlen($ext)) . ($ext !== '' ? '.' . $ext : '');
       }
 
       // Finalize file if necessary.
@@ -110,7 +113,7 @@ final class FileFieldPathsProcessFileLegacy {
       $dirname = $this->fileSystem->dirname($destination);
       $dir_exists = $this->fileSystem->prepareDirectory($dirname, $this->fileSystem::CREATE_DIRECTORY);
       if (!$dir_exists) {
-        $this->logger->notice('The directory %directory could not be created.', ['%directory' => $dirname]);
+        $this->loggerChannel->notice('The directory %directory could not be created.', ['%directory' => $dirname]);
         continue;
       }
 
@@ -119,8 +122,8 @@ final class FileFieldPathsProcessFileLegacy {
       try {
         $new_file = $this->fileRepository->move($file, $destination);
       }
-      catch (\Exception $e) {
-        $this->logger->notice('The file %old could not be moved to the destination of %new. Ensure your permissions are set correctly.', [
+      catch (\Exception) {
+        $this->loggerChannel->notice('The file %old could not be moved to the destination of %new. Ensure your permissions are set correctly.', [
           '%old' => $file->getFileUri(),
           '%new' => $destination,
         ]);
@@ -138,9 +141,9 @@ final class FileFieldPathsProcessFileLegacy {
 
       // Remove any old empty directories.
       // @todo Fix problem of missing test for the line below here.
-      $paths = explode('/', str_replace("{$source_scheme_name}://", '', $this->fileSystem->dirname($file->getFileUri())));
+      $paths = explode('/', str_replace($source_scheme_name . '://', '', $this->fileSystem->dirname($file->getFileUri())));
       while ($paths) {
-        if (!@$this->fileSystem->rmdir("{$source_scheme_name}://" . implode('/', $paths))) {
+        if (!@$this->fileSystem->rmdir($source_scheme_name . '://' . implode('/', $paths))) {
           // No dirs was removed, so we're done.
           break;
         }

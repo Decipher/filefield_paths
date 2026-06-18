@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths_test\StreamWrapper;
 
 use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\StreamWrapper\PublicStream;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\file_test\StreamWrapper\DummyReadOnlyStreamWrapper;
 
 /**
@@ -13,18 +16,20 @@ use Drupal\file_test\StreamWrapper\DummyReadOnlyStreamWrapper;
  */
 class FileFieldPathsDummyReadOnlyStreamWrapper extends DummyReadOnlyStreamWrapper {
 
+  use StringTranslationTrait;
+
   /**
    * {@inheritdoc}
    */
   public function getName() {
-    return t('File (Field) Paths Dummy files (readonly)');
+    return $this->t('File (Field) Paths Dummy files (readonly)');
   }
 
   /**
    * {@inheritdoc}
    */
   public function getDescription() {
-    return t('Dummy wrapper for File (Field) Paths simpletest (readonly).');
+    return $this->t('Dummy wrapper for File (Field) Paths simpletest (readonly).');
   }
 
   /**
@@ -32,8 +37,8 @@ class FileFieldPathsDummyReadOnlyStreamWrapper extends DummyReadOnlyStreamWrappe
    *
    * Return the HTML URI of a public file.
    */
-  public function getExternalUrl() {
-    $path = str_replace('\\', '/', $this->getTarget());
+  public function getExternalUrl(): string {
+    $path = str_replace('\\', '/', (string) $this->getTarget());
 
     return PublicStream::baseUrl() . '/' . UrlHelper::encodePath($path);
   }

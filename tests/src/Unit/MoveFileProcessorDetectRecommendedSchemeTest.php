@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filefield_paths\Unit;
 
 use Drupal\Core\Cache\CacheBackendInterface;
@@ -16,12 +18,42 @@ use Drupal\filefield_paths\MoveFileProcessor;
 class MoveFileProcessorDetectRecommendedSchemeTest extends UnitTestCase {
 
   /**
+   * Tests detectRecommendedScheme().
+   *
+   * @dataProvider dataProviderDetectRecommendedScheme
+   */
+  public function testDetectRecommendedScheme(array $wrappers, array $writable_map, string $expected): void {
+    $stream_manager = $this->createMock(StreamWrapperManagerInterface::class);
+    $cache_backend = $this->createMock(CacheBackendInterface::class);
+
+    $processor = new class($stream_manager, $cache_backend, $writable_map) extends MoveFileProcessor {
+
+      /**
+       * {@inheritdoc}
+       */
+      public function __construct(StreamWrapperManagerInterface $stream_manager, CacheBackendInterface $cache_backend, private array $writable_map) {
+        parent::__construct($stream_manager, $cache_backend);
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      protected function isWritable(string $path): bool {
+        return $this->writable_map[$path] ?? FALSE;
+      }
+
+    };
+
+    $this->assertSame($expected, $processor->detectRecommendedScheme($wrappers));
+  }
+
+  /**
    * Provides test cases for detectRecommendedScheme().
    *
    * @return array
    *   An array of test cases with: wrappers, writable, expected.
    */
-  public static function providerDetectRecommendedScheme(): array {
+  public static function dataProviderDetectRecommendedScheme(): array {
     return [
       'temporary present and writable (preferred)' => [
         // Wrappers available.
@@ -56,36 +88,6 @@ class MoveFileProcessorDetectRecommendedSchemeTest extends UnitTestCase {
         'public://',
       ],
     ];
-  }
-
-  /**
-   * Tests detectRecommendedScheme().
-   *
-   * @dataProvider providerDetectRecommendedScheme
-   */
-  public function testDetectRecommendedScheme(array $wrappers, array $writable_map, string $expected): void {
-    $stream_manager = $this->createMock(StreamWrapperManagerInterface::class);
-    $cache_backend = $this->createMock(CacheBackendInterface::class);
-
-    $processor = new class($stream_manager, $cache_backend, $writable_map) extends MoveFileProcessor {
-
-      /**
-       * {@inheritdoc}
-       */
-      public function __construct($stream_manager, $cache_backend, private array $writable_map) {
-        parent::__construct($stream_manager, $cache_backend);
-      }
-
-      /**
-       * {@inheritdoc}
-       */
-      protected function isWritable(string $path): bool {
-        return $this->writable_map[$path] ?? FALSE;
-      }
-
-    };
-
-    $this->assertSame($expected, $processor->detectRecommendedScheme($wrappers));
   }
 
 }

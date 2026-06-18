@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Form;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -21,43 +23,33 @@ use Symfony\Component\HttpFoundation\Request;
 class SettingsForm extends ConfigFormBase {
 
   /**
-   * Stream wrapper manager.
-   *
-   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
-   */
-  protected $streamWrapperManager;
-
-  /**
-   * Filesystem service.
-   *
-   * @var \Drupal\Core\File\FileSystemInterface
-   */
-  protected $fileSystem;
-
-  /**
    * {@inheritdoc}
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
-    StreamWrapperManagerInterface $stream_wrapper_manager,
-    FileSystemInterface $file_system,
+    /**
+     * Stream wrapper manager.
+     */
+    protected StreamWrapperManagerInterface $streamWrapperManager,
+    /**
+     * Filesystem service.
+     */
+    protected FileSystemInterface $fileSystem,
     TypedConfigManagerInterface $typed_config_manager,
     protected /*readonly*/ ?MoveFileProcessorInterface $moveFileProcessor = NULL,
   ) {
     parent::__construct($config_factory, $typed_config_manager);
-    $this->streamWrapperManager = $stream_wrapper_manager;
-    $this->fileSystem = $file_system;
-    if ($this->moveFileProcessor === NULL) {
+    if (!$this->moveFileProcessor instanceof MoveFileProcessorInterface) {
       @trigger_error('Calling ' . __METHOD__ . '() without the $moveFileProcessor argument is deprecated in filefield_paths:8.x-1.0 and it will be required in filefield_paths:2.0.0. See https://www.drupal.org/node/3562442', E_USER_DEPRECATED);
       // @phpstan-ignore-next-line
-      $this->moveFileProcessor = \Drupal::service(MoveFileProcessorInterface::class);
+      $this->moveFileProcessor = \Drupal::service(MoveFileProcessorInterface::class); // phpcs:ignore DrupalPractice.Objects.GlobalDrupal.GlobalDrupal
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
+  public static function create(ContainerInterface $container): static {
     return new static(
       $container->get('config.factory'),
       $container->get('stream_wrapper_manager'),
@@ -70,14 +62,14 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormId() {
+  public function getFormId(): string {
     return 'filefield_paths_settings_form';
   }
 
   /**
    * {@inheritdoc}
    */
-  protected function getEditableConfigNames() {
+  protected function getEditableConfigNames(): array {
     return [
       'filefield_paths.settings',
     ];
@@ -106,7 +98,7 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
+  public function validateForm(array &$form, FormStateInterface $form_state): bool {
     $values = $form_state->getValues();
     $scheme = $this->streamWrapperManager->getScheme($values['temp_location']);
     if (!$scheme) {
@@ -133,7 +125,7 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function submitForm(array &$form, FormStateInterface $form_state) {
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
     $values = $form_state->getValues();
     $this->config('filefield_paths.settings')
       ->set('temp_location', $values['temp_location'])

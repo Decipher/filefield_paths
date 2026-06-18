@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filefield_paths\Functional;
 
 /**
@@ -20,16 +22,16 @@ class FileFieldPathsTokensTest extends FileFieldPathsTestBase {
    * @param array $data
    *   The data to process the token with.
    */
-  public function assertToken($token, $value, array $data) {
+  public function assertToken(string $token, $value, array $data): void {
     $result = \Drupal::token()->replace($token, $data);
 
-    $this->assertEquals($value, $result, "Token {$token} equals {$value}");
+    $this->assertEquals($value, $result, sprintf('Token %s equals %s', $token, $value));
   }
 
   /**
    * Test token values with a text file.
    */
-  public function testTokensBasic() {
+  public function testTokensBasic(): void {
     // Prepare a test text file.
     /** @var \Drupal\file\Entity\File $text_file */
     $text_file = $this->getTestFile('text');
@@ -45,7 +47,7 @@ class FileFieldPathsTokensTest extends FileFieldPathsTestBase {
   /**
    * Test token values with a moved text file.
    */
-  public function testTokensMoved() {
+  public function testTokensMoved(): void {
     // Prepare a test text file.
     /** @var \Drupal\file\Entity\File $text_file */
     $text_file = $this->getTestFile('text');
@@ -64,7 +66,7 @@ class FileFieldPathsTokensTest extends FileFieldPathsTestBase {
   /**
    * Test token values with a multi-extension text file.
    */
-  public function testTokensMultiExtension() {
+  public function testTokensMultiExtension(): void {
     // Prepare a test text file.
     /** @var \Drupal\file\Entity\File $text_file */
     $text_file = $this->getTestFile('text');
@@ -91,7 +93,7 @@ class FileFieldPathsTokensTest extends FileFieldPathsTestBase {
    *
    * @see https://www.drupal.org/node/1292436
    */
-  public function testTokensUtf() {
+  public function testTokensUtf(): void {
     // Prepare a test text file.
     /** @var \Drupal\file\Entity\File $text_file */
     $text_file = $this->getTestFile('text');

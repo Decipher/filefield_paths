@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Utility;
 
 use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
@@ -14,14 +16,14 @@ final class FieldItem {
   /**
    * Get filefield_paths field settings.
    *
-   * @param \Drupal\Core\Field\FieldItemListInterface $fieldItemList
+   * @param \Drupal\Core\Field\FieldItemListInterface $field_item_list
    *   A field item to check for settings.
    *
    * @return array
    *   The filefield_paths settings for the field if set, else empty.
    */
-  public static function getConfiguration(FieldItemListInterface $fieldItemList): array {
-    $definition = $fieldItemList->getFieldDefinition();
+  public static function getConfiguration(FieldItemListInterface $field_item_list): array {
+    $definition = $field_item_list->getFieldDefinition();
     if ($definition instanceof ThirdPartySettingsInterface) {
       return $definition->getThirdPartySettings('filefield_paths');
     }
@@ -31,13 +33,13 @@ final class FieldItem {
   /**
    * Check if filefield_paths is enabled for a field item.
    *
-   * @param \Drupal\Core\Field\FieldItemListInterface|mixed $field
-   *   A field to check.
+   * @param \Drupal\Core\Field\FieldItemListInterface|null $field
+   *   A field to check. NULL returns false.
    *
    * @return bool
    *   State of filefield_path functionality for a given file field.
    */
-  public static function hasConfigurationEnabled($field): bool {
+  public static function hasConfigurationEnabled(?FieldItemListInterface $field): bool {
     return $field instanceof FileFieldItemList &&
       (self::getConfiguration($field)['enabled'] ?? FALSE);
   }

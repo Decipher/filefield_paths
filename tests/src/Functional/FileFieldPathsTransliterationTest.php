@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Component\Utility\Unicode;
@@ -15,19 +17,19 @@ class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
   /**
    * Test File (Field) Paths Transliteration UI.
    */
-  public function testUi() {
+  public function testUi(): void {
     // Create a File field.
     $field_name = mb_strtolower($this->randomMachineName());
     $this->createFileField($field_name, 'node', $this->contentType);
 
     // Ensure File (Field) Paths Transliteration settings are present and
     // available.
-    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
+    $this->drupalGet(sprintf('admin/structure/types/manage/%s/fields/node.%s.%s', $this->contentType, $this->contentType, $field_name));
     foreach (['path', 'name'] as $field) {
       // Transliteration checkbox is present in File settings.
-      $this->assertSession()->fieldExists("third_party_settings[filefield_paths][file_{$field}][options][transliterate]");
+      $this->assertSession()->fieldExists(sprintf('third_party_settings[filefield_paths][file_%s][options][transliterate]', $field));
 
-      $element = $this->xpath('//input[@name=:name]/@disabled', [':name' => "third_party_settings[filefield_paths][file_{$field}][options][transliterate]"]);
+      $element = $this->xpath('//input[@name=:name]/@disabled', [':name' => sprintf('third_party_settings[filefield_paths][file_%s][options][transliterate]', $field)]);
       $this->assertEmpty($element, 'Transliteration checkbox is not disabled in File ' . Unicode::ucfirst($field) . ' settings.');
     }
   }
@@ -35,7 +37,7 @@ class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
   /**
    * Test Transliteration cleanup in File (Field) Paths.
    */
-  public function testTransliteration() {
+  public function testTransliteration(): void {
     // Create a File field.
     $field_name = mb_strtolower($this->randomMachineName());
 
@@ -53,12 +55,13 @@ class FileFieldPathsTransliterationTest extends FileFieldPathsTestBase {
 
     $edit['files[' . $field_name . '_0]'] = \Drupal::service('file_system')
       ->realpath($test_file->getFileUri());
-    $this->drupalGet("node/add/{$this->contentType}");
+    $this->drupalGet('node/add/' . $this->contentType);
     $this->submitForm($edit, 'Save');
 
     // Get created Node ID.
     $matches = [];
-    preg_match('/node\/([0-9]+)/', $this->getUrl(), $matches);
+    preg_match('/node\/(\d+)/', $this->getUrl(), $matches);
+    $this->assertNotEmpty($matches);
     $nid = $matches[1];
 
     // Ensure that file path/name have been processed correctly by

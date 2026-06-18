@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Hook;
 
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -12,7 +14,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireServiceClosure;
 /**
  * Provides functionality to handle file processing for an entity's fields.
  */
-final class EntityWithFileField {
+final readonly class EntityWithFileField {
 
   /**
    * Constructor.
@@ -22,7 +24,7 @@ final class EntityWithFileField {
    */
   public function __construct(
     #[AutowireServiceClosure(ModuleHandlerInterface::class)]
-    private readonly \Closure $moduleHandlerClosure,
+    private \Closure $moduleHandlerClosure,
   ) {}
 
   /**

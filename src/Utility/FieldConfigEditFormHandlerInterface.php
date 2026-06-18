@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Utility;
 
 use Drupal\Core\Form\FormStateInterface;

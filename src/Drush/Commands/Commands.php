@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Drush\Commands;
 
 use Drupal\Core\Entity\EntityFieldManagerInterface;
@@ -20,7 +22,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 final class Commands extends DrushCommands {
 
-  protected const ALL_OPTION = 'all';
+  private const ALL_OPTION = 'all';
 
   /**
    * Constructs a new instance of the class.
@@ -50,8 +52,8 @@ final class Commands extends DrushCommands {
   /**
    * {@inheritdoc}
    */
-  public static function create(ContainerInterface $container) {
-    return new static(
+  public static function create(ContainerInterface $container): self {
+    return new self(
       $container->get('filefield_paths.batch.updater'),
       $container->get('entity_field.manager'),
       $container->get('entity_type.manager'),
@@ -139,18 +141,18 @@ final class Commands extends DrushCommands {
           if (!isset($info[$entity_type_name])) {
             $entity_type_info = $this->entityTypeManager->getDefinition($entity_type_name);
             $info[$entity_type_name] = [
-              '#label' => "{$entity_type_info->getLabel()} ({$entity_type_name})",
+              '#label' => sprintf('%s (%s)', $entity_type_info->getLabel(), $entity_type_name),
             ];
           }
 
           if (!isset($info[$entity_type_name][$bundle])) {
             $info[$entity_type_name][$bundle] = [
-              '#label' => "{$bundles_info[$bundle]['label']} ({$bundle})",
+              '#label' => sprintf('%s (%s)', $bundles_info[$bundle]['label'], $bundle),
             ];
           }
           $field_instance = $this->entityFieldManager->getFieldDefinitions($entity_type_name, $bundle)[$field->getName()] ?? NULL;
-          if ($field_instance) {
-            $info[$entity_type_name][$bundle][$field_instance->getName()] = "{$field_instance->getLabel()} ({$field_instance->getName()})";
+          if ($field_instance && is_array($info[$entity_type_name][$bundle])) {
+            $info[$entity_type_name][$bundle][$field_instance->getName()] = sprintf('%s (%s)', $field_instance->getLabel(), $field_instance->getName());
           }
         }
       }
@@ -161,7 +163,7 @@ final class Commands extends DrushCommands {
   /**
    * Helper function; invokes File (Field) Paths retroactive updates.
    *
-   * @param \Drupal\field\FieldConfigInterface[] $instances
+   * @param \Drupal\Core\Field\FieldDefinitionInterface[] $instances
    *   Field instances collection to update.
    */
   protected function ffpUpdate(array $instances): void {
@@ -175,7 +177,7 @@ final class Commands extends DrushCommands {
         $bundle = $field_config->getTargetBundle();
         $name = $field_config->getName();
         $this->logger()?->success(dt('"@field_name" File (Field) Paths updated.', [
-          '@field_name' => "{$label} ({$entity_type}-{$bundle}-{$name})",
+          '@field_name' => sprintf('%s (%s-%s-%s)', $label, $entity_type, $bundle, $name),
         ]));
       }
     }
@@ -234,7 +236,7 @@ final class Commands extends DrushCommands {
   protected function askBundle(array $info, string $entity_type): string {
     $choices = [];
     foreach ($info[$entity_type] as $bundle => $bundle_info) {
-      if (str_starts_with($bundle, '#')) {
+      if (str_starts_with((string) $bundle, '#')) {
         // Skip labels.
         continue;
       }
@@ -278,7 +280,7 @@ final class Commands extends DrushCommands {
   protected function askField(array $info, string $entity_type, string $bundle): string {
     $choices = [];
     foreach ($info[$entity_type][$bundle] as $field => $field_label) {
-      if (str_starts_with($field, '#')) {
+      if (str_starts_with((string) $field, '#')) {
         // Skip labels.
         continue;
       }
@@ -312,12 +314,12 @@ final class Commands extends DrushCommands {
     $instances = [];
     foreach ($info as $entity_type_id => $bundles) {
       foreach ($bundles as $bundle => $field_list) {
-        if (str_starts_with($bundle, '#')) {
+        if (str_starts_with((string) $bundle, '#')) {
           // Skip labels.
           continue;
         }
         foreach (array_keys($field_list) as $field) {
-          if (str_starts_with($field, '#')) {
+          if (str_starts_with((string) $field, '#')) {
             // Skip labels.
             continue;
           }
@@ -346,12 +348,12 @@ final class Commands extends DrushCommands {
   protected function processAllEntityBundles(array $info, string $entity_type): void {
     $instances = [];
     foreach ($info[$entity_type] as $bundle => $field_list) {
-      if (str_starts_with($bundle, '#')) {
+      if (str_starts_with((string) $bundle, '#')) {
         // Skip labels.
         continue;
       }
       foreach (array_keys($field_list) as $field) {
-        if (str_starts_with($field, '#')) {
+        if (str_starts_with((string) $field, '#')) {
           // Skip labels.
           continue;
         }
@@ -381,7 +383,7 @@ final class Commands extends DrushCommands {
   protected function processAllBundleFields(array $info, string $entity_type, string $bundle_name): void {
     $instances = [];
     foreach (array_keys($info[$entity_type][$bundle_name]) as $field) {
-      if (str_starts_with($field, '#')) {
+      if (str_starts_with((string) $field, '#')) {
         // Skip labels.
         continue;
       }

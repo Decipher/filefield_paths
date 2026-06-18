@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Hook;
 
 use Drupal\Core\Hook\Attribute\Hook;
@@ -19,7 +21,7 @@ final class FileFieldPathsFieldSettingsLegacy {
    */
   // @phpstan-ignore-next-line
   #[Hook('filefield_paths_field_settings')]
-  public function fileFieldPathsFieldSettings(array $form) {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
+  public function fileFieldPathsFieldSettings(array $form): array {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
     return [
       'file_path' => [
         'title' => 'File path',

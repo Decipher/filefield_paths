@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Hook;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
@@ -44,10 +47,14 @@ final class FieldConfigEditForm {
    */
   // @phpstan-ignore-next-line
   #[Hook('form_field_config_edit_form_alter')]
-  public function formAlter(array &$form, FormStateInterface $form_state) {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
+  public function formAlter(array &$form, FormStateInterface $form_state): void {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
 
+    $form_object = $form_state->getFormObject();
+    if (!$form_object instanceof EntityFormInterface) {
+      return;
+    }
     /** @var \Drupal\field\Entity\FieldConfig $field */
-    $field = $form_state->getFormObject()->getEntity();
+    $field = $form_object->getEntity();
     $class = $field->getClass();
 
     if (!(class_exists($class) && ($class === FileFieldItemList::class || is_subclass_of($class, FileFieldItemList::class)))) {
@@ -107,9 +114,9 @@ final class FieldConfigEditForm {
         // No expected form elements.
         continue;
       }
-      foreach (array_keys($settings_field['form']) as $delta => $key) {
+      foreach (array_keys($settings_field['form']) as $key) {
         $form['settings']['filefield_paths']['details'][$name][$key] = $settings_field['form'][$key];
-        if ($this->tokenEntityMapper !== NULL && $this->moduleHandler->moduleExists('token')) {
+        if ($this->tokenEntityMapper instanceof TokenEntityMapperInterface && $this->moduleHandler->moduleExists('token')) {
           $form['settings']['filefield_paths']['details'][$name][$key]['#element_validate'][] = 'token_element_validate';
           $form['settings']['filefield_paths']['details'][$name][$key]['#token_types'] = [
             'date',
@@ -133,7 +140,7 @@ final class FieldConfigEditForm {
         '#title'      => $this->t('@title options', ['@title' => $settings_field['title']]),
         '#weight'     => 1,
         '#attributes' => [
-          'class' => ["{$name} cleanup"],
+          'class' => [$name . ' cleanup'],
         ],
       ];
       // Cleanup slashes (/).

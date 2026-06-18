@@ -23,6 +23,8 @@ use DrupalRector\Set\Drupal9SetList;
 use Rector\CodeQuality\Rector\Class_\CompleteDynamicPropertiesRector;
 use Rector\CodeQuality\Rector\ClassMethod\InlineArrayReturnAssignRector;
 use Rector\CodeQuality\Rector\Empty_\SimplifyEmptyCheckOnEmptyArrayRector;
+use Rector\CodeQuality\Rector\Isset_\IssetOnPropertyObjectToPropertyExistsRector;
+use Rector\Php81\Rector\Array_\ArrayToFirstClassCallableRector;
 use Rector\CodingStyle\Rector\Catch_\CatchExceptionNameMatchingTypeRector;
 use Rector\CodingStyle\Rector\ClassMethod\NewlineBeforeNewAssignSetRector;
 use Rector\CodingStyle\Rector\FuncCall\CountArrayToEmptyArrayComparisonRector;
@@ -51,6 +53,9 @@ return RectorConfig::configure()
     CountArrayToEmptyArrayComparisonRector::class,
     DisallowedEmptyRuleFixerRector::class,
     InlineArrayReturnAssignRector::class,
+    // Drupal entities use __isset() magic for field access; property_exists()
+    // returns false for entity fields, breaking the origname/filename logic.
+    IssetOnPropertyObjectToPropertyExistsRector::class,
     NewlineAfterStatementRector::class,
     NewlineBeforeNewAssignSetRector::class,
     PrivatizeFinalClassMethodRector::class,
@@ -66,6 +71,11 @@ return RectorConfig::configure()
     StringClassNameToClassConstantRector::class,
     // Directories to skip.
     '*/node_modules/*',
+  ])
+  // DependencySerializationTrait requires array callables — Closures cannot be
+  // serialized into the database queue that batch processing uses.
+  ->withSkip([
+    ArrayToFirstClassCallableRector::class => ['*/src/Batch/Updater.php'],
   ])
   // PHP version upgrade sets - modernizes syntax to PHP 8.2.
   // Includes all rules from PHP 5.3 through 8.2.

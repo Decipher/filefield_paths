@@ -5,6 +5,8 @@
  * Hooks provided by the File (Field) Paths module.
  */
 
+declare(strict_types=1);
+
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Entity\ContentEntityInterface;
@@ -28,7 +30,7 @@ use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
  *
  * @see hook_filefield_paths_process_file()
  */
-function hook_filefield_paths_field_settings(array $form) {
+function hook_filefield_paths_field_settings(array $form): array {
   return [
     'file_path' => [
       'title' => 'File path',
@@ -58,7 +60,7 @@ function hook_filefield_paths_field_settings(array $form) {
  *
  * @see filefield_paths_filefield_paths_process_file()
  */
-function hook_filefield_paths_process_file(ContentEntityInterface $entity, FieldItemListInterface $field, array &$settings = []) {
+function hook_filefield_paths_process_file(ContentEntityInterface $entity, FieldItemListInterface $field, array &$settings = []): void {
   // Only process files if Active Updating is on.
   if (empty($settings['active_updating'])) {
     return;
@@ -68,8 +70,8 @@ function hook_filefield_paths_process_file(ContentEntityInterface $entity, Field
       // Process file if this is a new entity with a new file attached.
       $original_field = NULL;
       if (
-        DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal() !== NULL, fn() => isset($entity->original))
-        && DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->getOriginal(), fn() => $entity->original) instanceof ContentEntityInterface
+        DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): bool => $entity->getOriginal() instanceof ContentEntityInterface, fn(): bool => property_exists($entity, 'original') && $entity->original !== NULL)
+        && DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): ?ContentEntityInterface => $entity->getOriginal(), fn() => $entity->original) instanceof ContentEntityInterface
         && !$entity->isNew()
       ) {
         $original_field = $entity->{'original'}->{$field->getName()};

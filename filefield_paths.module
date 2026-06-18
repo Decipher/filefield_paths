@@ -5,6 +5,12 @@
  * Contains core functions for the File (Field) Paths module.
  */
 
+declare(strict_types=1);
+
+use Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface;
+use Drupal\filefield_paths\Batch\Updater;
+use Drupal\filefield_paths\RedirectInterface;
+use Drupal\file\FileInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
@@ -35,8 +41,8 @@ use Drupal\filefield_paths\PathProcessorInterface;
  *
  * @see https://www.drupal.org/node/3562160
  */
-function filefield_paths_form_submit(array $form, FormStateInterface $form_state) {
-  @trigger_error(__FUNCTION__ . '() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::submit() instead. See https://www.drupal.org/node/3562160', E_USER_DEPRECATED);
+function filefield_paths_form_submit(array $form, FormStateInterface $form_state): void {
+  @trigger_error('filefield_paths_form_submit() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . FieldConfigEditFormHandlerInterface::class . '::submit() instead. See https://www.drupal.org/node/3562160', E_USER_DEPRECATED);
   FieldConfigEditForm::submit($form, $form_state);
 }
 
@@ -51,8 +57,8 @@ function filefield_paths_form_submit(array $form, FormStateInterface $form_state
  * @see https://www.drupal.org/node/3562160
  * @see \Drupal\filefield_paths\Hook\FieldConfigEditForm::elementTempLocationValidate
  */
-function filefield_paths_element_temp_location_validate($element, FormStateInterface $form_state) {
-  @trigger_error(__FUNCTION__ . '() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::elementTempLocationValidate() instead. See https://www.drupal.org/node/3562160', E_USER_DEPRECATED);
+function filefield_paths_element_temp_location_validate(array $element, FormStateInterface $form_state): void {
+  @trigger_error('filefield_paths_element_temp_location_validate() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . FieldConfigEditFormHandlerInterface::class . '::elementTempLocationValidate() instead. See https://www.drupal.org/node/3562160', E_USER_DEPRECATED);
   FieldConfigEditForm::elementTempLocationValidate($element, $form_state);
 }
 
@@ -70,8 +76,8 @@ function filefield_paths_element_temp_location_validate($element, FormStateInter
  *   \Drupal\filefield_paths\Batch\Updater::batchUpdate() instead.
  * @see https://www.drupal.org/project/filefield_paths/issues/2930945
  */
-function filefield_paths_batch_update(FieldConfigInterface $field_config) {
-  @trigger_error('filefield_paths_batch_update() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\Batch\Updater::batchUpdate() instead. See https://www.drupal.org/project/filefield_paths/issues/2930945', E_USER_DEPRECATED);
+function filefield_paths_batch_update(FieldConfigInterface $field_config): bool {
+  @trigger_error('filefield_paths_batch_update() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . Updater::class . '::batchUpdate() instead. See https://www.drupal.org/project/filefield_paths/issues/2930945', E_USER_DEPRECATED);
   /** @var \Drupal\filefield_paths\Batch\Updater $updater */
   $updater = \Drupal::service('filefield_paths.batch.updater');
   return $updater->batchUpdate($field_config);
@@ -92,8 +98,8 @@ function filefield_paths_batch_update(FieldConfigInterface $field_config) {
  *   \Drupal\filefield_paths\RedirectInterface::createRedirect() instead.
  * @see https://www.drupal.org/project/filefield_paths/issues/2923206
  */
-function _filefield_paths_create_redirect($source, $path, Language $language) {
-  @trigger_error('_filefield_paths_create_redirect() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\RedirectInterface::createRedirect() instead. See https://www.drupal.org/project/filefield_paths/issues/2923206', E_USER_DEPRECATED);
+function _filefield_paths_create_redirect($source, $path, Language $language): void {
+  @trigger_error('_filefield_paths_create_redirect() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . RedirectInterface::class . '::createRedirect() instead. See https://www.drupal.org/project/filefield_paths/issues/2923206', E_USER_DEPRECATED);
   \Drupal::service('filefield_paths.redirect')->createRedirect($source, $path, $language);
 }
 
@@ -126,8 +132,8 @@ function _filefield_paths_create_redirect($source, $path, Language $language) {
  *
  * @see https://www.drupal.org/node/3562822
  */
-function filefield_paths_process_string($value, array $data, array $settings = []) {
-  @trigger_error('filefield_paths_process_string() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\PathProcessorInterface::processString() instead. See https://www.drupal.org/node/3562822', E_USER_DEPRECATED);
+function filefield_paths_process_string(string $value, array $data, array $settings = []): string {
+  @trigger_error('filefield_paths_process_string() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . PathProcessorInterface::class . '::processString() instead. See https://www.drupal.org/node/3562822', E_USER_DEPRECATED);
   return \Drupal::service(PathProcessorInterface::class)
     ->processString($value, $data, $settings);
 }
@@ -142,78 +148,78 @@ function filefield_paths_process_string($value, array $data, array $settings = [
  *
  * @see https://www.drupal.org/project/filefield_paths/issues/2930945
  */
-function filefield_paths_recommended_temporary_scheme() {
-  @trigger_error('filefield_paths_recommended_temporary_scheme() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use \Drupal\filefield_paths\MoveFileProcessorInterface::recommendedFileScheme() instead. See https://www.drupal.org/node/3562442', E_USER_DEPRECATED);
+function filefield_paths_recommended_temporary_scheme(): string {
+  @trigger_error('filefield_paths_recommended_temporary_scheme() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . MoveFileProcessorInterface::class . '::recommendedFileScheme() instead. See https://www.drupal.org/node/3562442', E_USER_DEPRECATED);
   return \Drupal::service(MoveFileProcessorInterface::class)
     ->recommendedTemporaryScheme();
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_filefield_paths_field_settings($form) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_filefield_paths_field_settings(array $form): array {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   return \Drupal::service(FileFieldPathsFieldSettingsLegacy::class)->fileFieldPathsFieldSettings($form);
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_filefield_paths_process_file(ContentEntityInterface $entity, FileFieldItemList $field, array &$settings = []) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_filefield_paths_process_file(ContentEntityInterface $entity, FileFieldItemList $field, array &$settings = []): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(FileFieldPathsProcessFileLegacy::class)
     ->fileFieldPathsProcessFile($entity, $field, $settings);
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(FieldConfigEditForm::class)->formAlter($form, $form_state);
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_entity_insert(EntityInterface $entity) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_entity_insert(EntityInterface $entity): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(EntityWithFileField::class)->handleProcessFile($entity);
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_entity_update(EntityInterface $entity) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_entity_update(EntityInterface $entity): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(EntityWithFileField::class)->handleProcessFile($entity);
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_field_widget_single_element_form_alter(&$element, FormStateInterface $form_state, $context) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_field_widget_single_element_form_alter(array &$element, FormStateInterface $form_state, array $context): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(FieldWidgetSingleElementForm::class)
     ->formAlter($element, $form_state, $context);
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_entity_base_field_info(EntityTypeInterface $entity_type) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_entity_base_field_info(EntityTypeInterface $entity_type): array {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   return \Drupal::service(File::class)->entityBaseFieldInfo($entity_type);
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_file_presave($file) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_file_presave(FileInterface $file): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(File::class)->filePresave($file);
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_local_tasks_alter(&$local_tasks) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_local_tasks_alter(array &$local_tasks): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(LocalTaskAlter::class)
     ->localTasksAlterImplementation($local_tasks);
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_token_info() {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_token_info(): array {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   return \Drupal::service(Tokens::class)->tokenInfo();
 }
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
-function filefield_paths_tokens($type, $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata) {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+function filefield_paths_tokens(string $type, array $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata): array {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   return \Drupal::service(Tokens::class)
-    ->tokensProvider($type, $tokens, $data, $options, $bubbleable_metadata);
+    ->tokensProvider($type, $tokens, $data);
 }

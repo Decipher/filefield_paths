@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Tests\TestFileCreationTrait;
@@ -20,12 +22,12 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    *
    * @var string|null
    */
-  public $contentType = NULL;
+  public $contentType;
 
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var array<string>
    */
   protected static $modules = [
     'filefield_paths_test',
@@ -76,7 +78,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \Drupal\Core\Entity\EntityStorageException
    */
-  public function createFileField($name, $entity_type, $bundle, $storage_settings = [], $field_settings = [], $widget_settings = [], $third_party_settings = []) {
+  protected function createFileField($name, $entity_type, $bundle, $storage_settings = [], $field_settings = [], $widget_settings = [], $third_party_settings = []) {
     $entity_type_manager = \Drupal::entityTypeManager();
     /** @var \Drupal\field\FieldStorageConfigInterface $field_storage */
     $field_storage = $entity_type_manager->getStorage('field_storage_config')
@@ -85,7 +87,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
         'field_name' => $name,
         'type' => 'file',
         'settings' => $storage_settings,
-        'cardinality' => !empty($storage_settings['cardinality']) ? $storage_settings['cardinality'] : 1,
+        'cardinality' => empty($storage_settings['cardinality']) ? 1 : $storage_settings['cardinality'],
       ]);
     $field_storage->save();
 
@@ -118,9 +120,9 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
       ])
       ->save();
 
-    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$name}");
+    $this->drupalGet(sprintf('admin/structure/types/manage/%s/fields/node.%s.%s', $this->contentType, $this->contentType, $name));
     $this->submitForm([], 'Save settings');
-    $this->assertSession()->pageTextContains("Saved {$name} configuration");
+    $this->assertSession()->pageTextContains(sprintf('Saved %s configuration', $name));
 
     // Clear field cache in order to avoid stale cache values.
     \Drupal::service('entity_field.manager')->clearCachedFieldDefinitions();
@@ -158,7 +160,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
         'entity_type' => 'node',
         'type' => 'image',
         'settings' => $storage_settings,
-        'cardinality' => !empty($storage_settings['cardinality']) ? $storage_settings['cardinality'] : 1,
+        'cardinality' => empty($storage_settings['cardinality']) ? 1 : $storage_settings['cardinality'],
       ]);
     $field_storage->save();
 
@@ -187,7 +189,7 @@ abstract class FileFieldPathsTestBase extends FileFieldTestBase {
       ->setComponent($name)
       ->save();
 
-    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$name}");
+    $this->drupalGet(sprintf('admin/structure/types/manage/%s/fields/node.%s.%s', $this->contentType, $this->contentType, $name));
     $this->submitForm([], 'Save settings');
 
     return $field_config;

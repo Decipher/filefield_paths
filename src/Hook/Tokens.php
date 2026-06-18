@@ -1,9 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Hook;
 
 use Drupal\Core\Hook\Attribute\Hook;
-use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -42,7 +43,7 @@ final class Tokens {
    */
   // @phpstan-ignore-next-line
   #[Hook('tokens')]
-  public function tokensProvider(string $type, array $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata): array {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
+  public function tokensProvider(string $type, array $tokens, array $data): array {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
     $replacements = [];
 
     if ($type === 'file' && !empty($data['file'])) {
@@ -52,19 +53,19 @@ final class Tokens {
       foreach ($tokens as $name => $original) {
         switch ($name) {
           case 'ffp-name-only':
-            $basename = basename($file->filename->value);
+            $basename = basename((string) $file->filename->value);
             $extension = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
-            $replacements[$original] = !is_null($extension) ? mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension)) : $basename;
+            $replacements[$original] = is_null($extension) ? $basename : mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension));
             break;
 
           case 'ffp-name-only-original':
-            $basename = basename($file->origname->value);
+            $basename = basename((string) $file->origname->value);
             $extension = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
-            $replacements[$original] = !is_null($extension) ? mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension)) : $basename;
+            $replacements[$original] = is_null($extension) ? $basename : mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension));
             break;
 
           case 'ffp-extension-original':
-            $replacements[$original] = preg_match('/[^.]+$/', basename($file->origname->value), $matches) ? $matches[0] : NULL;
+            $replacements[$original] = preg_match('/[^.]+$/', basename((string) $file->origname->value), $matches) ? $matches[0] : NULL;
             break;
         }
       }
