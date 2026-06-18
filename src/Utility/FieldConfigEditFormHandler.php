@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths\Utility;
 
+use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\field\FieldConfigInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\filefield_paths\Batch\BatchUpdaterInterface;
@@ -41,8 +45,16 @@ class FieldConfigEditFormHandler implements FieldConfigEditFormHandlerInterface 
       // Retroactive updates disabled.
       return;
     }
+    $form_object = $form_state->getFormObject();
+    if (!$form_object instanceof EntityFormInterface) {
+      return;
+    }
+    $entity = $form_object->getEntity();
+    if (!$entity instanceof FieldConfigInterface) {
+      return;
+    }
     $updater = $this->getUpdater();
-    if (!$updater->batchUpdate($form_state->getFormObject()->getEntity())) {
+    if (!$updater->batchUpdate($entity)) {
       // No paths to update.
       return;
     }

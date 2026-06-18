@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filefield_paths\Unit;
 
 use Drupal\Core\Field\FieldItemListInterface;
@@ -20,9 +22,9 @@ class FieldItemTest extends UnitTestCase {
    * Tests the getFromSupportedWidget method.
    *
    * @covers \Drupal\filefield_paths\Utility\FieldItem::getFromSupportedWidget
-   * @dataProvider providerGetFromSupportedWidget
+   * @dataProvider dataProviderGetFromSupportedWidget
    */
-  public function testGetFromSupportedWidget(array $element, array $context, $expected_result) {
+  public function testGetFromSupportedWidget(array $element, array $context, bool $expected_result): void {
     if (isset($context['items']) && $context['items'] === 'file_field_item_list') {
       $context['items'] = $this->createMock(FileFieldItemList::class);
     }
@@ -32,7 +34,7 @@ class FieldItemTest extends UnitTestCase {
 
     $result = FieldItem::getFromSupportedWidget($element, $context);
 
-    if ($expected_result === TRUE) {
+    if ($expected_result) {
       $this->assertInstanceOf(FileFieldItemList::class, $result);
     }
     else {
@@ -46,7 +48,7 @@ class FieldItemTest extends UnitTestCase {
    * @return array
    *   Test cases for testGetFromSupportedWidget.
    */
-  public static function providerGetFromSupportedWidget() {
+  public static function dataProviderGetFromSupportedWidget(): array {
     return [
       'valid case' => [
         ['#type' => 'managed_file'],

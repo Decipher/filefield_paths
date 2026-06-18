@@ -1,0 +1,107 @@
+##
+# Configuration file for PHPStan static code checking, see https://phpstan.org .
+#
+# Note that drupal-specific rules are automatically included by phpstan/extension-installer
+# from vendor/mglaman/phpstan-drupal/extension.neon and vendor/mglaman/phpstan-drupal/rules.neon
+# @see https://github.com/mglaman/phpstan-drupal
+#
+# Paths are passed as CLI arguments.
+
+parameters:
+
+  level: 7
+
+  paths:
+    - web/modules/custom
+    - web/themes/custom
+
+  excludePaths:
+    - vendor/*
+    - node_modules/*
+    - ../*/node_modules/*
+    - rector.php
+
+  ignoreErrors:
+    -
+      # Hook implementations do not provide docblocks for parameters, so there
+      # is no way to provide this information.
+      messages:
+        - '#.* no value type specified in iterable type array#'
+        - '#.* has no return type specified#'
+      reportUnmatched: false
+
+    -
+      # Unsafe usage of new static() - Drupal core pattern for Controllers, Forms, ListBuilders, Derivers
+      messages:
+        - '#Unsafe usage of new static#'
+      reportUnmatched: false
+
+    -
+      # TranslatableMarkup vs string return type mismatch - Drupal core pattern
+      messages:
+        - '#should return string but returns.*TranslatableMarkup#'
+      reportUnmatched: false
+
+    -
+      # Generic type issues with FieldItemListInterface - Drupal core pattern
+      messages:
+        - '#no value type specified in iterable type.*FieldItemListInterface#'
+      reportUnmatched: false
+
+    -
+      # treatPhpDocTypesAsCertain warnings
+      messages:
+        - '#Because the type is coming from a PHPDoc#'
+      reportUnmatched: false
+
+    -
+      # Generic type issues with interfaces that do not specify types
+      messages:
+        - '#does not specify its types: T#'
+      reportUnmatched: false
+
+    -
+      # Generic type issues with FieldItemListInterface parameter
+      messages:
+        - '#has parameter.*with generic interface.*FieldItemListInterface but does not specify its types#'
+      reportUnmatched: false
+
+    -
+      # DeprecationHelper::backwardsCompatibleCall() — PHPStan cannot resolve template types.
+      # Affects install, Batch/Updater, Hook/FileFieldPathsProcessFileLegacy.
+      messages:
+        - '#Unable to resolve the template type#'
+      reportUnmatched: false
+
+    -
+      # RequirementSeverity enum introduced in Drupal 11.2, used via DeprecationHelper in install.
+      messages:
+        - '#Drupal\\Core\\Extension\\Requirement\\RequirementSeverity#'
+      reportUnmatched: false
+
+    -
+      # ContentEntityInterface::$original (D10) and ::getOriginal() (D11.2+) are accessed via
+      # DeprecationHelper callbacks. BlockContent::setOriginal() is the D10 equivalent removed in
+      # D11.2. PHPStan analyses both callback branches regardless of the Drupal version.
+      messages:
+        - '#Access to an undefined property Drupal\\Core\\Entity\\ContentEntityInterface::\$original#'
+        - '#Call to an undefined method Drupal\\Core\\Entity\\ContentEntityInterface::getOriginal\(\)#'
+        - '#Call to an undefined method Drupal\\block_content\\Entity\\BlockContent::setOriginal\(\)#'
+      reportUnmatched: false
+
+    -
+      # drupalGetTestFiles() returns stdClass objects — PHPStan types them as object with no properties.
+      messages:
+        - '#Access to an undefined property object::#'
+      reportUnmatched: false
+
+    -
+      # StreamWrapperInterface does not declare getDirectoryPath() — it is defined only on the abstract
+      # LocalStream class and its concrete implementations (PublicStream, PrivateStream, TemporaryStream).
+      # No PHP interface exposes this method, so it cannot be narrowed via instanceof.
+      messages:
+        - '#Call to an undefined method Drupal\\Core\\StreamWrapper\\StreamWrapperInterface::getDirectoryPath\(\)#'
+        - '#StreamWrapperManagerInterface::isValidScheme\(\) expects string, string\|true given#'
+      reportUnmatched: false
+
+  reportUnmatchedIgnoredErrors: false

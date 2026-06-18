@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drupal\Core\StreamWrapper\PublicStream;
+use Drupal\redirect\Entity\Redirect;
 
 /**
  * Test redirect module integration.
@@ -15,7 +18,7 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
   /**
    * Modules to enable.
    *
-   * @var array
+   * @var array<string>
    */
   protected static $modules = [
     'filefield_paths_test',
@@ -43,13 +46,13 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
   /**
    * Test File (Field) Paths Redirect UI.
    */
-  public function testUi() {
+  public function testUi(): void {
     // Create a File field.
     $field_name = mb_strtolower($this->randomMachineName());
     $this->createFileField($field_name, 'node', $this->contentType);
 
     // Ensure File (Field) Paths Pathauto settings are present and available.
-    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
+    $this->drupalGet(sprintf('admin/structure/types/manage/%s/fields/node.%s.%s', $this->contentType, $this->contentType, $field_name));
     // Redirect checkbox is present in File (Field) Path settings.
     $this->assertSession()
       ->fieldExists('third_party_settings[filefield_paths][redirect]');
@@ -61,7 +64,7 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
   /**
    * Test File (Field) Paths Redirect functionality.
    */
-  public function testRedirect() {
+  public function testRedirect(): void {
     // Get the public file path.
     $public_path = PublicStream::basePath();
 
@@ -74,7 +77,7 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
     // Create a node with a test file.
     /** @var \Drupal\file\Entity\File $test_file */
     $test_file = $this->getTestFile('text');
-    $nid = $this->uploadNodeFile($test_file, $field_name, $this->contentType);
+    $this->uploadNodeFile($test_file, $field_name, $this->contentType);
 
     // Update file path and create redirect.
     $destination_dir = $this->randomMachineName();
@@ -83,15 +86,16 @@ class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
       'third_party_settings[filefield_paths][redirect]' => TRUE,
       'third_party_settings[filefield_paths][retroactive_update]' => TRUE,
     ];
-    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
+    $this->drupalGet(sprintf('admin/structure/types/manage/%s/fields/node.%s.%s', $this->contentType, $this->contentType, $field_name));
     $this->submitForm($edit, 'Save settings');
-    $this->drupalGet("admin/structure/types/manage/{$this->contentType}/fields/node.{$this->contentType}.{$field_name}");
+    $this->drupalGet(sprintf('admin/structure/types/manage/%s/fields/node.%s.%s', $this->contentType, $this->contentType, $field_name));
 
     // Check if a redirect has been created.
     $expected_redirect_source = $public_path . '/' . $source_dir . '/text-0.txt';
     $expected_redirect_destination = 'internal:/' . $public_path . '/' . $destination_dir . '/text-0.txt';
     $redirects = redirect_repository()->findBySourcePath($expected_redirect_source);
     $redirect = reset($redirects);
+    $this->assertInstanceOf(Redirect::class, $redirect);
     $this->assertSame($expected_redirect_destination, $redirect->getRedirect()['uri'], 'Redirect created for relocated file.');
   }
 

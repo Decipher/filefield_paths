@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Language\Language;
+use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -22,49 +25,25 @@ class Redirect implements RedirectInterface {
   protected $redirectStorage;
 
   /**
-   * The stream wrapper manager.
-   *
-   * @var \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface
-   */
-  protected $streamWrapperManager;
-
-  /**
-   * The config factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * A logger instance.
-   *
-   * @var \Psr\Log\LoggerInterface
-   */
-  protected $logger;
-
-  /**
    * Constructs a new redirect service.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
-   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $stream_wrapper_manager
+   * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $streamWrapperManager
    *   The stream wrapper manager.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory.
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, StreamWrapperManagerInterface $stream_wrapper_manager, ConfigFactoryInterface $config_factory, LoggerInterface $logger) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, protected StreamWrapperManagerInterface $streamWrapperManager, protected ConfigFactoryInterface $configFactory, protected LoggerInterface $logger) {
     $this->redirectStorage = $entity_type_manager->getStorage('redirect');
-    $this->streamWrapperManager = $stream_wrapper_manager;
-    $this->configFactory = $config_factory;
-    $this->logger = $logger;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function createRedirect($source, $path, Language $language) {
+  public function createRedirect($source, $path, LanguageInterface $language): void {
     $this->logger->debug('Creating redirect from @source to @path.', [
       '@source' => $source,
       '@path'   => $path,
@@ -98,12 +77,12 @@ class Redirect implements RedirectInterface {
    * @return string|null
    *   The file path, if found. Null otherwise.
    */
-  protected function getPath($file_uri) {
-    if ($wrapper = $this->streamWrapperManager->getViaUri($file_uri)) {
-      $directory = $wrapper->getDirectoryPath();
-      $target = StreamWrapperManager::getTarget($file_uri);
-      return $directory . '/' . $target;
+  protected function getPath($file_uri): ?string {
+    $wrapper = $this->streamWrapperManager->getViaUri($file_uri);
+    if (!$wrapper instanceof StreamWrapperInterface) {
+      return NULL;
     }
+    return $wrapper->getDirectoryPath() . '/' . StreamWrapperManager::getTarget($file_uri);
   }
 
 }

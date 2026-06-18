@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\filefield_paths;
 
 use Drupal\Component\Transliteration\TransliterationInterface;
@@ -49,9 +51,7 @@ class PathProcessor implements PathProcessorInterface {
     $that = $this;
     $result = $this->renderer->executeInRenderContext(
       $context,
-      static function () use ($that, $value, $data, $settings) {
-        return $that->doProcessString($value, $data, $settings);
-      },
+      static fn(): string => $that->doProcessString($value, $data, $settings),
     );
 
     // Handle any bubbled cacheability metadata.
@@ -93,7 +93,7 @@ class PathProcessor implements PathProcessorInterface {
   public function doProcessString(string $value, array $data, array $settings = []): string {
     $transliterate = (bool) $settings['transliterate'];
     $pathauto = (isset($settings['pathauto']) && $settings['pathauto']) &&
-      ($this->aliasCleaner !== NULL);
+      ($this->aliasCleaner instanceof AliasCleanerInterface);
     $remove_slashes = !empty($settings['slashes']);
 
     // If '/' is to be removed from tokens, token replacement needs to happen
@@ -113,7 +113,7 @@ class PathProcessor implements PathProcessorInterface {
           $pathinfo = pathinfo($path);
           $basename = basename($path);
           $extension = preg_match('/\.[^.]+$/', $basename, $matches) ? $matches[0] : NULL;
-          $pathinfo['filename'] = !is_null($extension) ? mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension)) : $basename;
+          $pathinfo['filename'] = is_null($extension) ? $basename : mb_substr($basename, 0, mb_strlen($basename) - mb_strlen($extension));
 
           if ($remove_slashes) {
             $path = '';

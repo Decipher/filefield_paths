@@ -5,6 +5,8 @@
  * Install, update and uninstall functions for the File (Field) Paths module.
  */
 
+declare(strict_types=1);
+
 use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Extension\Requirement\RequirementSeverity;
 use Drupal\Core\Database\Database;
@@ -15,7 +17,7 @@ use Drupal\filefield_paths\MoveFileProcessorInterface;
 /**
  * Returns the recommended temporary scheme for the site.
  */
-function filefield_paths_update_temporary_location_configuration() {
+function filefield_paths_update_temporary_location_configuration(): void {
   $config = \Drupal::configFactory()->getEditable('filefield_paths.settings');
   $temporary_path = $config->get('temp_location');
 
@@ -25,14 +27,14 @@ function filefield_paths_update_temporary_location_configuration() {
     return;
   }
 
-  $scheme = substr($temporary_path, 0, 9);
+  $scheme = substr((string) $temporary_path, 0, 9);
   $recommended_scheme = \Drupal::service(MoveFileProcessorInterface::class)
     ->recommendedTemporaryScheme();
 
   // If the scheme is 'public://' but the recommended scheme is NOT, then
   // we need to update to the variable to use the recommended scheme.
   if ($scheme === 'public://' && $recommended_scheme !== 'public://') {
-    $temporary_path = $recommended_scheme . substr($temporary_path, 9);
+    $temporary_path = $recommended_scheme . substr((string) $temporary_path, 9);
     $config->set('temp_location', $temporary_path)->save();
   }
 }
@@ -40,7 +42,7 @@ function filefield_paths_update_temporary_location_configuration() {
 /**
  * Implements hook_install().
  */
-function filefield_paths_install() {
+function filefield_paths_install(): void {
   $storage_definition = BaseFieldDefinition::create('string')
     ->setLabel(t('Original filename'))
     ->setDescription(t('Original name of the file with no path components.'));
@@ -58,7 +60,7 @@ function filefield_paths_install() {
 /**
  * Implements hook_modules_installed().
  */
-function filefield_paths_modules_installed($modules, $is_syncing) {
+function filefield_paths_modules_installed(array $modules, bool $is_syncing): void {
   if (!$is_syncing && in_array('filefield_paths', $modules, TRUE)) {
     filefield_paths_update_temporary_location_configuration();
   }
@@ -67,7 +69,7 @@ function filefield_paths_modules_installed($modules, $is_syncing) {
 /**
  * Implements hook_requirements().
  */
-function filefield_paths_requirements($phase) {
+function filefield_paths_requirements(string $phase): array {
   $requirements = [];
 
   if ($phase === 'runtime') {
@@ -79,7 +81,7 @@ function filefield_paths_requirements($phase) {
       return [];
     }
 
-    $temporary_scheme = substr($temporary_path, 0, 9);
+    $temporary_scheme = substr((string) $temporary_path, 0, 9);
     if ($temporary_scheme !== 'public://') {
       return [];
     }
@@ -94,7 +96,7 @@ function filefield_paths_requirements($phase) {
           'title' => t('File (Field) Paths temporary path'),
           'value' => t('Insecure!'),
           'description' => t('This site supports private files but the File (Field) Paths temporary path is under public:// which could lead to private files being temporarily exposed publicly. <a href=":url">Change the temporary path</a> to be under temporary:// or private:// in order to secure your files.', [':url' => Url::fromRoute('filefield_paths.admin_settings')->toString()]),
-          'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => RequirementSeverity::Error, fn() => REQUIREMENT_ERROR),
+          'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): RequirementSeverity => RequirementSeverity::Error, fn() => REQUIREMENT_ERROR),
         ];
       }
     }
@@ -106,7 +108,7 @@ function filefield_paths_requirements($phase) {
 /**
  * Add 'origname' field to 'file' entities.
  */
-function filefield_paths_update_8001() {
+function filefield_paths_update_8001(): void {
   $storage_definition = BaseFieldDefinition::create('string')
     ->setLabel(t('Original filename'))
     ->setDescription(t('Original name of the file with no path components.'));
@@ -118,6 +120,6 @@ function filefield_paths_update_8001() {
 /**
  * Change the temporary path if the site supports private files.
  */
-function filefield_paths_update_9001() {
+function filefield_paths_update_9001(): void {
   filefield_paths_update_temporary_location_configuration();
 }

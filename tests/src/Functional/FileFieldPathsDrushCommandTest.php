@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\Tests\filefield_paths\Functional;
 
 use Drush\TestTraits\DrushTestTrait;
@@ -30,9 +32,9 @@ class FileFieldPathsDrushCommandTest extends FileFieldPathsTestBase {
     $file_system = \Drupal::service('file_system');
     /** @var \Drupal\file\Entity\File $test_file */
     $test_file = $this->getTestFile('text');
-    $this->drupalGet("node/add/{$this->contentType}");
+    $this->drupalGet('node/add/' . $this->contentType);
     $edit['title[0][value]'] = $this->randomMachineName();
-    $edit["files[{$field_name}_0]"] = $file_system->realpath($test_file->getFileUri());
+    $edit[sprintf('files[%s_0]', $field_name)] = $file_system->realpath($test_file->getFileUri());
     $this->submitForm($edit, 'Upload');
     $this->submitForm([], 'Save');
 
@@ -58,9 +60,9 @@ class FileFieldPathsDrushCommandTest extends FileFieldPathsTestBase {
     $file_system = \Drupal::service('file_system');
     /** @var \Drupal\file\Entity\File $test_file */
     $test_file = $this->getTestFile('text');
-    $this->drupalGet("node/add/{$this->contentType}");
+    $this->drupalGet('node/add/' . $this->contentType);
     $edit['title[0][value]'] = $this->randomMachineName();
-    $edit["files[{$field_name}_0]"] = $file_system->realpath($test_file->getFileUri());
+    $edit[sprintf('files[%s_0]', $field_name)] = $file_system->realpath($test_file->getFileUri());
     $this->submitForm($edit, 'Upload');
     $this->submitForm([], 'Save');
 
