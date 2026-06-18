@@ -88,7 +88,9 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
     }
     $title = implode('/', $parts);
 
-    $this->assertSame(sprintf('public://node/%s/%s.txt', $title, $title), $node->{$field_name}[0]->entity->getFileUri(), 'File path/name has been processed correctly by Pathauto');
+    $expected = 'public://' . preg_replace('/\/+/', '/', sprintf('node/%s/%s.txt', $title, $title));
+
+    $this->assertSame($expected, $node->{$field_name}[0]->entity->getFileUri(), 'File path/name has been processed correctly by Pathauto');
   }
 
 }
