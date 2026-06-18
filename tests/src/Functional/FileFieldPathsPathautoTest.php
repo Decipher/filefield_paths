@@ -51,6 +51,11 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
    * Test Pathauto cleanup in File (Field) Paths.
    */
   public function testPathauto(): void {
+    if (PHP_VERSION_ID >= 80500) {
+      // @see https://www.drupal.org/project/pathauto/issues/3579655
+      $this->markTestSkipped('pathauto fails on PHP 8.5+ due to null array offset deprecation promoted to exception.');
+    }
+
     // Create a File field.
     $field_name = mb_strtolower($this->randomMachineName());
 
