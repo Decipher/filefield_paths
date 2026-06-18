@@ -76,7 +76,7 @@ parameters:
     -
       # RequirementSeverity enum introduced in Drupal 11.2, used via DeprecationHelper in install.
       messages:
-        - '#class Drupal\\Core\\Extension\\Requirement\\RequirementSeverity#'
+        - '#Drupal\\Core\\Extension\\Requirement\\RequirementSeverity#'
       reportUnmatched: false
 
     -
@@ -101,6 +101,7 @@ parameters:
       # No PHP interface exposes this method, so it cannot be narrowed via instanceof.
       messages:
         - '#Call to an undefined method Drupal\\Core\\StreamWrapper\\StreamWrapperInterface::getDirectoryPath\(\)#'
+        - '#StreamWrapperManagerInterface::isValidScheme\(\) expects string, string\|true given#'
       reportUnmatched: false
 
   reportUnmatchedIgnoredErrors: false
