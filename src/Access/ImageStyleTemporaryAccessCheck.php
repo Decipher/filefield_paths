@@ -36,14 +36,9 @@ final readonly class ImageStyleTemporaryAccessCheck implements AccessInterface {
       ->get('filefield_paths.settings')
       ->get('temp_location') ?? '';
 
-    $scheme = StreamWrapperManager::getScheme($temp_location);
     $subdir = StreamWrapperManager::getTarget($temp_location);
-
-    // Only enforce the prefix restriction when the configured temp location
-    // uses temporary://. Other schemes (private://, public://) are handled by
-    // their own access mechanisms and should not be blocked here.
-    if ($scheme !== 'temporary' || $subdir === '' || $subdir === FALSE) {
-      return AccessResult::neutral();
+    if (!is_string($subdir) || $subdir === '') {
+      return AccessResult::forbidden();
     }
 
     $allowed = str_starts_with($file, $subdir . '/');

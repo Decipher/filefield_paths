@@ -42,6 +42,12 @@ class FileFieldPathsImageStyleTemporaryTest extends BrowserTestBase {
   protected function setUp(): void {
     parent::setUp();
 
+    // Use temporary:// as the FFP temp location so the URL alter hook fires.
+    \Drupal::configFactory()
+      ->getEditable('filefield_paths.settings')
+      ->set('temp_location', 'temporary://filefield_paths')
+      ->save();
+
     // Create a simple image style.
     $this->style = ImageStyle::create(['name' => 'ffp_test', 'label' => 'FFP test']);
     $this->style->save();
@@ -55,6 +61,16 @@ class FileFieldPathsImageStyleTemporaryTest extends BrowserTestBase {
     $source = \Drupal::root() . '/core/tests/fixtures/files/image-1.png';
     $this->imageUri = \Drupal::service('file_system')
       ->copy($source, $temp_location . '/image-1.png', FileExists::Replace);
+  }
+
+  /**
+   * Tests that derivative URLs are rewritten to the FFP route.
+   */
+  public function testUrlIsRewritten(): void {
+    $url = $this->style->buildUrl($this->imageUri);
+    $this->assertStringContainsString('/filefield_paths/image-style/ffp_test/temporary', $url);
+    $this->assertStringContainsString('file=filefield_paths/', $url);
+    $this->assertStringContainsString('itok=', $url);
   }
 
   /**
@@ -95,10 +111,18 @@ class FileFieldPathsImageStyleTemporaryTest extends BrowserTestBase {
   }
 
   /**
-   * Tests private:// temp location leaves private delivery intact.
+   * Tests that accessing the route without a file parameter returns 403.
+   */
+  public function testEmptyFileParamReturns403(): void {
+    $this->drupalGet('/filefield_paths/image-style/ffp_test/temporary');
+    $this->assertSession()->statusCodeEquals(403);
+  }
+
+  /**
+   * Tests that non-temporary temp_location does not trigger URL rewriting.
    *
-   * The alter hook only matches temporary:// derivative URIs, so switching
-   * the temp location to private:// must not trigger the FFP temporary route.
+   * When temp_location uses private://, the alter hook must not intercept
+   * derivative URLs, leaving them on the standard private delivery route.
    */
   public function testPrivateTempLocationUnaffected(): void {
     \Drupal::configFactory()
@@ -106,9 +130,8 @@ class FileFieldPathsImageStyleTemporaryTest extends BrowserTestBase {
       ->set('temp_location', 'private://filefield_paths')
       ->save();
 
-    $private_uri = 'private://filefield_paths/image-1.png';
-    $derivative_uri = $this->style->buildUri($private_uri);
-    $this->assertStringStartsWith('private://', $derivative_uri);
+    $url = $this->style->buildUrl($this->imageUri);
+    $this->assertStringNotContainsString('/filefield_paths/image-style/', $url);
   }
 
 }
