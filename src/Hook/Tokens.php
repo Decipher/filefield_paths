@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\filefield_paths\Hook;
 
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -43,7 +44,7 @@ final class Tokens {
    */
   // @phpstan-ignore-next-line
   #[Hook('tokens')]
-  public function tokensProvider(string $type, array $tokens, array $data): array {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
+  public function tokensProvider(string $type, array $tokens, array $data, array $options = [], ?BubbleableMetadata $bubbleable_metadata = NULL): array {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
     $replacements = [];
 
     if ($type === 'file' && !empty($data['file'])) {

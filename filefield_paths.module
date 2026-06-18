@@ -16,7 +16,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\LegacyHook;
-use Drupal\Core\Language\Language;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
@@ -90,7 +90,7 @@ function filefield_paths_batch_update(FieldConfigInterface $field_config): bool 
  *   The source file URL.
  * @param string $path
  *   The moved file URL.
- * @param \Drupal\Core\Language\Language $language
+ * @param \Drupal\Core\Language\LanguageInterface $language
  *   The language of the source file.
  *
  * @deprecated in filefield_paths:8.x-1.0 and is removed from
@@ -98,7 +98,7 @@ function filefield_paths_batch_update(FieldConfigInterface $field_config): bool 
  *   \Drupal\filefield_paths\RedirectInterface::createRedirect() instead.
  * @see https://www.drupal.org/project/filefield_paths/issues/2923206
  */
-function _filefield_paths_create_redirect($source, $path, Language $language): void {
+function _filefield_paths_create_redirect($source, $path, LanguageInterface $language): void {
   @trigger_error('_filefield_paths_create_redirect() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . RedirectInterface::class . '::createRedirect() instead. See https://www.drupal.org/project/filefield_paths/issues/2923206', E_USER_DEPRECATED);
   \Drupal::service('filefield_paths.redirect')->createRedirect($source, $path, $language);
 }

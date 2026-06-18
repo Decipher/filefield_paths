@@ -102,7 +102,8 @@ final readonly class FileFieldPathsProcessFileLegacy {
         $this->loggerChannel->info('File path was truncated');
         $pathinfo = pathinfo($destination);
         $ext = $pathinfo['extension'] ?? '';
-        $destination = mb_substr($destination, 0, 254 - mb_strlen($ext)) . ($ext !== '' ? '.' . $ext : '');
+        $prefix_max = $ext !== '' ? 254 - mb_strlen($ext) : 255;
+        $destination = mb_substr($destination, 0, $prefix_max) . ($ext !== '' ? '.' . $ext : '');
       }
 
       // Finalize file if necessary.

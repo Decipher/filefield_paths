@@ -98,28 +98,24 @@ class SettingsForm extends ConfigFormBase {
   /**
    * {@inheritdoc}
    */
-  public function validateForm(array &$form, FormStateInterface $form_state): bool {
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
     $values = $form_state->getValues();
     $scheme = $this->streamWrapperManager->getScheme($values['temp_location']);
     if (!$scheme) {
       $form_state->setErrorByName('temp_location', $this->t('Invalid file location. You must include a file stream wrapper (e.g., public://).'));
 
-      return FALSE;
+      return;
     }
 
     if (!$this->streamWrapperManager->isValidScheme($scheme)) {
       $form_state->setErrorByName('temp_location', $this->t('Invalid file stream wrapper.'));
 
-      return FALSE;
+      return;
     }
 
     if ((!is_dir($values['temp_location']) || !is_writable($values['temp_location'])) && !$this->fileSystem->prepareDirectory($values['temp_location'], FileSystem::CREATE_DIRECTORY | FileSystem::MODIFY_PERMISSIONS)) {
       $form_state->setErrorByName('temp_location', $this->t('File location can not be created or is not writable.'));
-
-      return FALSE;
     }
-
-    return TRUE;
   }
 
   /**
