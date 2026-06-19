@@ -126,11 +126,37 @@ class DrushCommandsTest extends KernelTestBase {
   }
 
   /**
+   * Tests processAllEntityBundles iterates bundles without error.
+   */
+  public function testProcessAllEntityBundlesWithNoEntities(): void {
+    $info = $this->callProtected('buildInfo');
+    $this->callProtected('processAllEntityBundles', [$info, 'entity_test']);
+    $this->addToAssertionCount(1);
+  }
+
+  /**
+   * Tests processAllBundleFields iterates fields without error.
+   */
+  public function testProcessAllBundleFieldsWithNoEntities(): void {
+    $info = $this->callProtected('buildInfo');
+    $this->callProtected('processAllBundleFields', [$info, 'entity_test', 'entity_test']);
+    $this->addToAssertionCount(1);
+  }
+
+  /**
+   * Tests processField skips a non-existent field gracefully.
+   */
+  public function testProcessFieldWithNonExistentField(): void {
+    $this->callProtected('processField', ['entity_test', 'entity_test', 'non_existent_field']);
+    $this->addToAssertionCount(1);
+  }
+
+  /**
    * Calls a protected method on the Commands instance via reflection.
    */
-  protected function callProtected(string $method): mixed {
+  protected function callProtected(string $method, array $args = []): mixed {
     $ref = new \ReflectionMethod($this->commands, $method);
-    return $ref->invoke($this->commands);
+    return $ref->invokeArgs($this->commands, $args);
   }
 
 }

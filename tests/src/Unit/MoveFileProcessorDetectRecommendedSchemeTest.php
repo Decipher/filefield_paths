@@ -14,6 +14,7 @@ use Drupal\filefield_paths\MoveFileProcessor;
  *
  * @group filefield_paths
  * @covers \Drupal\filefield_paths\MoveFileProcessor::detectRecommendedScheme
+ * @covers \Drupal\filefield_paths\MoveFileProcessor::recommendedTemporaryScheme
  */
 class MoveFileProcessorDetectRecommendedSchemeTest extends UnitTestCase {
 
@@ -45,6 +46,23 @@ class MoveFileProcessorDetectRecommendedSchemeTest extends UnitTestCase {
     };
 
     $this->assertSame($expected, $processor->detectRecommendedScheme($wrappers));
+  }
+
+  /**
+   * Tests recommendedTemporaryScheme() returns cached value on cache hit.
+   */
+  public function testRecommendedTemporarySchemeCacheHit(): void {
+    $stream_manager = $this->createMock(StreamWrapperManagerInterface::class);
+    $cache_backend = $this->createMock(CacheBackendInterface::class);
+
+    $cache_obj = (object) ['data' => 'private://'];
+    $cache_backend->method('get')->willReturn($cache_obj);
+
+    // Stream wrapper manager should NOT be called on cache hit.
+    $stream_manager->expects($this->never())->method('getWrappers');
+
+    $processor = new MoveFileProcessor($stream_manager, $cache_backend);
+    $this->assertSame('private://', $processor->recommendedTemporaryScheme());
   }
 
   /**
