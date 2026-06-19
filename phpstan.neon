@@ -104,4 +104,12 @@ parameters:
         - '#StreamWrapperManagerInterface::isValidScheme\(\) expects string, string\|true given#'
       reportUnmatched: false
 
+    -
+      # Deprecated procedural wrappers are tested intentionally in
+      # ModuleDeprecatedWrappersTest to verify deprecation notices fire.
+      messages:
+        - '#Call to deprecated function filefield_paths_#'
+        - '#Call to deprecated function _filefield_paths_#'
+      reportUnmatched: false
+
   reportUnmatchedIgnoredErrors: false
