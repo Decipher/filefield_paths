@@ -109,4 +109,16 @@ class SettingsFormTest extends KernelTestBase {
     $this->assertFalse($form_state->hasAnyErrors());
   }
 
+  /**
+   * Tests that validateForm rejects an unregistered scheme.
+   */
+  public function testValidateRejectsInvalidScheme(): void {
+    $form_state = new FormState();
+    $form_state->setValues(['temp_location' => 'unknown://path']);
+
+    $form = [];
+    $this->form->validateForm($form, $form_state);
+    $this->assertTrue($form_state->hasAnyErrors());
+  }
+
 }

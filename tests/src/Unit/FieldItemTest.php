@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
@@ -84,6 +85,19 @@ class FieldItemTest extends UnitTestCase {
       'no settings' => [TRUE, [], FALSE],
       'not a file field' => [FALSE, NULL, FALSE],
     ];
+  }
+
+  /**
+   * Tests getConfiguration() with a non-ThirdPartySettings definition.
+   *
+   * @covers \Drupal\filefield_paths\Utility\FieldItem::getConfiguration
+   */
+  public function testGetConfigurationReturnsEmptyForNonThirdParty(): void {
+    $definition = $this->createMock(FieldDefinitionInterface::class);
+    $field = $this->createMock(FieldItemListInterface::class);
+    $field->method('getFieldDefinition')->willReturn($definition);
+
+    $this->assertSame([], FieldItem::getConfiguration($field));
   }
 
   /**

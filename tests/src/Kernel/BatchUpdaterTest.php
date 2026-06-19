@@ -102,4 +102,46 @@ class BatchUpdaterTest extends KernelTestBase {
     $this->assertTrue($result);
   }
 
+  /**
+   * Tests batchProcess() processes entities and initializes the sandbox.
+   */
+  public function testBatchProcessWithEntities(): void {
+    $file = $this->createFile('public://batch/example.txt');
+    $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $entity->save();
+
+    $field_config = FieldConfig::load('entity_test.entity_test.field_file');
+
+    $context = [];
+    $this->updater->batchProcess([(int) $entity->id()], $field_config, $context);
+
+    $this->assertSame(1, $context['sandbox']['progress']);
+    $this->assertSame(1, $context['sandbox']['max']);
+    $this->assertSame([], $context['sandbox']['objects']);
+    $this->assertArrayNotHasKey('finished', $context);
+  }
+
+  /**
+   * Tests batchProcess() sets $context['finished'] when not all processed.
+   */
+  public function testBatchProcessSetsFinishedWhenIncomplete(): void {
+    $file = $this->createFile('public://batch-finished/example.txt');
+    $entity_ids = [];
+    for ($i = 0; $i < 6; $i++) {
+      $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+      $entity->save();
+      $entity_ids[] = (int) $entity->id();
+    }
+
+    $field_config = FieldConfig::load('entity_test.entity_test.field_file');
+
+    $context = [];
+    $this->updater->batchProcess($entity_ids, $field_config, $context);
+
+    $this->assertSame(5, $context['sandbox']['progress']);
+    $this->assertSame(6, $context['sandbox']['max']);
+    $this->assertCount(1, $context['sandbox']['objects']);
+    $this->assertSame(5 / 6, $context['finished']);
+  }
+
 }

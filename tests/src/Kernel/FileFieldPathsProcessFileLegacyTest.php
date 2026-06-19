@@ -5,13 +5,17 @@ declare(strict_types=1);
 namespace Drupal\Tests\filefield_paths\Kernel;
 
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
+use Drupal\file\FileRepositoryInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Hook\FileFieldPathsProcessFileLegacy;
+use Drupal\filefield_paths\PathProcessorInterface;
+use Drupal\filefield_paths\RedirectInterface;
 
 /**
  * Tests the legacy hook_filefield_paths_process_file() implementation.
@@ -142,6 +146,93 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
    */
   protected function getService(): FileFieldPathsProcessFileLegacy {
     return $this->container->get(FileFieldPathsProcessFileLegacy::class);
+  }
+
+  /**
+   * Constructs the service with optional dependency overrides.
+   */
+  protected function constructService(?FileSystemInterface $fileSystem = NULL, ?FileRepositoryInterface $fileRepository = NULL): FileFieldPathsProcessFileLegacy {
+    return new FileFieldPathsProcessFileLegacy(
+      $fileSystem ?? $this->container->get('file_system'),
+      $fileRepository ?? $this->container->get('file.repository'),
+      $this->container->get('stream_wrapper_manager'),
+      $this->container->get('module_handler'),
+      $this->container->get('config.factory'),
+      $this->container->get(PathProcessorInterface::class),
+      $this->container->get('logger.channel.filefield_paths'),
+      fn (): RedirectInterface => $this->container->get(RedirectInterface::class),
+    );
+  }
+
+  /**
+   * A file with an unexpected source scheme is silently skipped.
+   */
+  public function testUnexpectedSourceSchemeSkipped(): void {
+    $file = File::create(['uri' => 'bogus://dir/file.txt']);
+    $file->setPermanent();
+    $file->save();
+
+    $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    \assert($field instanceof FileFieldItemList);
+
+    $settings = [
+      'file_path' => ['value' => 'new-dir', 'options' => ['transliterate' => FALSE]],
+      'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
+    ];
+
+    // Should skip the file without error.
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
+    $this->addToAssertionCount(1);
+  }
+
+  /**
+   * Directory creation failure logs a notice and continues.
+   */
+  public function testDirectoryCreationFailure(): void {
+    $file = $this->createFile('public://dir-fail/example.txt');
+
+    $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    \assert($field instanceof FileFieldItemList);
+
+    $settings = [
+      'file_path' => ['value' => 'new-dir-fail', 'options' => ['transliterate' => FALSE]],
+      'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
+    ];
+
+    $fileSystem = $this->createMock(FileSystemInterface::class);
+    $fileSystem->method('dirname')->willReturn('public://new-dir-fail');
+    $fileSystem->method('prepareDirectory')->willReturn(FALSE);
+
+    $service = $this->constructService($fileSystem);
+    $service->fileFieldPathsProcessFile($entity, $field, $settings);
+
+    $this->assertFileExists('public://dir-fail/example.txt');
+  }
+
+  /**
+   * A move exception is caught, logged, and the file stays in place.
+   */
+  public function testMoveException(): void {
+    $file = $this->createFile('public://move-fail/example.txt');
+
+    $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    \assert($field instanceof FileFieldItemList);
+
+    $settings = [
+      'file_path' => ['value' => 'new-move-fail', 'options' => ['transliterate' => FALSE]],
+      'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
+    ];
+
+    $fileRepository = $this->createMock(FileRepositoryInterface::class);
+    $fileRepository->method('move')->willThrowException(new \Exception('Move failed'));
+
+    $service = $this->constructService(NULL, $fileRepository);
+    $service->fileFieldPathsProcessFile($entity, $field, $settings);
+
+    $this->assertFileExists('public://move-fail/example.txt');
   }
 
 }

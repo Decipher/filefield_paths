@@ -119,6 +119,65 @@ class ModuleLegacyHooksTest extends KernelTestBase {
   }
 
   /**
+   * Tests that tokens() handles filenames without an extension.
+   */
+  public function testTokensNoExtension(): void {
+    $file = File::create([
+      'uri' => 'public://readme',
+      'filename' => 'readme',
+      'origname' => 'readme',
+    ]);
+
+    $replacements = filefield_paths_tokens(
+      'file',
+      [
+        'ffp-name-only' => '[file:ffp-name-only]',
+        'ffp-name-only-original' => '[file:ffp-name-only-original]',
+        'ffp-extension-original' => '[file:ffp-extension-original]',
+      ],
+      ['file' => $file],
+      [],
+      new BubbleableMetadata(),
+    );
+
+    $this->assertSame('readme', $replacements['[file:ffp-name-only]']);
+    $this->assertSame('readme', $replacements['[file:ffp-name-only-original]']);
+    $this->assertSame('readme', $replacements['[file:ffp-extension-original]']);
+  }
+
+  /**
+   * Tests that tokens() returns empty for non-file token types.
+   */
+  public function testTokensNonFileType(): void {
+    $replacements = filefield_paths_tokens(
+      'node',
+      ['ffp-name-only' => '[node:ffp-name-only]'],
+      [],
+      [],
+      new BubbleableMetadata(),
+    );
+
+    $this->assertSame([], $replacements);
+  }
+
+  /**
+   * Tests that file_presave does not override an existing origname.
+   */
+  public function testFilePresaveDoesNotOverrideExistingOrigname(): void {
+    $file = File::create([
+      'uri' => 'public://test.txt',
+      'filename' => 'changed.txt',
+      'origname' => 'original.txt',
+    ]);
+
+    $this->assertFalse($file->origname->isEmpty());
+
+    filefield_paths_file_presave($file);
+
+    $this->assertSame('original.txt', $file->origname->value);
+  }
+
+  /**
    * Tests that filefield_paths_field_settings returns expected form elements.
    */
   public function testFileFieldPathsFieldSettings(): void {

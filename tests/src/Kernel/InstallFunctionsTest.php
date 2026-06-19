@@ -158,4 +158,15 @@ class InstallFunctionsTest extends KernelTestBase {
     $this->assertStringEndsWith('filefield_paths', $updated);
   }
 
+  /**
+   * Tests that update_8001 installs the origname field storage definition.
+   */
+  public function testUpdate8001InstallsOrigname(): void {
+    filefield_paths_update_8001();
+
+    $field_definitions = \Drupal::service('entity_field.manager')
+      ->getFieldDefinitions('file', 'file');
+    $this->assertArrayHasKey('origname', $field_definitions);
+  }
+
 }
