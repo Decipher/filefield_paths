@@ -10,6 +10,7 @@ use Drupal\entity_test\Entity\EntityTest;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\file\Entity\File;
+use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Hook\FileFieldPathsProcessFileLegacy;
 
 /**
@@ -80,12 +81,14 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
     $this->assertDirectoryExists('public://old-dir/old-sub');
 
     $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    assert($field instanceof FileFieldItemList);
 
     $settings = [
       'file_path' => ['value' => 'new-dir', 'options' => ['transliterate' => FALSE]],
       'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
     ];
-    $this->getService()->fileFieldPathsProcessFile($entity, $entity->field_file, $settings);
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
 
     $this->assertFileExists('public://new-dir/example.txt');
     $this->assertDirectoryDoesNotExist('public://old-dir/old-sub');
@@ -100,12 +103,14 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
     file_put_contents('public://shared-dir/sibling.txt', 'kept');
 
     $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    assert($field instanceof FileFieldItemList);
 
     $settings = [
       'file_path' => ['value' => 'new-dir', 'options' => ['transliterate' => FALSE]],
       'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
     ];
-    $this->getService()->fileFieldPathsProcessFile($entity, $entity->field_file, $settings);
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
 
     $this->assertFileExists('public://new-dir/example.txt');
     $this->assertFileExists('public://shared-dir/sibling.txt');
@@ -119,12 +124,14 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
     $original_changed = $file->getChangedTime();
 
     $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    assert($field instanceof FileFieldItemList);
 
     $settings = [
       'file_path' => ['value' => 'same-dir', 'options' => ['transliterate' => FALSE]],
       'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
     ];
-    $this->getService()->fileFieldPathsProcessFile($entity, $entity->field_file, $settings);
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
 
     $this->assertSame($original_changed, $file->getChangedTime());
     $this->assertFileExists('public://same-dir/example.txt');
