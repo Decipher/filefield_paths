@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
+use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Utility\FieldItem;
@@ -40,6 +42,52 @@ class FieldItemTest extends UnitTestCase {
     else {
       $this->assertNull($result);
     }
+  }
+
+  /**
+   * Tests getConfiguration() and hasConfigurationEnabled().
+   *
+   * @covers \Drupal\filefield_paths\Utility\FieldItem::getConfiguration
+   * @covers \Drupal\filefield_paths\Utility\FieldItem::hasConfigurationEnabled
+   * @dataProvider dataProviderHasConfigurationEnabled
+   */
+  public function testHasConfigurationEnabled(bool $is_file_field, ?array $third_party_settings, bool $expected): void {
+    if ($is_file_field) {
+      $definition = $this->createMockForIntersectionOfInterfaces([
+        FieldDefinitionInterface::class,
+        ThirdPartySettingsInterface::class,
+      ]);
+      $definition->method('getThirdPartySettings')->with('filefield_paths')->willReturn($third_party_settings ?? []);
+      $field = $this->createMock(FileFieldItemList::class);
+      $field->method('getFieldDefinition')->willReturn($definition);
+    }
+    else {
+      $field = $this->createMock(FieldItemListInterface::class);
+    }
+
+    $this->assertSame($expected, FieldItem::hasConfigurationEnabled($field));
+  }
+
+  /**
+   * Tests hasConfigurationEnabled() returns false for a null field.
+   */
+  public function testHasConfigurationEnabledWithNullField(): void {
+    $this->assertFalse(FieldItem::hasConfigurationEnabled(NULL));
+  }
+
+  /**
+   * Data provider for testHasConfigurationEnabled.
+   *
+   * @return array
+   *   Test cases for testHasConfigurationEnabled.
+   */
+  public static function dataProviderHasConfigurationEnabled(): array {
+    return [
+      'enabled file field' => [TRUE, ['enabled' => TRUE], TRUE],
+      'disabled file field' => [TRUE, ['enabled' => FALSE], FALSE],
+      'no settings' => [TRUE, [], FALSE],
+      'not a file field' => [FALSE, NULL, FALSE],
+    ];
   }
 
   /**
