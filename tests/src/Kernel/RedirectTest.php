@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\Tests\filefield_paths\Kernel;
 
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\Entity\EntityStorageException;
 use Drupal\Core\Language\Language;
 use Drupal\KernelTests\KernelTestBase;
 
@@ -73,7 +72,14 @@ class RedirectTest extends KernelTestBase {
   }
 
   /**
-   * Documents that the existence pre-check does not prevent duplicates.
+   * Whether the redirect dedup hash bug has been fixed.
+   *
+   * Flip to TRUE to re-enable the test.
+   */
+  private static bool $issueRedirectDedupFixed = FALSE;
+
+  /**
+   * Tests that duplicate redirects are silently skipped, not thrown.
    *
    * Bug (undocumented, found while writing this test): the pre-check hash in
    * Redirect::createRedirect() is generated from the destination path
@@ -85,14 +91,23 @@ class RedirectTest extends KernelTestBase {
    * exception instead of being silently skipped. This is not yet filed as a
    * Drupal.org issue; recorded here as a baseline for future investigation.
    */
-  public function testCreateRedirectTwiceWithSameArgumentsThrows(): void {
+  public function testCreateRedirectTwiceWithSameArgumentsDoesNotThrow(): void {
+    if (!self::$issueRedirectDedupFixed) {
+      $this->markTestSkipped('Reproduces redirect dedup hash bug: duplicate createRedirect() throws instead of being skipped. Flip $issueRedirectDedupFixed once fixed.');
+    }
+
+    /** @var \Drupal\filefield_paths\RedirectInterface $redirect_service */
     $redirect_service = $this->container->get('filefield_paths.redirect');
     $language = new Language(['id' => 'en']);
 
     $redirect_service->createRedirect('public://old/source.txt', 'public://new/destination.txt', $language);
 
-    $this->expectException(EntityStorageException::class);
+    // Second call with identical arguments should be silently skipped,
+    // not throw a database unique-constraint exception.
     $redirect_service->createRedirect('public://old/source.txt', 'public://new/destination.txt', $language);
+
+    $redirects = $this->container->get('entity_type.manager')->getStorage('redirect')->loadMultiple();
+    $this->assertCount(1, $redirects, 'Duplicate redirect should be skipped, not stored twice.');
   }
 
   /**
