@@ -84,9 +84,10 @@ class ModuleDeprecatedWrappersTest extends KernelTestBase {
     \set_error_handler(function (int $errno, string $errstr) use ($expectedFragment, &$caught): bool {
       if ($errno === \E_USER_DEPRECATED && \str_contains($errstr, $expectedFragment)) {
         $caught = TRUE;
+        return TRUE;
       }
-      return TRUE;
-    });
+      return FALSE;
+    }, \E_USER_DEPRECATED);
     try {
       $result = $fn();
     }
@@ -156,7 +157,7 @@ class ModuleDeprecatedWrappersTest extends KernelTestBase {
    */
   public function testElementTempLocationValidateDeprecated(): void {
     $this->callExpectingDeprecation(
-      fn() => filefield_paths_element_temp_location_validate([], new FormState()),
+      fn() => filefield_paths_element_temp_location_validate(['#default_value' => ''], new FormState()),
       'filefield_paths_element_temp_location_validate() is deprecated'
     );
   }

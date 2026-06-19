@@ -107,6 +107,7 @@ parameters:
     -
       # Deprecated procedural wrappers are tested intentionally in
       # ModuleDeprecatedWrappersTest to verify deprecation notices fire.
+      path: web/modules/custom/filefield_paths/tests/src/Kernel/ModuleDeprecatedWrappersTest.php
       messages:
         - '#Call to deprecated function filefield_paths_#'
         - '#Call to deprecated function _filefield_paths_#'
