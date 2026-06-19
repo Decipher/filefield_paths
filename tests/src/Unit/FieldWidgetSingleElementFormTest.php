@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
-use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
+use PHPUnit\Framework\MockObject\MockObject;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Tests\UnitTestCase;
+use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm;
 
@@ -54,7 +54,7 @@ class FieldWidgetSingleElementFormTest extends UnitTestCase {
     $config->method('get')->with('temp_location')->willReturn('temporary://filefield_paths');
     $config_factory = $this->createMock(ConfigFactoryInterface::class);
     $config_factory->method('get')->with('filefield_paths.settings')->willReturn($config);
-    $hook = new FieldWidgetSingleElementForm(static fn () => $config_factory);
+    $hook = new FieldWidgetSingleElementForm(static fn (): MockObject => $config_factory);
 
     $items = $this->buildFileFieldItemList(['enabled' => TRUE]);
     $element = ['#type' => 'managed_file'];
@@ -80,10 +80,7 @@ class FieldWidgetSingleElementFormTest extends UnitTestCase {
    * Builds a mocked FileFieldItemList with the given filefield_paths settings.
    */
   protected function buildFileFieldItemList(array $settings): FileFieldItemList {
-    $definition = $this->createMockForIntersectionOfInterfaces([
-      FieldDefinitionInterface::class,
-      ThirdPartySettingsInterface::class,
-    ]);
+    $definition = $this->createMock(FieldConfigInterface::class);
     $definition->method('getThirdPartySettings')->with('filefield_paths')->willReturn($settings);
 
     $items = $this->createMock(FileFieldItemList::class);

@@ -4,9 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
-use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
-use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\field\FieldConfigInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Utility\FieldItem;
 use Drupal\Tests\UnitTestCase;
@@ -53,10 +52,7 @@ class FieldItemTest extends UnitTestCase {
    */
   public function testHasConfigurationEnabled(bool $is_file_field, ?array $third_party_settings, bool $expected): void {
     if ($is_file_field) {
-      $definition = $this->createMockForIntersectionOfInterfaces([
-        FieldDefinitionInterface::class,
-        ThirdPartySettingsInterface::class,
-      ]);
+      $definition = $this->createMock(FieldConfigInterface::class);
       $definition->method('getThirdPartySettings')->with('filefield_paths')->willReturn($third_party_settings ?? []);
       $field = $this->createMock(FileFieldItemList::class);
       $field->method('getFieldDefinition')->willReturn($definition);
