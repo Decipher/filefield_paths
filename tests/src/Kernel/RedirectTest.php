@@ -45,6 +45,7 @@ class RedirectTest extends KernelTestBase {
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function register(ContainerBuilder $container): void {
     parent::register($container);
     // Core only registers the private:// stream wrapper if a file path is
