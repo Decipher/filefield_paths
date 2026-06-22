@@ -114,11 +114,6 @@ class RedirectTest extends KernelTestBase {
   }
 
   /**
-   * Whether #3269636 has been fixed. Flip to TRUE to re-enable the test.
-   */
-  private static bool $issue3269636Fixed = FALSE;
-
-  /**
    * Tests that a private:// destination produces a web-accessible redirect.
    *
    * @see https://www.drupal.org/project/filefield_paths/issues/3269636
@@ -131,10 +126,6 @@ class RedirectTest extends KernelTestBase {
    * should start passing once #3269636 is fixed.
    */
   public function testCreateRedirectForPrivateSchemeUsesWebAccessiblePath(): void {
-    if (!self::$issue3269636Fixed) {
-      $this->markTestSkipped('Reproduces #3269636: private:// redirect resolves to filesystem path. Flip $issue3269636Fixed once fixed.');
-    }
-
     /** @var \Drupal\filefield_paths\RedirectInterface $redirect_service */
     $redirect_service = $this->container->get('filefield_paths.redirect');
 
