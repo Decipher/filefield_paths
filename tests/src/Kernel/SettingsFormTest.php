@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\Form\FormState;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\filefield_paths\Form\SettingsForm;
@@ -14,6 +15,7 @@ use Drupal\filefield_paths\Form\SettingsForm;
  * @group filefield_paths
  * @covers \Drupal\filefield_paths\Form\SettingsForm
  */
+#[Group('filefield_paths')]
 class SettingsFormTest extends KernelTestBase {
 
   /**

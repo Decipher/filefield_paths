@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Language\Language;
 use Drupal\KernelTests\KernelTestBase;
@@ -14,6 +15,7 @@ use Drupal\KernelTests\KernelTestBase;
  * @group filefield_paths
  * @covers \Drupal\filefield_paths\Redirect
  */
+#[Group('filefield_paths')]
 class RedirectTest extends KernelTestBase {
 
   /**

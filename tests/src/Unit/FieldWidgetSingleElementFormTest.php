@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
@@ -19,6 +20,7 @@ use Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm;
  * @group filefield_paths
  * @covers \Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm
  */
+#[Group('filefield_paths')]
 class FieldWidgetSingleElementFormTest extends UnitTestCase {
 
   /**

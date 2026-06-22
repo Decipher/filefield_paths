@@ -105,6 +105,18 @@ parameters:
       reportUnmatched: false
 
     -
+      # PHPUnit\Framework\Attributes\{Group,DataProvider} only exist in PHPUnit 10+. The project's
+      # composer constraint (^9.6 || ^10.5 || ^11) deliberately spans PHPUnit 9 through 11 so the
+      # matrix can test PHP 8.5/PHPUnit 11 alongside older platforms; whichever environment resolves
+      # PHPUnit 9 won't have these classes. The attributes are harmless no-ops under PHPUnit 9 (PHP
+      # never loads an attribute class unless something reflects for it, and PHPUnit 9 doesn't
+      # look for these), so they're kept for forward-compat with the docblock-to-attribute migration
+      # PHPUnit 10+/Rector expect, and ignored here rather than dropped.
+      messages:
+        - '#Attribute class PHPUnit\\Framework\\Attributes\\(Group|DataProvider) does not exist#'
+      reportUnmatched: false
+
+    -
       # Deprecated procedural wrappers are tested intentionally in
       # ModuleDeprecatedWrappersTest to verify deprecation notices fire.
       #

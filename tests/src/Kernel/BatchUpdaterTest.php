@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\entity_test\Entity\EntityTest;
@@ -18,6 +19,7 @@ use Drupal\filefield_paths\Batch\BatchUpdaterInterface;
  * @group filefield_paths
  * @covers \Drupal\filefield_paths\Batch\Updater
  */
+#[Group('filefield_paths')]
 class BatchUpdaterTest extends KernelTestBase {
 
   /**

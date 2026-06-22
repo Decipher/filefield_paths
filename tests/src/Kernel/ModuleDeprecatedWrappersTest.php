@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Language\Language;
@@ -19,6 +20,7 @@ use Drupal\field\Entity\FieldStorageConfig;
  *
  * @group filefield_paths
  */
+#[Group('filefield_paths')]
 class ModuleDeprecatedWrappersTest extends KernelTestBase {
 
   /**

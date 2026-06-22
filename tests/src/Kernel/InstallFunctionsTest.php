@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Extension\Requirement\RequirementSeverity;
 use Drupal\KernelTests\KernelTestBase;
@@ -14,6 +15,7 @@ use Drupal\filefield_paths\MoveFileProcessorInterface;
  *
  * @group filefield_paths
  */
+#[Group('filefield_paths')]
 class InstallFunctionsTest extends KernelTestBase {
 
   /**

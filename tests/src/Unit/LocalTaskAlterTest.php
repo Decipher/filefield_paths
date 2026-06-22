@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Tests\UnitTestCase;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 
@@ -13,6 +14,7 @@ use Drupal\filefield_paths\Hook\LocalTaskAlter;
  * @group filefield_paths
  * @covers \Drupal\filefield_paths\Hook\LocalTaskAlter
  */
+#[Group('filefield_paths')]
 class LocalTaskAlterTest extends UnitTestCase {
 
   /**
