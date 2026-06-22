@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\MockObject\MockObject;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Form\FormInterface;
@@ -21,6 +22,7 @@ use Drupal\Tests\UnitTestCase;
  * @group filefield_paths
  * @covers \Drupal\filefield_paths\Utility\FieldConfigEditFormHandler
  */
+#[Group('filefield_paths')]
 class FieldConfigEditFormHandlerTest extends UnitTestCase {
 
   /**

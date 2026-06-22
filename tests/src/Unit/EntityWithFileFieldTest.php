@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\filefield_paths\Hook\EntityWithFileField;
@@ -15,6 +16,7 @@ use Drupal\Tests\UnitTestCase;
  * @group filefield_paths
  * @covers \Drupal\filefield_paths\Hook\EntityWithFileField
  */
+#[Group('filefield_paths')]
 class EntityWithFileFieldTest extends UnitTestCase {
 
   /**

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drush\TestTraits\DrushTestTrait;
 
 /**
@@ -12,6 +13,7 @@ use Drush\TestTraits\DrushTestTrait;
  * @group filefield_paths
  * @runTestsInSeparateProcesses
  */
+#[Group('filefield_paths')]
 class FileFieldPathsDrushCommandTest extends FileFieldPathsTestBase {
 
   use DrushTestTrait;

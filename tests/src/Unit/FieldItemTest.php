@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\field\FieldConfigInterface;
@@ -18,6 +20,7 @@ use Drupal\Tests\UnitTestCase;
  * @runTestsInSeparateProcesses
  * @covers \Drupal\filefield_paths\Utility\FieldItem
  */
+#[Group('filefield_paths')]
 class FieldItemTest extends UnitTestCase {
 
   /**
@@ -26,6 +29,7 @@ class FieldItemTest extends UnitTestCase {
    * @covers \Drupal\filefield_paths\Utility\FieldItem::getFromSupportedWidget
    * @dataProvider dataProviderGetFromSupportedWidget
    */
+  #[DataProvider('dataProviderGetFromSupportedWidget')]
   public function testGetFromSupportedWidget(array $element, array $context, bool $expected_result): void {
     if (isset($context['items']) && $context['items'] === 'file_field_item_list') {
       $context['items'] = $this->createMock(FileFieldItemList::class);
@@ -51,6 +55,7 @@ class FieldItemTest extends UnitTestCase {
    * @covers \Drupal\filefield_paths\Utility\FieldItem::hasConfigurationEnabled
    * @dataProvider dataProviderHasConfigurationEnabled
    */
+  #[DataProvider('dataProviderHasConfigurationEnabled')]
   public function testHasConfigurationEnabled(bool $is_file_field, ?array $third_party_settings, bool $expected): void {
     if ($is_file_field) {
       $definition = $this->createMock(FieldConfigInterface::class);

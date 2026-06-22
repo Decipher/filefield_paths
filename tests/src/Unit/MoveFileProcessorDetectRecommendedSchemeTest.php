@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Unit;
 
+use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\Tests\UnitTestCase;
@@ -16,6 +18,7 @@ use Drupal\filefield_paths\MoveFileProcessor;
  * @covers \Drupal\filefield_paths\MoveFileProcessor::detectRecommendedScheme
  * @covers \Drupal\filefield_paths\MoveFileProcessor::recommendedTemporaryScheme
  */
+#[Group('filefield_paths')]
 class MoveFileProcessorDetectRecommendedSchemeTest extends UnitTestCase {
 
   /**
@@ -23,6 +26,7 @@ class MoveFileProcessorDetectRecommendedSchemeTest extends UnitTestCase {
    *
    * @dataProvider dataProviderDetectRecommendedScheme
    */
+  #[DataProvider('dataProviderDetectRecommendedScheme')]
   public function testDetectRecommendedScheme(array $wrappers, array $writable_map, string $expected): void {
     $stream_manager = $this->createMock(StreamWrapperManagerInterface::class);
     $cache_backend = $this->createMock(CacheBackendInterface::class);

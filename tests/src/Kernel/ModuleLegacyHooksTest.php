@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\Form\FormInterface;
 use Drupal\Core\Form\FormState;
@@ -22,6 +23,7 @@ use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
  *
  * @group filefield_paths
  */
+#[Group('filefield_paths')]
 class ModuleLegacyHooksTest extends KernelTestBase {
 
   /**

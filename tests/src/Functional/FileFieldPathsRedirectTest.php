@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Functional;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\StreamWrapper\PublicStream;
 use Drupal\redirect\Entity\Redirect;
 
@@ -13,6 +14,7 @@ use Drupal\redirect\Entity\Redirect;
  * @group filefield_paths
  * @runTestsInSeparateProcesses
  */
+#[Group('filefield_paths')]
 class FileFieldPathsRedirectTest extends FileFieldPathsTestBase {
 
   /**

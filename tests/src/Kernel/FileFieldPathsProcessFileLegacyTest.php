@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\KernelTests\KernelTestBase;
@@ -23,6 +24,7 @@ use Drupal\filefield_paths\RedirectInterface;
  * @group filefield_paths
  * @covers \Drupal\filefield_paths\Hook\FileFieldPathsProcessFileLegacy
  */
+#[Group('filefield_paths')]
 class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
 
   /**
