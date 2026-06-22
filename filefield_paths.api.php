@@ -3,6 +3,42 @@
 /**
  * @file
  * Hooks provided by the File (Field) Paths module.
+ *
+ * @section sec_disabling Disabling processing
+ *
+ * File (Field) Paths offers three ways to suppress processing, at different
+ * levels of granularity:
+ * - Site-wide: disable the "Enable File (Field) Paths" checkbox on the
+ *   module's settings form (filefield_paths.admin_settings), or set the
+ *   `enabled` key of the `filefield_paths.settings` config object to FALSE.
+ *   A persistent config change affecting every field on the site.
+ * - Per field, persistent: disable the "Enable File (Field) Paths?" checkbox
+ *   on a specific field's settings form. A persistent config change
+ *   affecting every entity that uses that field.
+ * - Per entity, transient: set the `filefield_paths_settings` property on an
+ *   entity before saving it, to suppress (or otherwise override) processing
+ *   for that single save only. This is a plain runtime property, never
+ *   persisted to storage, and is the recommended approach for migrations and
+ *   other programmatic imports where you don't want to touch field
+ *   configuration (which would invalidate site-wide caches) just to skip
+ *   processing for the rows being imported. For example:
+ *   @code
+ *   // Suppress every file field on this entity for this save only.
+ *   $entity->filefield_paths_settings = ['enabled' => FALSE];
+ *
+ *   // Suppress just one field, leaving others on the entity untouched.
+ *   $entity->filefield_paths_settings = ['field_image' => ['enabled' => FALSE]];
+ *
+ *   // Override any other settings key the same way, not just 'enabled' -
+ *   // here the file still gets moved/renamed, but no redirect is created
+ *   // for this save.
+ *   $entity->filefield_paths_settings = ['redirect' => FALSE];
+ *   @endcode
+ *   A key matching a field name on the entity is treated as a field-specific
+ *   override (and takes precedence); any other key is applied to every
+ *   field. This can only ever suppress or modify processing that is already
+ *   enabled via field configuration - it cannot enable File (Field) Paths on
+ *   a field where it isn't configured.
  */
 
 declare(strict_types=1);

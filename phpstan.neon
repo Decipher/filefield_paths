@@ -129,4 +129,16 @@ parameters:
         - '#Call to deprecated function _filefield_paths_#'
       reportUnmatched: false
 
+    -
+      # filefield_paths_settings is a plain runtime property (not a field), set directly on the
+      # entity per filefield_paths.api.php. PHPStan's Drupal extension assumes every property on a
+      # ContentEntityInterface is a field access and infers FieldItemListInterface for it.
+      #
+      # See the note above on ModuleDeprecatedWrappersTest.php for why this
+      # uses a leading wildcard instead of a path rooted at the module.
+      path: '*/EntityWithFileFieldOverrideTest.php'
+      messages:
+        - '#Property Drupal\\entity_test\\Entity\\EntityTest::\$filefield_paths_settings \(Drupal\\Core\\Field\\FieldItemListInterface\) does not accept#'
+      reportUnmatched: false
+
   reportUnmatchedIgnoredErrors: false

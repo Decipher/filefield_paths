@@ -79,12 +79,34 @@ class SettingsFormTest extends KernelTestBase {
    */
   public function testSubmitFormSavesValue(): void {
     $form_state = new FormState();
-    $form_state->setValues(['temp_location' => 'temporary://my-path']);
+    $form_state->setValues(['enabled' => TRUE, 'temp_location' => 'temporary://my-path']);
 
     $form = [];
     $this->form->submitForm($form, $form_state);
 
     $this->assertSame('temporary://my-path', $this->config('filefield_paths.settings')->get('temp_location'));
+  }
+
+  /**
+   * Tests that buildForm sets the default enabled value.
+   */
+  public function testBuildFormSetsDefaultEnabled(): void {
+    $form = $this->form->buildForm([], new FormState());
+    $this->assertArrayHasKey('enabled', $form);
+    $this->assertTrue($form['enabled']['#default_value']);
+  }
+
+  /**
+   * Tests that submitForm persists the enabled value.
+   */
+  public function testSubmitFormSavesEnabledValue(): void {
+    $form_state = new FormState();
+    $form_state->setValues(['enabled' => FALSE, 'temp_location' => 'temporary://my-path']);
+
+    $form = [];
+    $this->form->submitForm($form, $form_state);
+
+    $this->assertFalse($this->config('filefield_paths.settings')->get('enabled'));
   }
 
   /**

@@ -34,7 +34,12 @@ final readonly class FieldWidgetSingleElementForm {
   #[Hook('field_widget_single_element_form_alter')]
   public function formAlter(array &$element, FormStateInterface $form_state, array $context): void {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
     // Force all File (Field) Paths uploads to go to the temporary file system
-    // prior to being processed.
+    // prior to being processed. Skipped entirely when disabled site-wide, so
+    // uploads fall back to the field's own upload location instead of being
+    // staged somewhere they will never be moved out of.
+    if (!($this->getSettings()->get('enabled') ?? TRUE)) {
+      return;
+    }
     if (FieldItem::hasConfigurationEnabled(FieldItem::getFromSupportedWidget($element, $context))) {
       $settings = $context['items']->getFieldDefinition()
         ->getThirdPartySettings('filefield_paths');

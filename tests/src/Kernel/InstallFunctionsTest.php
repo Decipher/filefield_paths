@@ -85,6 +85,75 @@ class InstallFunctionsTest extends KernelTestBase {
   }
 
   /**
+   * Tests that requirements() flags the global toggle being disabled.
+   */
+  public function testRequirementsGlobalDisabledIsWarning(): void {
+    $this->config('filefield_paths.settings')
+      ->set('enabled', FALSE)
+      ->save();
+
+    $requirements = filefield_paths_requirements('runtime');
+
+    $this->assertArrayHasKey('filefield_paths_enabled', $requirements);
+    $this->assertSame(DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): RequirementSeverity => RequirementSeverity::Warning, fn() => REQUIREMENT_WARNING), $requirements['filefield_paths_enabled']['severity']);
+  }
+
+  /**
+   * Tests that requirements() passes when the global toggle is enabled.
+   */
+  public function testRequirementsGlobalEnabledIsClean(): void {
+    $this->config('filefield_paths.settings')
+      ->set('enabled', TRUE)
+      ->save();
+
+    $requirements = filefield_paths_requirements('runtime');
+
+    $this->assertArrayNotHasKey('filefield_paths_enabled', $requirements);
+  }
+
+  /**
+   * Tests that requirements() does not warn when 'enabled' is merely unset.
+   *
+   * An unset value means an existing site predates the setting and the
+   * update hook has not run yet, not that it was deliberately disabled.
+   */
+  public function testRequirementsUnsetEnabledIsClean(): void {
+    $this->config('filefield_paths.settings')
+      ->clear('enabled')
+      ->save();
+
+    $requirements = filefield_paths_requirements('runtime');
+
+    $this->assertArrayNotHasKey('filefield_paths_enabled', $requirements);
+  }
+
+  /**
+   * Tests that update_9002 defaults an unset 'enabled' setting to TRUE.
+   */
+  public function testUpdate9002DefaultsToEnabled(): void {
+    $this->config('filefield_paths.settings')
+      ->clear('enabled')
+      ->save();
+
+    filefield_paths_update_9002();
+
+    $this->assertTrue($this->config('filefield_paths.settings')->get('enabled'));
+  }
+
+  /**
+   * Tests that update_9002 leaves an explicit 'enabled' value untouched.
+   */
+  public function testUpdate9002LeavesExplicitValueUntouched(): void {
+    $this->config('filefield_paths.settings')
+      ->set('enabled', FALSE)
+      ->save();
+
+    filefield_paths_update_9002();
+
+    $this->assertFalse($this->config('filefield_paths.settings')->get('enabled'));
+  }
+
+  /**
    * Tests that requirements() only checks during the runtime phase.
    */
   public function testRequirementsNonRuntimePhase(): void {
