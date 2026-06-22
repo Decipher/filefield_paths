@@ -34,13 +34,14 @@ use Drupal\filefield_paths\PathProcessorInterface;
 /**
  * Form submission handler for the File (Field) Paths settings form.
  *
- * @deprecated in filefield_paths:8.x-1.0 and is removed from
- *   filefield_paths:2.0.0. Use
- *   \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::submit()
- *   instead.
- *
  * @see https://www.drupal.org/node/3562160
  */
+#[\Deprecated(message: <<<'TXT'
+in filefield_paths:8.x-1.0 and is removed from
+   filefield_paths:2.0.0. Use
+   \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::submit()
+   instead.
+TXT)]
 function filefield_paths_form_submit(array $form, FormStateInterface $form_state): void {
   @trigger_error('filefield_paths_form_submit() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . FieldConfigEditFormHandlerInterface::class . '::submit() instead. See https://www.drupal.org/node/3562160', E_USER_DEPRECATED);
   FieldConfigEditForm::submit($form, $form_state);
@@ -49,14 +50,15 @@ function filefield_paths_form_submit(array $form, FormStateInterface $form_state
 /**
  * Validate the temporary upload location.
  *
- * @deprecated in filefield_paths:8.x-1.0 and is removed from
- *    filefield_paths:2.0.0. Use
- *    \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::elementTempLocationValidate()
- *    instead.
- *
  * @see https://www.drupal.org/node/3562160
  * @see \Drupal\filefield_paths\Hook\FieldConfigEditForm::elementTempLocationValidate
  */
+#[\Deprecated(message: <<<'TXT'
+in filefield_paths:8.x-1.0 and is removed from
+    filefield_paths:2.0.0. Use
+    \Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface::elementTempLocationValidate()
+    instead.
+TXT)]
 function filefield_paths_element_temp_location_validate(array $element, FormStateInterface $form_state): void {
   @trigger_error('filefield_paths_element_temp_location_validate() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . FieldConfigEditFormHandlerInterface::class . '::elementTempLocationValidate() instead. See https://www.drupal.org/node/3562160', E_USER_DEPRECATED);
   FieldConfigEditForm::elementTempLocationValidate($element, $form_state);
@@ -71,11 +73,13 @@ function filefield_paths_element_temp_location_validate(array $element, FormStat
  * @return bool
  *   True if there were paths to update, false otherwise.
  *
- * @deprecated in filefield_paths:8.x-1.0 and is removed from
- *   filefield_paths:2.0.0. Use
- *   \Drupal\filefield_paths\Batch\Updater::batchUpdate() instead.
  * @see https://www.drupal.org/project/filefield_paths/issues/2930945
  */
+#[\Deprecated(message: <<<'TXT'
+in filefield_paths:8.x-1.0 and is removed from
+   filefield_paths:2.0.0. Use
+   \Drupal\filefield_paths\Batch\Updater::batchUpdate() instead.
+TXT)]
 function filefield_paths_batch_update(FieldConfigInterface $field_config): bool {
   @trigger_error('filefield_paths_batch_update() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . Updater::class . '::batchUpdate() instead. See https://www.drupal.org/project/filefield_paths/issues/2930945', E_USER_DEPRECATED);
   /** @var \Drupal\filefield_paths\Batch\Updater $updater */
@@ -93,11 +97,13 @@ function filefield_paths_batch_update(FieldConfigInterface $field_config): bool 
  * @param \Drupal\Core\Language\LanguageInterface $language
  *   The language of the source file.
  *
- * @deprecated in filefield_paths:8.x-1.0 and is removed from
- *   filefield_paths:2.0.0. Use
- *   \Drupal\filefield_paths\RedirectInterface::createRedirect() instead.
  * @see https://www.drupal.org/project/filefield_paths/issues/2923206
  */
+#[\Deprecated(message: <<<'TXT'
+in filefield_paths:8.x-1.0 and is removed from
+   filefield_paths:2.0.0. Use
+   \Drupal\filefield_paths\RedirectInterface::createRedirect() instead.
+TXT)]
 function _filefield_paths_create_redirect($source, $path, LanguageInterface $language): void {
   @trigger_error('_filefield_paths_create_redirect() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . RedirectInterface::class . '::createRedirect() instead. See https://www.drupal.org/project/filefield_paths/issues/2923206', E_USER_DEPRECATED);
   \Drupal::service('filefield_paths.redirect')->createRedirect($source, $path, $language);
@@ -126,12 +132,13 @@ function _filefield_paths_create_redirect($source, $path, LanguageInterface $lan
  *   The cleaned string, in which tokens are replaced and other alterations may
  *   have been applied, depending on the settings.
  *
- * @deprecated in filefield_paths:8.x-1.0 and is removed from
- *   filefield_paths:2.0.0. Use
- *   \Drupal\filefield_paths\PathProcessorInterface::processString() instead.
- *
  * @see https://www.drupal.org/node/3562822
  */
+#[\Deprecated(message: <<<'TXT'
+in filefield_paths:8.x-1.0 and is removed from
+   filefield_paths:2.0.0. Use
+   \Drupal\filefield_paths\PathProcessorInterface::processString() instead.
+TXT)]
 function filefield_paths_process_string(string $value, array $data, array $settings = []): string {
   @trigger_error('filefield_paths_process_string() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . PathProcessorInterface::class . '::processString() instead. See https://www.drupal.org/node/3562822', E_USER_DEPRECATED);
   return \Drupal::service(PathProcessorInterface::class)
@@ -141,15 +148,16 @@ function filefield_paths_process_string(string $value, array $data, array $setti
 /**
  * Get the recommended file scheme based on which file systems are enabled.
  *
- * @deprecated in filefield_paths:8.x-1.0 and is removed from
- *   filefield_paths:2.0.0. Use
- *   \Drupal\filefield_paths\MoveFileProcessorInterface::recommendedFileScheme()
- *   instead.
- *
  * @see https://www.drupal.org/project/filefield_paths/issues/2930945
  */
+#[\Deprecated(message: <<<'TXT'
+in filefield_paths:8.x-1.0 and is removed from
+   filefield_paths:2.0.0. Use
+   \Drupal\filefield_paths\MoveFileProcessorInterface::recommendedTemporaryScheme()
+   instead.
+TXT)]
 function filefield_paths_recommended_temporary_scheme(): string {
-  @trigger_error('filefield_paths_recommended_temporary_scheme() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . MoveFileProcessorInterface::class . '::recommendedFileScheme() instead. See https://www.drupal.org/node/3562442', E_USER_DEPRECATED);
+  @trigger_error('filefield_paths_recommended_temporary_scheme() is deprecated in filefield_paths:8.x-1.0 and is removed from filefield_paths:2.0.0. Use ' . MoveFileProcessorInterface::class . '::recommendedTemporaryScheme() instead. See https://www.drupal.org/node/3562442', E_USER_DEPRECATED);
   return \Drupal::service(MoveFileProcessorInterface::class)
     ->recommendedTemporaryScheme();
 }

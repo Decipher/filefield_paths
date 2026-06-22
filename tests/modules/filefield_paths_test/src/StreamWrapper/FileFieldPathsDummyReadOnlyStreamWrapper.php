@@ -21,6 +21,7 @@ class FileFieldPathsDummyReadOnlyStreamWrapper extends DummyReadOnlyStreamWrappe
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function getName() {
     return $this->t('File (Field) Paths Dummy files (readonly)');
   }
@@ -28,6 +29,7 @@ class FileFieldPathsDummyReadOnlyStreamWrapper extends DummyReadOnlyStreamWrappe
   /**
    * {@inheritdoc}
    */
+  #[\Override]
   public function getDescription() {
     return $this->t('Dummy wrapper for File (Field) Paths simpletest (readonly).');
   }
@@ -37,6 +39,7 @@ class FileFieldPathsDummyReadOnlyStreamWrapper extends DummyReadOnlyStreamWrappe
    *
    * Return the HTML URI of a public file.
    */
+  #[\Override]
   public function getExternalUrl(): string {
     $path = str_replace('\\', '/', (string) $this->getTarget());
 
