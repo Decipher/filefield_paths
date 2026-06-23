@@ -71,6 +71,12 @@ class Redirect implements RedirectInterface {
   /**
    * Returns the path to the file, starting from the Drupal root.
    *
+   * For public:// this is a directory path relative to the Drupal root, which
+   * Redirect::setRedirect() turns into an internal path. Other schemes
+   * (e.g. private://, temporary://) are not served directly from their
+   * directory path, so the wrapper's own external URL is used instead to
+   * resolve the route Drupal actually serves the file through.
+   *
    * @param string $file_uri
    *   The file url to get the path for.
    *
@@ -82,7 +88,10 @@ class Redirect implements RedirectInterface {
     if (!$wrapper instanceof StreamWrapperInterface) {
       return NULL;
     }
-    return $wrapper->getDirectoryPath() . '/' . StreamWrapperManager::getTarget($file_uri);
+    if (StreamWrapperManager::getScheme($file_uri) === 'public') {
+      return $wrapper->getDirectoryPath() . '/' . StreamWrapperManager::getTarget($file_uri);
+    }
+    return $wrapper->getExternalUrl();
   }
 
 }
