@@ -73,32 +73,38 @@ function filefield_paths_requirements(string $phase): array {
   $requirements = [];
 
   if ($phase === 'runtime') {
-    $temporary_path = \Drupal::config('filefield_paths.settings')->get('temp_location');
+    $config = \Drupal::config('filefield_paths.settings');
+    $temporary_path = $config->get('temp_location');
+    $temporary_scheme = $temporary_path ? substr((string) $temporary_path, 0, 9) : NULL;
 
-    // If it's not set, we don't need to do anything because the default will
-    // be secure.
-    if (!$temporary_path) {
-      return [];
-    }
-
-    $temporary_scheme = substr((string) $temporary_path, 0, 9);
-    if ($temporary_scheme !== 'public://') {
-      return [];
-    }
     // If private files are supported, and the temporary scheme is 'public://'
     // then let the user know they need to change the temporary scheme in order
-    // to be secure.
-    $wrappers = \Drupal::service('stream_wrapper_manager')->getWrappers();
-    $recommended_wrappers = ['private', 'temporary'];
-    foreach ($recommended_wrappers as $recommended_wrapper) {
-      if (in_array($recommended_wrapper, array_keys($wrappers), TRUE)) {
-        $requirements['filefield_paths'] = [
-          'title' => t('File (Field) Paths temporary path'),
-          'value' => t('Insecure!'),
-          'description' => t('This site supports private files but the File (Field) Paths temporary path is under public:// which could lead to private files being temporarily exposed publicly. <a href=":url">Change the temporary path</a> to be under temporary:// or private:// in order to secure your files.', [':url' => Url::fromRoute('filefield_paths.admin_settings')->toString()]),
-          'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): RequirementSeverity => RequirementSeverity::Error, fn() => REQUIREMENT_ERROR),
-        ];
+    // to be secure. If temp_location is unset, the default will be secure.
+    if ($temporary_scheme === 'public://') {
+      $wrappers = \Drupal::service('stream_wrapper_manager')->getWrappers();
+      $recommended_wrappers = ['private', 'temporary'];
+      foreach ($recommended_wrappers as $recommended_wrapper) {
+        if (in_array($recommended_wrapper, array_keys($wrappers), TRUE)) {
+          $requirements['filefield_paths'] = [
+            'title' => t('File (Field) Paths temporary path'),
+            'value' => t('Insecure!'),
+            'description' => t('This site supports private files but the File (Field) Paths temporary path is under public:// which could lead to private files being temporarily exposed publicly. <a href=":url">Change the temporary path</a> to be under temporary:// or private:// in order to secure your files.', [':url' => Url::fromRoute('filefield_paths.admin_settings')->toString()]),
+            'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): RequirementSeverity => RequirementSeverity::Error, fn() => REQUIREMENT_ERROR),
+          ];
+        }
       }
+    }
+
+    // Use a strict comparison: an unset value means the site predates the
+    // 'enabled' setting and an update hook has not run yet, not that it was
+    // deliberately disabled.
+    if ($config->get('enabled') === FALSE) {
+      $requirements['filefield_paths_enabled'] = [
+        'title' => t('File (Field) Paths'),
+        'value' => t('Disabled'),
+        'description' => t('File (Field) Paths processing is disabled site-wide. If you do not intend to use it, consider uninstalling the module instead of leaving it disabled. <a href=":url">Re-enable it</a> if this was not intentional.', [':url' => Url::fromRoute('filefield_paths.admin_settings')->toString()]),
+        'severity' => DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): RequirementSeverity => RequirementSeverity::Warning, fn() => REQUIREMENT_WARNING),
+      ];
     }
   }
 
@@ -122,4 +128,14 @@ function filefield_paths_update_8001(): void {
  */
 function filefield_paths_update_9001(): void {
   filefield_paths_update_temporary_location_configuration();
+}
+
+/**
+ * Add the 'enabled' setting, defaulting existing sites to enabled.
+ */
+function filefield_paths_update_9002(): void {
+  $config = \Drupal::configFactory()->getEditable('filefield_paths.settings');
+  if ($config->get('enabled') === NULL) {
+    $config->set('enabled', TRUE)->save();
+  }
 }

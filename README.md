@@ -22,6 +22,7 @@ Submit bug reports and feature suggestions, or track changes in the
 ## Table of contents
 
 - Requirements
+- Recommended modules
 - Configuration
 - Features
 - FAQ
@@ -30,24 +31,33 @@ Submit bug reports and feature suggestions, or track changes in the
 
 ## Requirements
 
-This module requires the following modules:
+This module requires the Drupal core File module.
 
-- [Pathauto](https://www.drupal.org/project/pathauto)
-- [Redirect](https://www.drupal.org/project/redirect)
-- [Token](https://www.drupal.org/project/token)
+
+## Recommended modules
+
+These modules are optional, and are used when present:
+
+- [Pathauto](https://www.drupal.org/project/pathauto) - for filename/path
+  cleanup options.
+- [Redirect](https://www.drupal.org/project/redirect) - to create a redirect
+  when a previously uploaded file is moved.
+- [Token](https://www.drupal.org/project/token) - for the token browser when
+  building path/filename patterns.
 
 
 ## Configuration
 
 Once installed, File (Field) Paths needs to be configured for each file field
-you wish to use. Settings can be found on the settings form of any supported
-file based field.
+you wish to use, on that field's settings form. For example, for an Image
+field on the Article content type:
 
-*Example:*
-  
 Administration > Structure > Content types > Article > Manage fields > Image
-http://example.com/admin/structure/types/manage/article/fields/field_image
+(admin/structure/types/manage/article/fields/field_image)
 
+Module-wide settings, such as the temporary upload location, are at
+Administration > Configuration > Media > File system > File (Field) Paths
+(admin/config/media/file-system/filefield-paths).
 
 ## Features
 
@@ -96,6 +106,17 @@ http://example.com/admin/structure/types/manage/article/fields/field_image
    possible that the moving/renaming of these files could break links. It is
    strongly advised that you only use this functionality on your developmental
    servers so that you can make sure not to introduce any linking issues.
+
+
+**Q: How do I disable File (Field) Paths?**
+
+**A:** At three levels: uncheck "Enable File (Field) Paths?" on a field's settings
+   form to disable it for that field, uncheck "Enable File (Field) Paths" on the
+   module's settings form to disable it site-wide, or set the
+   `filefield_paths_settings` property on an entity before saving it to disable
+   (or otherwise override) processing for that one save only, without changing
+   any configuration. See `filefield_paths.api.php` for the per-save override's
+   full API.
 
 
 
