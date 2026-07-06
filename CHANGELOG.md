@@ -10,6 +10,11 @@ release is dated by its Drupal.org release node.
 
 ## Unreleased
 
+### Added
+
+- [#3608361](https://www.drupal.org/i/3608361): Passed the field delta in the
+  token data, so `[file:delta]` works in file path and file name patterns.
+
 ### Fixed
 
 - Stopped discarding the result of `BubbleableMetadata::merge()` when
