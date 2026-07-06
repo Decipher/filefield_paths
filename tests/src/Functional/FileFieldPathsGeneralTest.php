@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Group;
 use Drupal\file\Plugin\Field\FieldType\FileItem;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -19,6 +20,7 @@ use Drupal\image\Entity\ImageStyle;
  * @runTestsInSeparateProcesses
  */
 #[Group('filefield_paths')]
+#[RunTestsInSeparateProcesses]
 class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
 
   /**
@@ -190,6 +192,49 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $session->responseContains(sprintf('%s/node/%s/1.txt', $this->publicFilesDirectory, $nid));
     $session->responseContains(sprintf('%s/node/%s/2.txt', $this->publicFilesDirectory, $nid));
     $session->responseContains(sprintf('%s/node/%s/3.txt', $this->publicFilesDirectory, $nid));
+  }
+
+  /**
+   * Tests that the field item delta is passed in token data.
+   *
+   * Ensures the [file:delta] token resolves to each file's zero-based position
+   * within a multi-value field when used in a File (Field) Paths filename
+   * pattern.
+   *
+   * @see https://www.drupal.org/project/filefield_paths/issues/3608361
+   */
+  public function testUploadFileDeltaToken(): void {
+    $file_system = \Drupal::service('file_system');
+
+    // Create a multivalue File field whose filename pattern uses [file:delta].
+    $field_name = mb_strtolower($this->randomMachineName());
+    $storage_settings['cardinality'] = FieldStorageDefinitionInterface::CARDINALITY_UNLIMITED;
+    $third_party_settings['filefield_paths']['file_path']['value'] = 'node/[node:nid]';
+    $third_party_settings['filefield_paths']['file_name']['value'] = '[node:nid]-[file:delta].[file:ffp-extension-original]';
+    $this->createFileField($field_name, 'node', $this->contentType, $storage_settings, [], [], $third_party_settings);
+
+    // Create a node with three (3) test files.
+    $text_files = $this->drupalGetTestFiles('text');
+    $this->drupalGet('node/add/' . $this->contentType);
+    $this->submitForm([sprintf('files[%s_0][]', $field_name) => $file_system->realpath($text_files[0]->uri)], 'Upload');
+    $this->submitForm([sprintf('files[%s_1][]', $field_name) => $file_system->realpath($text_files[1]->uri)], 'Upload');
+    $edit = [
+      'title[0][value]' => $this->randomMachineName(),
+      sprintf('files[%s_2][]', $field_name) => $file_system->realpath($text_files[2]->uri),
+    ];
+    $this->submitForm($edit, 'Save');
+
+    // Get created Node ID.
+    $matches = [];
+    preg_match('/node\/(\d+)/', $this->getUrl(), $matches);
+    $this->assertNotEmpty($matches);
+    $nid = $matches[1];
+
+    // Ensure each file received its zero-based delta in the filename.
+    $session = $this->assertSession();
+    $session->responseContains(sprintf('%s/node/%s/%s-0.txt', $this->publicFilesDirectory, $nid, $nid));
+    $session->responseContains(sprintf('%s/node/%s/%s-1.txt', $this->publicFilesDirectory, $nid, $nid));
+    $session->responseContains(sprintf('%s/node/%s/%s-2.txt', $this->publicFilesDirectory, $nid, $nid));
   }
 
   /**

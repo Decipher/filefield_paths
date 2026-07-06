@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
@@ -13,6 +14,7 @@ use PHPUnit\Framework\Attributes\Group;
  * @runTestsInSeparateProcesses
  */
 #[Group('filefield_paths')]
+#[RunTestsInSeparateProcesses]
 class FileFieldPathsUpdateTest extends FileFieldPathsTestBase {
 
   /**
