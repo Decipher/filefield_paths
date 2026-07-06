@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Support module for File (Field) Paths related testing.
+ */
+
+declare(strict_types=1);
+
+use Drupal\Core\Render\BubbleableMetadata;
+
+/**
+ * Implements hook_token_info_alter().
+ *
+ * Adds a [file:delta] token mirroring the one provided by the Field Tokens
+ * module so that File (Field) Paths can be tested without that dependency.
+ */
+function filefield_paths_test_token_info_alter(array &$data): void {
+  $data['tokens']['file']['delta'] = [
+    'name' => t('Delta'),
+    'description' => t('The zero-based position of the file within its parent multi-value field.'),
+  ];
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function filefield_paths_test_tokens(string $type, array $tokens, array $data, array $options, BubbleableMetadata $bubbleable_metadata): array {
+  $replacements = [];
+  if ($type === 'file' && isset($data['delta']) && isset($tokens['delta'])) {
+    $replacements[$tokens['delta']] = (string) $data['delta'];
+  }
+  return $replacements;
+}
