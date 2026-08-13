@@ -36,7 +36,11 @@ final readonly class FileUrlHooks {
       return;
     }
 
-    if (preg_match('#^temporary://styles/([^/]+)/temporary/(.+)$#', $uri, $m)) {
+    $subdir = StreamWrapperManager::getTarget($temp_location);
+    if (is_string($subdir) && $subdir !== ''
+      && preg_match('#^temporary://styles/([^/]+)/temporary/(.+)$#', $uri, $m)
+      && str_starts_with($m[2], $subdir . '/')
+    ) {
       $uri = Url::fromRoute(
         'filefield_paths.image_style_temporary',
         ['image_style' => $m[1]],
@@ -88,8 +92,14 @@ final readonly class FileUrlHooks {
 
     $subdir = StreamWrapperManager::getTarget($temp_location);
     $target = StreamWrapperManager::getTarget($uri);
-    if (!is_string($subdir) || $subdir === ''
-      || !is_string($target)
+    if (!is_string($subdir) || !is_string($target)) {
+      return NULL;
+    }
+
+    $subdir = trim(str_replace('\\', '/', $subdir), '/');
+    $target = ltrim(str_replace('\\', '/', $target), '/');
+    if ($subdir === ''
+      || preg_match('~(^|/)\.\.(/|$)~', $target)
       || !str_starts_with($target, $subdir . '/')
     ) {
       return NULL;

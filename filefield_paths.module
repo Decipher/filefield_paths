@@ -221,6 +221,12 @@ function filefield_paths_file_url_alter(string &$uri): void {// phpcs:ignore Dru
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
+function filefield_paths_file_download(string $uri): array|null {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  return \Drupal::service(FileUrlHooks::class)->fileDownload($uri);
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
 function filefield_paths_local_tasks_alter(array &$local_tasks): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(LocalTaskAlter::class)
     ->localTasksAlterImplementation($local_tasks);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\File\FileExists;
 use Drupal\Core\File\FileSystemInterface;
@@ -16,6 +17,7 @@ use Drupal\Tests\BrowserTestBase;
  * @group filefield_paths
  */
 #[Group('filefield_paths')]
+#[RunTestsInSeparateProcesses]
 class FileFieldPathsImageStyleTemporaryTest extends BrowserTestBase {
 
   /**

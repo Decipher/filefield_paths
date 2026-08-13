@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\KernelTests\KernelTestBase;
@@ -22,6 +23,7 @@ use Symfony\Component\HttpFoundation\Request;
  * @covers \Drupal\filefield_paths\Access\ImageStyleTemporaryAccessCheck
  */
 #[Group('filefield_paths')]
+#[RunTestsInSeparateProcesses]
 class ImageStyleTemporaryAccessCheckTest extends KernelTestBase {
 
   /**

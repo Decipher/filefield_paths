@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Group;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\filefield_paths\Hook\FileUrlHooks;
@@ -21,6 +22,7 @@ use Drupal\filefield_paths\Hook\FileUrlHooks;
  * @covers \Drupal\filefield_paths\Hook\FileUrlHooks
  */
 #[Group('filefield_paths')]
+#[RunTestsInSeparateProcesses]
 class FileUrlHooksTest extends KernelTestBase {
 
   /**
@@ -143,6 +145,24 @@ class FileUrlHooksTest extends KernelTestBase {
     $result = $this->fileUrlHooks->fileDownload('temporary://custom_staging/image.png');
     $this->assertIsArray($result);
     $this->assertNotEmpty($result);
+  }
+
+  /**
+   * Derivative URIs for files outside the FFP subdir are not rewritten.
+   */
+  public function testUrlAlterOutsideSubdirIsUnaffected(): void {
+    $this->setTempLocation('temporary://filefield_paths');
+    $uri = 'temporary://styles/thumbnail/temporary/other_module/image.png';
+    $this->fileUrlHooks->fileUrlAlter($uri);
+    $this->assertSame('temporary://styles/thumbnail/temporary/other_module/image.png', $uri);
+  }
+
+  /**
+   * Path traversal in fileDownload() is rejected.
+   */
+  public function testFileDownloadTraversalReturnsNull(): void {
+    $this->setTempLocation('temporary://filefield_paths');
+    $this->assertNull($this->fileUrlHooks->fileDownload('temporary://filefield_paths/../other_module/image.png'));
   }
 
 }
