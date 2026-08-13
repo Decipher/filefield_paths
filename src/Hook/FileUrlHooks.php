@@ -10,7 +10,7 @@ use Drupal\Core\StreamWrapper\StreamWrapperManager;
 use Drupal\Core\Url;
 
 /**
- * File URL hook implementations.
+ * File URL and download hook implementations.
  */
 final readonly class FileUrlHooks {
 
@@ -43,6 +43,59 @@ final readonly class FileUrlHooks {
         ['query' => ['file' => $m[2]], 'absolute' => TRUE],
       )->toString();
     }
+  }
+
+  /**
+   * Implements hook_file_download().
+   *
+   * Grants access to source files staged inside the configured FFP
+   * temporary:// subdirectory so that ImageStyleDownloadController can
+   * generate and serve derivatives.
+   *
+   * Drupal 11.4 removed the token-valid shortcut that previously treated
+   * temporary:// as a public scheme during image style delivery. The
+   * controller now always invokes hook_file_download() for non-public
+   * schemes, so without an explicit grant here, derivative requests for
+   * temporary:// staged files receive a 403.
+   *
+   * Security: the image style derivative token (itok) is validated by the
+   * controller before this hook runs, and the route access checker
+   * (ImageStyleTemporaryAccessCheck) already restricted the request to the
+   * FFP temp subdirectory. This hook only needs to confirm the source URI
+   * itself lives within that subdirectory.
+   *
+   * Only the Content-Disposition header is returned: the controller sets
+   * Content-Type and Content-Length from the generated derivative via array
+   * union, and returning those from the source would mask derivative MIME
+   * types for converting image styles.
+   *
+   * @return array<string, mixed>|null
+   *   A non-empty headers array to grant access, or NULL for no opinion.
+   */
+  #[Hook('file_download')]
+  public function fileDownload(string $uri): array|null {
+    if (StreamWrapperManager::getScheme($uri) !== 'temporary') {
+      return NULL;
+    }
+
+    $temp_location = $this->configFactory
+      ->get('filefield_paths.settings')
+      ->get('temp_location') ?? '';
+
+    if (StreamWrapperManager::getScheme($temp_location) !== 'temporary') {
+      return NULL;
+    }
+
+    $subdir = StreamWrapperManager::getTarget($temp_location);
+    $target = StreamWrapperManager::getTarget($uri);
+    if (!is_string($subdir) || $subdir === ''
+      || !is_string($target)
+      || !str_starts_with($target, $subdir . '/')
+    ) {
+      return NULL;
+    }
+
+    return ['Content-Disposition' => 'inline'];
   }
 
 }
