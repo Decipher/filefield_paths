@@ -41,7 +41,7 @@ class FieldConfigEditFormHandler implements FieldConfigEditFormHandlerInterface 
   public function submit(array $form, FormStateInterface $form_state): void {
     $settings = $form_state->getValue('third_party_settings')['filefield_paths'];
     // Retroactive updates.
-    if (!($settings['enabled'] && $settings['retroactive_update'])) {
+    if (!$settings['enabled'] || !$settings['retroactive_update']) {
       // Retroactive updates disabled.
       return;
     }

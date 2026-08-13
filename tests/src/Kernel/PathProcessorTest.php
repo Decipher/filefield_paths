@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Group;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\filefield_paths\PathProcessorInterface;
@@ -21,6 +22,7 @@ use Drupal\filefield_paths\PathProcessorInterface;
  * @covers \Drupal\filefield_paths\PathProcessor
  */
 #[Group('filefield_paths')]
+#[RunTestsInSeparateProcesses]
 class PathProcessorTest extends KernelTestBase {
 
   /**
