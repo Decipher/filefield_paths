@@ -26,6 +26,7 @@ use Drupal\filefield_paths\Hook\FieldWidgetSingleElementForm;
 use Drupal\filefield_paths\Hook\File;
 use Drupal\filefield_paths\Hook\FileFieldPathsFieldSettingsLegacy;
 use Drupal\filefield_paths\Hook\FileFieldPathsProcessFileLegacy;
+use Drupal\filefield_paths\Hook\FileUrlHooks;
 use Drupal\filefield_paths\Hook\LocalTaskAlter;
 use Drupal\filefield_paths\Hook\Tokens;
 use Drupal\filefield_paths\MoveFileProcessorInterface;
@@ -210,6 +211,18 @@ function filefield_paths_entity_base_field_info(EntityTypeInterface $entity_type
 #[LegacyHook]
 function filefield_paths_file_presave(FileInterface $file): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(File::class)->filePresave($file);
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_file_url_alter(string &$uri): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  \Drupal::service(FileUrlHooks::class)->fileUrlAlter($uri);
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
+function filefield_paths_file_download(string $uri): array|null {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  return \Drupal::service(FileUrlHooks::class)->fileDownload($uri);
 }
 
 // @phpstan-ignore-next-line

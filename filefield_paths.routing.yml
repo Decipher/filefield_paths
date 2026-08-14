@@ -5,3 +5,14 @@ filefield_paths.admin_settings:
     _title: 'File (Field) Paths settings'
   requirements:
     _permission: 'administer site configuration'
+
+filefield_paths.image_style_temporary:
+  path: '/filefield_paths/image-style/{image_style}/temporary'
+  defaults:
+    _controller: '\Drupal\image\Controller\ImageStyleDownloadController::deliver'
+    scheme: 'temporary'
+    required_derivative_scheme: 'temporary'
+  requirements:
+    _ffp_temp_image_style: 'TRUE'
+  options:
+    no_cache: TRUE

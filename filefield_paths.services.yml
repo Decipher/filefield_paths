@@ -20,6 +20,12 @@ services:
     class: Drupal\filefield_paths\PathProcessor
     autowire: true
 
+  filefield_paths.access_checker.image_style_temporary:
+    class: Drupal\filefield_paths\Access\ImageStyleTemporaryAccessCheck
+    arguments: ['@config.factory']
+    tags:
+      - { name: access_check, applies_to: _ffp_temp_image_style }
+
   # Legacy hook support
   Drupal\filefield_paths\Hook\EntityWithFileField:
     class: Drupal\filefield_paths\Hook\EntityWithFileField
@@ -44,4 +50,7 @@ services:
     autowire: true
   Drupal\filefield_paths\Hook\Tokens:
     class: Drupal\filefield_paths\Hook\Tokens
+    autowire: true
+  Drupal\filefield_paths\Hook\FileUrlHooks:
+    class: Drupal\filefield_paths\Hook\FileUrlHooks
     autowire: true
