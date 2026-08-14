@@ -64,7 +64,7 @@ final readonly class FileFieldPathsProcessFileLegacy {
     /** @var \Drupal\file\Entity\File $file */
     foreach ($field->referencedEntities() as $file) {
       $source_scheme_name = $this->streamWrapperManager::getScheme($file->getFileUri());
-      if (!(!empty($wrappers[$destination_scheme_name]) && in_array($source_scheme_name, $schemas, TRUE))) {
+      if (empty($wrappers[$destination_scheme_name]) || !in_array($source_scheme_name, $schemas, TRUE)) {
         // Unexpected source scheme.
         continue;
       }
@@ -107,7 +107,7 @@ final readonly class FileFieldPathsProcessFileLegacy {
       }
 
       // Finalize file if necessary.
-      if (!($file->getFileUri() !== $destination && file_exists($file->getFileUri()))) {
+      if ($file->getFileUri() === $destination || !file_exists($file->getFileUri())) {
         // File is already in the right place.
         continue;
       }

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Group;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Form\FormInterface;
@@ -21,6 +22,7 @@ use Drupal\filefield_paths\Hook\FieldConfigEditForm;
  * @covers \Drupal\filefield_paths\Hook\FileFieldPathsFieldSettingsLegacy
  */
 #[Group('filefield_paths')]
+#[RunTestsInSeparateProcesses]
 class FieldConfigEditFormTest extends KernelTestBase {
 
   /**

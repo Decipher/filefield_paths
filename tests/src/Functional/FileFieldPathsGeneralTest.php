@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Functional;
 
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Group;
 use Drupal\file\Plugin\Field\FieldType\FileItem;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
@@ -19,6 +20,7 @@ use Drupal\image\Entity\ImageStyle;
  * @runTestsInSeparateProcesses
  */
 #[Group('filefield_paths')]
+#[RunTestsInSeparateProcesses]
 class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
 
   /**

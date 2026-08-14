@@ -18,16 +18,9 @@ use Psr\Log\LoggerInterface;
 class Redirect implements RedirectInterface {
 
   /**
-   * The redirect storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $redirectStorage;
-
-  /**
    * Constructs a new redirect service.
    *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   The entity type manager.
    * @param \Drupal\Core\StreamWrapper\StreamWrapperManagerInterface $streamWrapperManager
    *   The stream wrapper manager.
@@ -36,9 +29,7 @@ class Redirect implements RedirectInterface {
    * @param \Psr\Log\LoggerInterface $logger
    *   The logger service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, protected StreamWrapperManagerInterface $streamWrapperManager, protected ConfigFactoryInterface $configFactory, protected LoggerInterface $logger) {
-    $this->redirectStorage = $entity_type_manager->getStorage('redirect');
-  }
+  public function __construct(protected EntityTypeManagerInterface $entityTypeManager, protected StreamWrapperManagerInterface $streamWrapperManager, protected ConfigFactoryInterface $configFactory, protected LoggerInterface $logger) {}
 
   /**
    * {@inheritdoc}
@@ -49,8 +40,11 @@ class Redirect implements RedirectInterface {
       '@path'   => $path,
     ]);
 
+    /** @var \Drupal\Core\Entity\EntityStorageInterface $storage */
+    $storage = $this->entityTypeManager->getStorage('redirect');
+
     /** @var \Drupal\redirect\Entity\Redirect $redirect */
-    $redirect = $this->redirectStorage->create([]);
+    $redirect = $storage->create([]);
 
     $parsed_source = $this->getPath($source);
     $parsed_path = $this->getPath($path);
@@ -61,7 +55,7 @@ class Redirect implements RedirectInterface {
 
     // Check if the redirect doesn't already exist before saving.
     $hash = $redirect->generateHash($parsed_path, [], $language->getId());
-    $redirects = $this->redirectStorage->loadByProperties(['hash' => $hash]);
+    $redirects = $storage->loadByProperties(['hash' => $hash]);
     if (empty($redirects)) {
       // Redirect does not exist yet, save as new one.
       $redirect->save();

@@ -57,7 +57,7 @@ final class FieldConfigEditForm {
     $field = $form_object->getEntity();
     $class = $field->getClass();
 
-    if (!(class_exists($class) && ($class === FileFieldItemList::class || is_subclass_of($class, FileFieldItemList::class)))) {
+    if (!class_exists($class) || $class !== FileFieldItemList::class && !is_subclass_of($class, FileFieldItemList::class)) {
       // Not supported the field config edit form.
       return;
     }
@@ -110,7 +110,7 @@ final class FieldConfigEditForm {
       ];
 
       // Attach widget field form elements.
-      if (!(isset($settings_field['form']) && is_array($settings_field['form']))) {
+      if (!isset($settings_field['form']) || !is_array($settings_field['form'])) {
         // No expected form elements.
         continue;
       }
