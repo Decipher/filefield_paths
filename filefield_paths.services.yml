@@ -6,9 +6,11 @@ services:
   logger.channel.filefield_paths:
     parent: logger.channel_base
     arguments: ['filefield_paths']
+  Drupal\filefield_paths\ProcessOutcomeInterface:
+    class: Drupal\filefield_paths\ProcessOutcome
   filefield_paths.batch.updater:
     class: 'Drupal\filefield_paths\Batch\Updater'
-    arguments: ['@entity_type.manager']
+    arguments: ['@entity_type.manager', '@Drupal\filefield_paths\ProcessOutcomeInterface', '@module_handler', '@current_user']
   Drupal\filefield_paths\Batch\BatchUpdaterInterface: '@filefield_paths.batch.updater'
   Drupal\filefield_paths\Utility\FieldConfigEditFormHandlerInterface:
     class: Drupal\filefield_paths\Utility\FieldConfigEditFormHandler

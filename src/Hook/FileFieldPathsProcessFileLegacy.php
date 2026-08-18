@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\filefield_paths\Hook;
 
 use Drupal\Component\Utility\DeprecationHelper;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\File\FileSystemInterface;
@@ -16,6 +15,7 @@ use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
 use Drupal\file\FileRepositoryInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\PathProcessorInterface;
+use Drupal\filefield_paths\ProcessOutcomeInterface;
 use Drupal\filefield_paths\RedirectInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\AutowireServiceClosure;
@@ -32,8 +32,8 @@ final readonly class FileFieldPathsProcessFileLegacy {
     private FileRepositoryInterface $fileRepository,
     private StreamWrapperManagerInterface $streamWrapperManager,
     private ModuleHandlerInterface $moduleHandler,
-    private ConfigFactoryInterface $configFactory,
     private PathProcessorInterface $pathProcessor,
+    private ProcessOutcomeInterface $processOutcome,
     #[Autowire(service: 'logger.channel.filefield_paths')]
     private LoggerChannelInterface $loggerChannel,
     #[AutowireServiceClosure(RedirectInterface::class)]
@@ -51,21 +51,27 @@ final readonly class FileFieldPathsProcessFileLegacy {
     /** @var \Drupal\field\Entity\FieldStorageConfig $field_storage */
     $field_storage = $field_config->getFieldStorageDefinition();
 
-    $config = $this->configFactory->get('filefield_paths.settings');
-
-    // Check that the destination is writeable.
+    // Check that the destination is writeable and the source is readable.
+    // Any registered, readable scheme is an acceptable move source: the
+    // temporary staging scheme, the field's own destination scheme, or any
+    // other scheme (e.g. moving public:// files to private:// after a
+    // uri_scheme setting change).
     $wrappers = $this->streamWrapperManager->getWrappers(StreamWrapperInterface::WRITE);
+    $readable_wrappers = $this->streamWrapperManager->getWrappers(StreamWrapperInterface::READ);
 
     $destination_scheme_name = $field_storage->getSetting('uri_scheme');
-    $temp_location = empty($settings['temp_location']) ? $config->get('temp_location') : $settings['temp_location'];
-    $temporary_scheme_name = $this->streamWrapperManager::getScheme($temp_location);
-    $schemas = [$temporary_scheme_name, $destination_scheme_name];
 
     /** @var \Drupal\file\Entity\File $file */
     foreach ($field->referencedEntities() as $file) {
       $source_scheme_name = $this->streamWrapperManager::getScheme($file->getFileUri());
-      if (empty($wrappers[$destination_scheme_name]) || !in_array($source_scheme_name, $schemas, TRUE)) {
-        // Unexpected source scheme.
+      if (empty($wrappers[$destination_scheme_name]) || empty($readable_wrappers[$source_scheme_name])) {
+        // Unexpected source or destination scheme.
+        $this->loggerChannel->notice('The file %uri was skipped because its scheme (%source) or the destination scheme (%destination) is not a registered, accessible stream wrapper.', [
+          '%uri' => $file->getFileUri(),
+          '%source' => $source_scheme_name,
+          '%destination' => $destination_scheme_name,
+        ]);
+        $this->processOutcome->recordSkipped($file->id());
         continue;
       }
       // Process file if this is a new entity, 'Active updating' is set or
@@ -74,6 +80,10 @@ final readonly class FileFieldPathsProcessFileLegacy {
         /** @var \Drupal\file\Entity\File $original_file */
         foreach (DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): ?ContentEntityInterface => $entity->getOriginal(), fn() => $entity->original)->{$field->getName()}->referencedEntities() as $original_file) {
           if ((string) $original_file->id() === (string) $file->id()) {
+            $this->loggerChannel->notice('The file %uri was skipped because it was already attached before this save and active updating is not enabled.', [
+              '%uri' => $file->getFileUri(),
+            ]);
+            $this->processOutcome->recordSkipped($file->id());
             continue 2;
           }
         }
@@ -107,14 +117,26 @@ final readonly class FileFieldPathsProcessFileLegacy {
       }
 
       // Finalize file if necessary.
-      if ($file->getFileUri() === $destination || !file_exists($file->getFileUri())) {
+      // Check the file is on disk first. A record can point at the correct
+      // destination while the file itself is gone, and that is a failure,
+      // not a file that is already in place.
+      if (!file_exists($file->getFileUri())) {
+        $this->loggerChannel->notice('The file %uri was skipped because it does not exist on disk.', [
+          '%uri' => $file->getFileUri(),
+        ]);
+        $this->processOutcome->recordSkipped($file->id());
+        continue;
+      }
+      if ($file->getFileUri() === $destination) {
         // File is already in the right place.
+        $this->processOutcome->recordUpdated($file->id());
         continue;
       }
       $dirname = $this->fileSystem->dirname($destination);
       $dir_exists = $this->fileSystem->prepareDirectory($dirname, $this->fileSystem::CREATE_DIRECTORY);
       if (!$dir_exists) {
         $this->loggerChannel->notice('The directory %directory could not be created.', ['%directory' => $dirname]);
+        $this->processOutcome->recordSkipped($file->id());
         continue;
       }
 
@@ -128,8 +150,10 @@ final readonly class FileFieldPathsProcessFileLegacy {
           '%old' => $file->getFileUri(),
           '%new' => $destination,
         ]);
+        $this->processOutcome->recordSkipped($file->id());
         continue;
       }
+      $this->processOutcome->recordUpdated($file->id());
 
       // Create redirect from old location.
       if (

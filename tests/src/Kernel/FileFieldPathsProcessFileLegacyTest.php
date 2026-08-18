@@ -17,6 +17,7 @@ use Drupal\file\FileRepositoryInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\Hook\FileFieldPathsProcessFileLegacy;
 use Drupal\filefield_paths\PathProcessorInterface;
+use Drupal\filefield_paths\ProcessOutcomeInterface;
 use Drupal\filefield_paths\RedirectInterface;
 
 /**
@@ -161,8 +162,8 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
       $fileRepository ?? $this->container->get('file.repository'),
       $this->container->get('stream_wrapper_manager'),
       $this->container->get('module_handler'),
-      $this->container->get('config.factory'),
       $this->container->get(PathProcessorInterface::class),
+      $this->container->get(ProcessOutcomeInterface::class),
       $this->container->get('logger.channel.filefield_paths'),
       fn (): RedirectInterface => $this->container->get(RedirectInterface::class),
     );

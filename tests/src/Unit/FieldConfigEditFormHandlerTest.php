@@ -125,6 +125,37 @@ class FieldConfigEditFormHandlerTest extends UnitTestCase {
   }
 
   /**
+   * Tests that submit() re-enables the form redirect when a batch is set.
+   *
+   * AJAX submissions disable the redirect, and the batch would keep that
+   * state. The finished batch then falls back to the request URL, which
+   * still carries the ajax_form query arguments and fails on a normal
+   * page load.
+   */
+  public function testSubmitReEnablesRedirectWhenBatchSet(): void {
+    $updater = $this->createMock(BatchUpdaterInterface::class);
+    $field_config = $this->createMock(FieldConfigInterface::class);
+
+    $updater->expects($this->once())->method('batchUpdate')
+      ->with($field_config)->willReturn(TRUE);
+
+    $form_object = $this->createMock(EntityFormInterface::class);
+    $form_object->method('getEntity')->willReturn($field_config);
+
+    $form_state = $this->createMock(FormStateInterface::class);
+    $form_state->method('getValue')->with('third_party_settings')
+      ->willReturn(['filefield_paths' => ['enabled' => TRUE, 'retroactive_update' => TRUE]]);
+    $form_state->method('getFormObject')->willReturn($form_object);
+    $form_state->expects($this->once())->method('disableRedirect')->with(FALSE);
+
+    $handler = $this->buildHandler(
+      static fn (): MockObject => $updater,
+      static fn () => throw new \LogicException('SWM should not be called.'),
+    );
+    $handler->submit([], $form_state);
+  }
+
+  /**
    * Tests elementTempLocationValidate() with an empty value.
    */
   public function testValidateSkipsEmptyValue(): void {

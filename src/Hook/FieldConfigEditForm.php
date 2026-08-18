@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace Drupal\filefield_paths\Hook;
 
+use Drupal\Core\Ajax\AjaxResponse;
+use Drupal\Core\Ajax\RedirectCommand;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Entity\EntityFormInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\field_ui\Form\FieldConfigEditForm as CoreFieldConfigEditForm;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
@@ -64,6 +67,15 @@ final class FieldConfigEditForm {
 
     $entity_info = $this->entityTypeManager->getDefinition($field->getTargetEntityTypeId());
     $settings = $field->getThirdPartySettings('filefield_paths');
+
+    // Core's AJAX callback for this form does not know about batches set by
+    // third-party submit handlers. It always redirects to the field overview
+    // page, so a retroactive update batch is stored but never run. Replace
+    // the callback with one that sends the browser to the batch page when a
+    // batch is waiting, and hands over to core's callback when none is.
+    if (isset($form['actions']['submit']['#ajax']['callback'])) {
+      $form['actions']['submit']['#ajax']['callback'] = [self::class, 'ajaxSubmit'];
+    }
 
     $form['settings']['filefield_paths'] = [
       '#type'    => 'container',
@@ -252,6 +264,28 @@ final class FieldConfigEditForm {
    */
   public static function submit(array $form, FormStateInterface $form_state): void {
     \Drupal::service(FieldConfigEditFormHandlerInterface::class)->submit($form, $form_state);
+  }
+
+  /**
+   * AJAX callback for the field configuration form.
+   *
+   * By the time this runs, the form API has already built and stored any
+   * batch set during submission, but its redirect to the batch page was
+   * discarded by the AJAX handling. Send the browser there ourselves. When
+   * no batch is waiting, core's own callback handles the response.
+   *
+   * @internal
+   */
+  public static function ajaxSubmit(array &$form, FormStateInterface $form_state): AjaxResponse {
+    $batch = &batch_get();
+    if (isset($batch['id'], $batch['url']) && !empty($batch['progressive'])) {
+      $response = new AjaxResponse();
+      $response->addCommand(new RedirectCommand($batch['url']->toString()));
+      return $response;
+    }
+    $form_object = $form_state->getFormObject();
+    assert($form_object instanceof CoreFieldConfigEditForm);
+    return $form_object->ajaxSubmit($form, $form_state);
   }
 
   /**
