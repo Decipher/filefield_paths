@@ -146,6 +146,120 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
   }
 
   /**
+   * The entity's file object is updated to the moved location.
+   *
+   * A hook_entity_insert() implementation that runs after this module reads
+   * the file object cached on the field item. Focal Point does this. If the
+   * object still holds the pre-move URI, that module writes its own data
+   * against a path that no longer exists.
+   *
+   * @see https://www.drupal.org/i/3015137
+   */
+  public function testMoveUpdatesFileObjectHeldByTheEntity(): void {
+    $file = $this->createFile('public://stale-old/example.txt');
+
+    $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    assert($field instanceof FileFieldItemList);
+
+    // Resolve the referenced file before the move. ImageItem::preSave() does
+    // this to read the image dimensions, so the field item holds the object
+    // before any insert hook runs.
+    $referenced = $entity->get('field_file')->entity;
+    $this->assertInstanceOf(File::class, $referenced);
+    $this->assertSame('public://stale-old/example.txt', $referenced->getFileUri());
+
+    $settings = [
+      'file_path' => ['value' => 'stale-new', 'options' => ['transliterate' => FALSE]],
+      'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
+    ];
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
+
+    $this->assertFileExists('public://stale-new/example.txt');
+
+    // A later hook implementation reads the same cached object.
+    $after_move = $entity->get('field_file')->entity;
+    $this->assertInstanceOf(File::class, $after_move);
+    $this->assertSame('public://stale-new/example.txt', $after_move->getFileUri());
+  }
+
+  /**
+   * The entity's file object matches the stored record after a rename.
+   *
+   * The move renames around a file that already holds the destination path, so
+   * the stored record can differ from the path that was asked for. The
+   * in-memory object must still agree with what was written to the database.
+   *
+   * @see https://www.drupal.org/i/3015137
+   */
+  public function testMovedFileObjectMatchesStoredRecordOnRename(): void {
+    $file = $this->createFile('public://rename-old/example.txt');
+    // Occupy the destination so the move has to rename around it.
+    $this->createFile('public://rename-new/example.txt', 'occupied');
+
+    $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    assert($field instanceof FileFieldItemList);
+
+    $referenced = $entity->get('field_file')->entity;
+    $this->assertInstanceOf(File::class, $referenced);
+
+    $settings = [
+      'file_path' => ['value' => 'rename-new', 'options' => ['transliterate' => FALSE]],
+      'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
+    ];
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
+
+    $stored = $this->container->get('entity_type.manager')
+      ->getStorage('file')
+      ->loadUnchanged((int) $file->id());
+    $this->assertInstanceOf(File::class, $stored);
+    $this->assertNotSame('public://rename-old/example.txt', $stored->getFileUri());
+    $this->assertSame($stored->getFileUri(), $referenced->getFileUri());
+    $this->assertSame($stored->getFilename(), $referenced->getFilename());
+  }
+
+  /**
+   * The field item is updated even when it holds a different file instance.
+   *
+   * On a real upload the file object cached on the field item is not always the
+   * same instance that referencedEntities() returns during processing. Focal
+   * Point reads the field item, so updating only the processed instance is not
+   * enough. Here the file static cache is reset after the entity caches its
+   * reference, so the two diverge, the way they do behind the widget.
+   *
+   * @see https://www.drupal.org/i/3015137
+   */
+  public function testMoveUpdatesFieldItemWhenReferencedInstanceDiffers(): void {
+    $file = $this->createFile('public://divergent-old/example.txt');
+
+    $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    assert($field instanceof FileFieldItemList);
+
+    // Cache the field item's reference, as ImageItem::preSave() does.
+    $cached = $entity->get('field_file')->entity;
+    $this->assertInstanceOf(File::class, $cached);
+    $this->assertSame('public://divergent-old/example.txt', $cached->getFileUri());
+
+    // Reset the file cache so processing loads a different File instance.
+    $this->container->get('entity_type.manager')->getStorage('file')->resetCache([(int) $file->id()]);
+
+    $settings = [
+      'file_path' => ['value' => 'divergent-new', 'options' => ['transliterate' => FALSE]],
+      'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
+    ];
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
+
+    $this->assertFileExists('public://divergent-new/example.txt');
+
+    // What a later hook reads from the field item must be the moved file.
+    $after_move = $entity->get('field_file')->entity;
+    $this->assertInstanceOf(File::class, $after_move);
+    $this->assertSame('public://divergent-new/example.txt', $after_move->getFileUri());
+  }
+
+  /**
    * Returns the hook service under test.
    */
   protected function getService(): FileFieldPathsProcessFileLegacy {

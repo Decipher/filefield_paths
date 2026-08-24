@@ -62,7 +62,7 @@ final readonly class FileFieldPathsProcessFileLegacy {
     $schemas = [$temporary_scheme_name, $destination_scheme_name];
 
     /** @var \Drupal\file\Entity\File $file */
-    foreach ($field->referencedEntities() as $file) {
+    foreach ($field->referencedEntities() as $delta => $file) {
       $source_scheme_name = $this->streamWrapperManager::getScheme($file->getFileUri());
       if (empty($wrappers[$destination_scheme_name]) || !in_array($source_scheme_name, $schemas, TRUE)) {
         // Unexpected source scheme.
@@ -149,6 +149,17 @@ final readonly class FileFieldPathsProcessFileLegacy {
           break;
         }
         array_pop($paths);
+      }
+
+      // Point the field item at the moved file. Modules that act later in the
+      // same save read the file from the field item, which may be a different
+      // object than this one. Without this they read a path that no longer
+      // exists. This is what breaks Focal Point on the first save.
+      $file->setFileUri($new_file->getFileUri());
+      $file->setFilename($new_file->getFilename());
+      $item = $field->get($delta);
+      if ($item !== NULL) {
+        $item->set('entity', $new_file);
       }
     }
   }
