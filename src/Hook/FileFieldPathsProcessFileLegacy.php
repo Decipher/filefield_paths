@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\filefield_paths\Hook;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -28,6 +29,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutowireServiceClosure;
 final readonly class FileFieldPathsProcessFileLegacy {
 
   public function __construct(
+    private ConfigFactoryInterface $configFactory,
     private FileSystemInterface $fileSystem,
     private FileRepositoryInterface $fileRepository,
     private StreamWrapperManagerInterface $streamWrapperManager,
@@ -155,10 +157,13 @@ final readonly class FileFieldPathsProcessFileLegacy {
       }
       $this->processOutcome->recordUpdated($file->id());
 
-      // Create redirect from old location.
+      // Create redirect from old location, unless the file is only now
+      // leaving the staging area. A staged path exists between the upload
+      // and the save, so nothing can be linking to it.
       if (
         !empty($settings['redirect']) && $settings['active_updating'] &&
-        $this->moduleHandler->moduleExists('redirect')
+        $this->moduleHandler->moduleExists('redirect') &&
+        !$this->isStagedUpload($file->getFileUri(), $settings)
       ) {
         $redirect = $this->getRedirect();
         $redirect->createRedirect($file->getFileUri(), $new_file->getFileUri(), $file->language());
@@ -185,6 +190,30 @@ final readonly class FileFieldPathsProcessFileLegacy {
    */
   private function getRedirect(): RedirectInterface {
     return ($this->redirectClosure)();
+  }
+
+  /**
+   * Checks whether a file is still at the upload staging location.
+   *
+   * @param string $uri
+   *   The file URI before the move.
+   * @param array $settings
+   *   The File (Field) Paths settings for the field.
+   *
+   * @return bool
+   *   TRUE if the file has not left the staging location yet.
+   */
+  private function isStagedUpload(string $uri, array $settings): bool {
+    $temp_location = $settings['temp_location'] ?? NULL;
+    if (empty($temp_location)) {
+      $temp_location = $this->configFactory
+        ->get('filefield_paths.settings')
+        ->get('temp_location');
+    }
+    if (!is_string($temp_location) || $temp_location === '') {
+      return FALSE;
+    }
+    return str_starts_with($uri, rtrim($temp_location, '/') . '/');
   }
 
 }
