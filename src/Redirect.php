@@ -52,9 +52,10 @@ class Redirect implements RedirectInterface {
     $redirect->setSource($parsed_source);
     $redirect->setRedirect($parsed_path);
     $redirect->setStatusCode($this->configFactory->get('redirect.settings')->get('default_status_code'));
+    $redirect->setLanguage($language->getId());
 
     // Check if the redirect doesn't already exist before saving.
-    $hash = $redirect->generateHash($parsed_path, [], $language->getId());
+    $hash = $redirect->generateHash(ltrim($parsed_source, '/'), [], $language->getId());
     $redirects = $storage->loadByProperties(['hash' => $hash]);
     if (empty($redirects)) {
       // Redirect does not exist yet, save as new one.
