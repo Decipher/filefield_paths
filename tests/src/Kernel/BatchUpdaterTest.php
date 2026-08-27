@@ -114,6 +114,23 @@ class BatchUpdaterTest extends KernelTestBase {
   }
 
   /**
+   * Tests that entities with an empty file field are excluded from the batch.
+   *
+   * The query must use a numeric comparison on target_id. A string
+   * comparison is a fatal error on PostgreSQL.
+   *
+   * @see https://www.drupal.org/i/3569210
+   */
+  public function testReturnsFalseWhenFileFieldIsEmpty(): void {
+    EntityTest::create(['field_file' => []])->save();
+
+    $field_config = FieldConfig::load('entity_test.entity_test.field_file');
+
+    $result = $this->updater->batchUpdate($field_config);
+    $this->assertFalse($result);
+  }
+
+  /**
    * Tests that batchUpdate() returns TRUE and sets a batch when entities exist.
    */
   public function testReturnsTrueAndSetsBatchWhenEntitiesExist(): void {

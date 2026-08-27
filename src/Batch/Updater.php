@@ -54,6 +54,8 @@ class Updater implements BatchUpdaterInterface {
     if ($bundle_field = $entity_info->getKey('bundle')) {
       $query->condition($bundle_field, $field_config->getTargetBundle());
     }
+    // Use a numeric comparison. The target_id column is an integer, and
+    // PostgreSQL rejects a comparison with an empty string.
     $result = $query->accessCheck(FALSE)
       ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT')
       ->condition($field_config->getName() . '.target_id', 0, '>')
