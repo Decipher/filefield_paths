@@ -1,6 +1,6 @@
 {
     "extends": ["config:recommended"],
-    "automerge": true,
+    "automerge": false,
     "rangeStrategy": "bump",
     "dependencyDashboard": true,
     "pinDigests": true,
