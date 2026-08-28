@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\filefield_paths\Kernel;
 
-use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\entity_test\Entity\EntityTest;
@@ -85,16 +84,6 @@ class StagingRedirectTest extends KernelTestBase {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  #[\Override]
-  public function register(ContainerBuilder $container): void {
-    parent::register($container);
-    $container->register('stream_wrapper.private', 'Drupal\Core\StreamWrapper\PrivateStream')
-      ->addTag('stream_wrapper', ['scheme' => 'private']);
-  }
-
-  /**
    * Attaches a file at the given URI to a new entity and saves it.
    *
    * @param string $uri
@@ -152,6 +141,44 @@ class StagingRedirectTest extends KernelTestBase {
 
     $this->assertFileExists('public://sorted/example.txt');
     $this->assertSame(1, $this->redirectCount(), 'A move from a real location should still leave a redirect.');
+  }
+
+  /**
+   * A bare scheme root is not a staging location.
+   *
+   * The settings form accepts "public://" on its own. Treating that as a
+   * staging prefix would match every file on the scheme and quietly stop
+   * redirects being created at all.
+   *
+   * @see https://www.drupal.org/i/3494240
+   */
+  public function testBareSchemeRootIsNotTreatedAsStaging(): void {
+    $this->config('filefield_paths.settings')
+      ->set('temp_location', 'public://')
+      ->save();
+
+    $this->attachFileAt('public://published/example.txt');
+
+    $this->assertFileExists('public://sorted/example.txt');
+    $this->assertSame(1, $this->redirectCount(), 'A bare scheme root must not suppress redirects.');
+  }
+
+  /**
+   * The field's own staging location wins over the global one.
+   *
+   * @see https://www.drupal.org/i/3494240
+   */
+  public function testFieldStagingLocationTakesPrecedence(): void {
+    $field = FieldConfig::loadByName('entity_test', 'entity_test', 'field_file');
+    \assert($field instanceof FieldConfig);
+    $field->setThirdPartySetting('filefield_paths', 'temp_location', 'public://custom_stage');
+    $field->save();
+    $this->container->get('entity_field.manager')->clearCachedFieldDefinitions();
+
+    $this->attachFileAt('public://custom_stage/example.txt');
+
+    $this->assertFileExists('public://sorted/example.txt');
+    $this->assertSame(0, $this->redirectCount(), 'The field level staging location should suppress the redirect.');
   }
 
 }

@@ -213,6 +213,12 @@ final readonly class FileFieldPathsProcessFileLegacy {
     if (!is_string($temp_location) || $temp_location === '') {
       return FALSE;
     }
+    // A bare scheme root such as "public://" is not a staging directory, and
+    // the settings form accepts one. Used as a prefix it would match every
+    // file on that scheme and stop redirects being created at all.
+    if ((string) $this->streamWrapperManager::getTarget($temp_location) === '') {
+      return FALSE;
+    }
     return str_starts_with($uri, rtrim($temp_location, '/') . '/');
   }
 
