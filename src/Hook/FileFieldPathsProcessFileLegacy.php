@@ -76,9 +76,10 @@ final readonly class FileFieldPathsProcessFileLegacy {
       }
       // Process file if this is a new entity, 'Active updating' is set or
       // file wasn't previously attached to the entity.
-      if (DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): bool => $entity->getOriginal() instanceof ContentEntityInterface, fn(): bool => property_exists($entity, 'original') && $entity->original !== NULL) && empty($settings['active_updating']) && !$entity->isNew() && !DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): ?ContentEntityInterface => $entity->getOriginal(), fn() => $entity->original)->{$field->getName()}->isEmpty()) {
+      $original_entity = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): ?ContentEntityInterface => $entity->getOriginal(), fn() => $entity->original ?? NULL);
+      if ($original_entity instanceof ContentEntityInterface && empty($settings['active_updating']) && !$entity->isNew() && !$original_entity->{$field->getName()}->isEmpty()) {
         /** @var \Drupal\file\Entity\File $original_file */
-        foreach (DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): ?ContentEntityInterface => $entity->getOriginal(), fn() => $entity->original)->{$field->getName()}->referencedEntities() as $original_file) {
+        foreach ($original_entity->{$field->getName()}->referencedEntities() as $original_file) {
           if ((string) $original_file->id() === (string) $file->id()) {
             $this->loggerChannel->notice('The file %uri was skipped because it was already attached before this save and active updating is not enabled.', [
               '%uri' => $file->getFileUri(),
