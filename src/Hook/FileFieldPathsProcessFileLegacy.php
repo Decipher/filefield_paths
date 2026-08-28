@@ -76,6 +76,9 @@ final readonly class FileFieldPathsProcessFileLegacy {
       }
       // Process file if this is a new entity, 'Active updating' is set or
       // file wasn't previously attached to the entity.
+      // ContentEntityBase::__set() writes 'original' into its internal values
+      // array rather than an object property, so property_exists() is always
+      // FALSE here and the skip below never fired on core older than 11.2.
       $original_entity = DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): ?ContentEntityInterface => $entity->getOriginal(), fn() => $entity->original ?? NULL);
       if ($original_entity instanceof ContentEntityInterface && empty($settings['active_updating']) && !$entity->isNew() && !$original_entity->{$field->getName()}->isEmpty()) {
         /** @var \Drupal\file\Entity\File $original_file */

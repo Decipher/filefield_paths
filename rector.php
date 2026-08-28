@@ -37,6 +37,7 @@ use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Php80\Rector\Switch_\ChangeSwitchToMatchRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\Privatization\Rector\MethodCall\PrivatizeLocalGetterToPropertyRector;
+use DrupalRector\Drupal11\Rector\Deprecation\ReplaceEntityOriginalPropertyRector;
 use Rector\Privatization\Rector\Property\PrivatizeFinalClassPropertyRector;
 use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 
@@ -70,6 +71,12 @@ return RectorConfig::configure()
   // serialized into the database queue that batch processing uses.
   ->withSkip([
     ArrayToFirstClassCallableRector::class => ['*/src/Batch/Updater.php'],
+  ])
+  // The pre-11.2 half of DeprecationHelper::backwardsCompatibleCall() has to
+  // read $entity->original. getOriginal() does not exist before 11.2 and the
+  // module supports ^10.3, so rewriting it is a fatal error there.
+  ->withSkip([
+    ReplaceEntityOriginalPropertyRector::class => ['*/src/Hook/FileFieldPathsProcessFileLegacy.php'],
   ])
   // PHP version upgrade sets - modernizes syntax to PHP 8.2.
   // Includes all rules from PHP 5.3 through 8.2.
