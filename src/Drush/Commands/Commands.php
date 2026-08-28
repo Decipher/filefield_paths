@@ -145,11 +145,9 @@ final class Commands extends DrushCommands {
             ];
           }
 
-          if (!isset($info[$entity_type_name][$bundle])) {
-            $info[$entity_type_name][$bundle] = [
-              '#label' => sprintf('%s (%s)', $bundles_info[$bundle]['label'], $bundle),
-            ];
-          }
+          $info[$entity_type_name][$bundle] ??= [
+            '#label' => sprintf('%s (%s)', $bundles_info[$bundle]['label'], $bundle),
+          ];
           $field_instance = $this->entityFieldManager->getFieldDefinitions($entity_type_name, $bundle)[$field->getName()] ?? NULL;
           if ($field_instance && is_array($info[$entity_type_name][$bundle])) {
             $info[$entity_type_name][$bundle][$field_instance->getName()] = sprintf('%s (%s)', $field_instance->getLabel(), $field_instance->getName());
