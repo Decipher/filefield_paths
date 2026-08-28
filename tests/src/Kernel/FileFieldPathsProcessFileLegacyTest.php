@@ -240,4 +240,34 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
     $this->assertFileExists('public://move-fail/example.txt');
   }
 
+  /**
+   * An unregistered temporary scheme is skipped rather than fatal.
+   *
+   * The old procedural code resolved the configured temp location with
+   * StreamWrapperManager::getViaUri() and called getType() on the result.
+   * That returns FALSE for a scheme no wrapper handles, which is why
+   * migrations died with "Call to a member function getType() on bool".
+   *
+   * @see https://www.drupal.org/i/3432653
+   */
+  public function testUnregisteredTemporarySchemeIsSkipped(): void {
+    $this->config('filefield_paths.settings')
+      ->set('temp_location', 'bogus://filefield_paths')
+      ->save();
+
+    $file = $this->createFile('public://guard-source/example.txt');
+    $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    \assert($field instanceof FileFieldItemList);
+
+    $settings = [
+      'file_path' => ['value' => 'guard-dest', 'options' => ['transliterate' => FALSE]],
+      'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
+    ];
+
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
+
+    $this->assertFileExists('public://guard-dest/example.txt');
+  }
+
 }
