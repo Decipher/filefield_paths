@@ -22,6 +22,7 @@ Submit bug reports and feature suggestions, or track changes in the
 ## Table of contents
 
 - Requirements
+- Installation
 - Configuration
 - Features
 - FAQ
@@ -37,16 +38,47 @@ This module requires the following modules:
 - [Token](https://www.drupal.org/project/token)
 
 
+## Installation
+
+Install as you would normally install a contributed Drupal module. For further
+information, see
+[Installing Drupal Modules](https://www.drupal.org/docs/extending-drupal/installing-modules).
+
+
 ## Configuration
+
+### File fields
 
 Once installed, File (Field) Paths needs to be configured for each file field
 you wish to use. Settings can be found on the settings form of any supported
-file based field.
+file based field:
 
-*Example:*
-  
-Administration > Structure > Content types > Article > Manage fields > Image
-http://example.com/admin/structure/types/manage/article/fields/field_image
+Administration > Structure > Content types > Article > Manage fields > Image  
+`/admin/structure/types/manage/article/fields/node.article.field_image`
+
+### Temporary file location
+
+Unprocessed files will be uploaded prior to being processed by File (Field)
+Paths, and if `public://` is used, it could lead to private files being
+temporarily exposed publicly.
+
+It is recommended to use the temporary file system (`temporary://`) whenever
+possible, especially for files that do not require previewing before form
+submission.
+
+Alternatively, if your server configuration permits, the
+[private file system](https://www.drupal.org/docs/8/core/modules/file/overview#s-managing-file-locations-and-access)
+(`private://`) is preferred for situations where file previews — such as
+image previews — are needed before the form is submitted, as it provides
+secure and appropriate access for this functionality.
+
+1. Use
+[File module overview > Private file system settings](https://www.drupal.org/docs/8/core/modules/file/overview#s-private-file-system-settings)
+to define a Private file path in settings.php
+1. Under "File (Field) Paths settings" 
+`/admin/config/media/file-system/filefield-pathscan`, 
+set "Temporary file location" to use the private file path:
+    `private://filefield_paths`
 
 
 ## Features
