@@ -77,30 +77,16 @@ class RedirectTest extends KernelTestBase {
   }
 
   /**
-   * Whether the redirect dedup hash bug has been fixed.
-   *
-   * Flip to TRUE to re-enable the test.
-   */
-  private static bool $issueRedirectDedupFixed = FALSE;
-
-  /**
    * Tests that duplicate redirects are silently skipped, not thrown.
    *
-   * Bug (undocumented, found while writing this test): the pre-check hash in
-   * Redirect::createRedirect() is generated from the destination path
-   * ($parsed_path), but \Drupal\redirect\Entity\Redirect::preSave() always
-   * recomputes the stored hash from the *source* path. The two hashes are
-   * never the same value for a real redirect, so the existence check almost
-   * never matches, and calling createRedirect() twice with an identical
-   * source/destination throws an uncaught database unique-constraint
-   * exception instead of being silently skipped. This is not yet filed as a
-   * Drupal.org issue; recorded here as a baseline for future investigation.
+   * Until #3045063 was fixed, the pre-check hashed the destination path while
+   * Redirect::preSave() hashed the source, so the two values never matched
+   * and a second identical call crashed on the redirect table's unique hash
+   * index instead of being skipped.
+   *
+   * @see https://www.drupal.org/i/3045063
    */
   public function testCreateRedirectTwiceWithSameArgumentsDoesNotThrow(): void {
-    if (!self::$issueRedirectDedupFixed) {
-      $this->markTestSkipped('Reproduces redirect dedup hash bug: duplicate createRedirect() throws instead of being skipped. Flip $issueRedirectDedupFixed once fixed.');
-    }
-
     /** @var \Drupal\filefield_paths\RedirectInterface $redirect_service */
     $redirect_service = $this->container->get('filefield_paths.redirect');
     $language = new Language(['id' => 'en']);
@@ -113,6 +99,28 @@ class RedirectTest extends KernelTestBase {
 
     $redirects = $this->container->get('entity_type.manager')->getStorage('redirect')->loadMultiple();
     $this->assertCount(1, $redirects, 'Duplicate redirect should be skipped, not stored twice.');
+  }
+
+  /**
+   * The same skip happens when the file's language is not the site default.
+   *
+   * The stored hash is built in Redirect::preSave() from the entity's own
+   * language. Until #3045063 was fixed the pre-check used the language passed
+   * in by the caller, which is the file's and often not the one the entity
+   * carries, so the two hashes disagreed and the duplicate was missed.
+   *
+   * @see https://www.drupal.org/i/3045063
+   */
+  public function testCreateRedirectTwiceWithNonDefaultLanguageDoesNotThrow(): void {
+    /** @var \Drupal\filefield_paths\RedirectInterface $redirect_service */
+    $redirect_service = $this->container->get('filefield_paths.redirect');
+    $language = new Language(['id' => 'de']);
+
+    $redirect_service->createRedirect('public://old/source.txt', 'public://new/destination.txt', $language);
+    $redirect_service->createRedirect('public://old/source.txt', 'public://new/destination.txt', $language);
+
+    $redirects = $this->container->get('entity_type.manager')->getStorage('redirect')->loadMultiple();
+    $this->assertCount(1, $redirects, 'Duplicate redirect should be skipped for a non-default language too.');
   }
 
   /**

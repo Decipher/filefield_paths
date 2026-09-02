@@ -52,9 +52,11 @@ class Redirect implements RedirectInterface {
     $redirect->setSource($parsed_source);
     $redirect->setRedirect($parsed_path);
     $redirect->setStatusCode($this->configFactory->get('redirect.settings')->get('default_status_code'));
-
-    // Check if the redirect doesn't already exist before saving.
-    $hash = $redirect->generateHash($parsed_path, [], $language->getId());
+    // Redirect::preSave() builds the stored hash from the source path and the
+    // entity's own language. Read the language back off the entity so the
+    // check below asks for the hash the save will actually produce, rather
+    // than one built from a language the entity does not carry.
+    $hash = $redirect->generateHash(ltrim($parsed_source, '/'), [], $redirect->get('language')->value);
     $redirects = $storage->loadByProperties(['hash' => $hash]);
     if (empty($redirects)) {
       // Redirect does not exist yet, save as new one.
