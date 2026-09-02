@@ -9,7 +9,8 @@
         "drupal/pathauto": "*",
         "drupal/token": "*",
         "drupal/redirect": "*",
-        "drush/drush": ">=12.5.0"
+        "drush/drush": ">=12.5.0",
+        "rector/rector": "<2.6.5"
     },
     "conflict": {
         "drush/drush": "<12.5.0"
