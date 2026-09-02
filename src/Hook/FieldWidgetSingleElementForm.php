@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\filefield_paths\Hook;
 
+use Drupal\Component\Utility\Crypt;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Form\FormStateInterface;
@@ -39,8 +40,13 @@ final readonly class FieldWidgetSingleElementForm {
       $settings = $context['items']->getFieldDefinition()
         ->getThirdPartySettings('filefield_paths');
       $temp_location = $settings['temp_location'] ?? NULL;
-      $element['#upload_location'] = $temp_location ?:
-        $this->getSettings()->get('temp_location');
+      $temp_location = $temp_location ?: $this->getSettings()->get('temp_location');
+      // Stage each upload in a directory of its own. Two files with the same
+      // name would otherwise take the same staged path in turn, and the image
+      // style preview URL is built from that path. A browser or a CDN then
+      // shows the first image in place of the second.
+      // See https://www.drupal.org/i/3277844.
+      $element['#upload_location'] = sprintf('%s/ffp-%s', rtrim((string) $temp_location, '/'), Crypt::randomBytesBase64(8));
     }
   }
 

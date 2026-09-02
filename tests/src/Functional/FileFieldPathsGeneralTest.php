@@ -91,9 +91,11 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $edit[sprintf('files[%s_0]', $field_name)] = $file_system->realpath($test_file->getFileUri());
     $this->submitForm($edit, 'Upload');
 
-    // Ensure that the file was put into the Temporary file location.
+    // Ensure that the file was put into the Temporary file location. Each
+    // upload is staged in a directory of its own under that location.
     $config = $this->config('filefield_paths.settings');
-    $session->responseContains(\Drupal::service('file_url_generator')->generateString(sprintf('%s/%s', $config->get('temp_location'), $test_file->getFilename())));
+    $temp_location_url = \Drupal::service('file_url_generator')->generateString($config->get('temp_location'));
+    $session->responseMatches(sprintf('#%s/ffp-[A-Za-z0-9_-]+/%s#', preg_quote($temp_location_url, '#'), preg_quote($test_file->getFilename(), '#')));
 
     // Save the node.
     $this->submitForm([], 'Save');
@@ -139,9 +141,10 @@ class FileFieldPathsGeneralTest extends FileFieldPathsTestBase {
     $this->submitForm($edit, 'Upload');
 
     // Ensure that the file was put into the custom Temporary file location
-    // defined on the field configuration (not the global setting).
-    $generated_url = \Drupal::service('file_url_generator')->generateString($custom_dir . '/' . $test_file->getFilename());
-    $session->responseContains($generated_url);
+    // defined on the field configuration (not the global setting). Each
+    // upload is staged in a directory of its own under that location.
+    $custom_dir_url = \Drupal::service('file_url_generator')->generateString($custom_dir);
+    $session->responseMatches(sprintf('#%s/ffp-[A-Za-z0-9_-]+/%s#', preg_quote($custom_dir_url, '#'), preg_quote($test_file->getFilename(), '#')));
 
     // Save the node.
     $this->submitForm([], 'Save');
