@@ -215,6 +215,12 @@ function filefield_paths_file_presave(FileInterface $file): void {// phpcs:ignor
 
 // @phpstan-ignore-next-line
 #[LegacyHook]
+function filefield_paths_file_delete(FileInterface $file): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
+  \Drupal::service(File::class)->fileDelete($file);
+}
+
+// @phpstan-ignore-next-line
+#[LegacyHook]
 function filefield_paths_file_url_alter(string &$uri): void {// phpcs:ignore Drupal.Commenting.FunctionComment.Missing, Squiz.WhiteSpace.FunctionSpacing.Before
   \Drupal::service(FileUrlHooks::class)->fileUrlAlter($uri);
 }
