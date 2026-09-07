@@ -203,11 +203,11 @@ final class FieldConfigEditForm {
         }
       }
 
-      $description = $this->t('The location that unprocessed files will be uploaded prior to being processed by File (Field) Paths.');
+      $description = $this->t('Files are uploaded here first. They move to their final path when the entity is saved.');
       $description .= '<br />';
-      $description .= $this->t('It is recommended to use the temporary file system (temporary://) whenever possible, especially for files that do not require previewing before form submission. Alternatively, if your server configuration permits, the private file system (private://) is preferred for situations where file previews — such as image previews — are needed before the form is submitted, as it provides secure and appropriate access for this functionality.');
+      $description .= $this->t('Use the temporary file system (temporary://) where you can. Files there have no public URL, and image previews still work. If temporary:// does not suit your server, use the private file system (private://).');
       $description .= '<br />';
-      $description .= '<strong>' . $this->t('Never use the public directory (public://) if the site supports private files, or private files can be temporarily exposed publicly.') . '</strong>';
+      $description .= '<strong>' . $this->t('Do not use the public file system (public://) on a site with private files. A file bound for private:// would have a public URL until the entity is saved.') . '</strong>';
       $description .= '<br />';
       $description .= $this->t('Leave blank to use <a href=":url">global setting</a>.', [':url' => Url::fromRoute('filefield_paths.admin_settings')->toString()]);
       // Temporary file path.
