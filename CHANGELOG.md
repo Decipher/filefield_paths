@@ -46,6 +46,8 @@ Releases follow the Drupal.org `8.x-1.x` contrib versioning scheme.
 - [#3580359](https://www.drupal.org/i/3580359): Fixed "Call to a member
   function isEmpty() on array" in `File::filePresave()` after updating to
   8.x-1.0-rc1.
+- Generated file names now go through core's upload name sanitising before
+  a file is moved, and keep an extension the field allows.
 
 ## Earlier releases
 

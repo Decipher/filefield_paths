@@ -87,6 +87,10 @@ while a safer scheme is available.
 
 - Configurable file paths now use entity tokens in addition to user tokens.
 - Configurable file names.
+  - A generated name always ends in an extension the field allows. When the
+    pattern does not give one, the file's own extension is added.
+  - Generated names are sanitised the way core sanitises an uploaded file
+    name, with the same file system settings.
 - Support for file based fields, including but not limited to:
   - Drupal core File module.
   - Drupal core Image module.

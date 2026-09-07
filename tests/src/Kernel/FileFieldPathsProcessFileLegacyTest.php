@@ -166,6 +166,7 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
       $this->container->get(ProcessOutcomeInterface::class),
       $this->container->get('logger.channel.filefield_paths'),
       fn (): RedirectInterface => $this->container->get(RedirectInterface::class),
+      $this->container->get('event_dispatcher'),
     );
   }
 
