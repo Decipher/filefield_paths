@@ -7,6 +7,7 @@ namespace Drupal\filefield_paths\Hook;
 use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\File\Event\FileUploadSanitizeNameEvent;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -19,6 +20,7 @@ use Drupal\filefield_paths\ProcessOutcomeInterface;
 use Drupal\filefield_paths\RedirectInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\DependencyInjection\Attribute\AutowireServiceClosure;
+use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
 
 /**
  * Implements hook_filefield_paths_process_file().
@@ -38,6 +40,7 @@ final readonly class FileFieldPathsProcessFileLegacy {
     private LoggerChannelInterface $loggerChannel,
     #[AutowireServiceClosure(RedirectInterface::class)]
     private \Closure $redirectClosure,
+    private EventDispatcherInterface $eventDispatcher,
   ) {}
 
   /**
@@ -110,6 +113,9 @@ final readonly class FileFieldPathsProcessFileLegacy {
       $path = $this->pathProcessor->processString($settings['file_path']['value'], $token_data, $settings['file_path']['options']);
 
       $destination = $this->streamWrapperManager->normalizeUri($field_storage->getSetting('uri_scheme') . '://' . $path . '/' . $name);
+      // The name came from tokens, so it may carry an extension that core
+      // munged on upload. Sanitise it the way core sanitises an upload.
+      $destination = $this->sanitizeDestination($destination, $file->getFileUri(), (string) $field_config->getSetting('file_extensions'));
 
       // Ensure file uri is no more than 255 characters.
       if (mb_strlen($destination) > 255) {
@@ -189,6 +195,47 @@ final readonly class FileFieldPathsProcessFileLegacy {
    */
   private function getRedirect(): RedirectInterface {
     return ($this->redirectClosure)();
+  }
+
+  /**
+   * Sanitises the file name part of a destination URI.
+   *
+   * Only the last path segment is a file name. The directory part is left
+   * alone. The name must end in an extension the field allows. When it does
+   * not, the file's own extension is put back first: the content is still
+   * the type that passed upload validation. Core's upload sanitiser then
+   * munges any insecure extension inside the name.
+   *
+   * @param string $destination
+   *   The normalised destination URI.
+   * @param string $source_uri
+   *   The URI the file is moving from.
+   * @param string $allowed_extensions
+   *   The field's allowed extensions, space separated. Empty means any.
+   *
+   * @return string
+   *   The destination URI with a sanitised file name.
+   */
+  private function sanitizeDestination(string $destination, string $source_uri, string $allowed_extensions): string {
+    $segments = explode('/', $destination);
+    $name = array_pop($segments);
+    // A backslash in a name is not path information here, but the sanitise
+    // event rejects it as such. Neutralise it rather than throw on save.
+    $name = str_replace('\\', '_', $name);
+
+    $allowed = $allowed_extensions === '' ? [] : array_unique(explode(' ', trim(strtolower($allowed_extensions))));
+    $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+    if ($allowed !== [] && !in_array($extension, $allowed, TRUE)) {
+      $original_extension = pathinfo($source_uri, PATHINFO_EXTENSION);
+      if ($original_extension !== '') {
+        $name .= '.' . $original_extension;
+      }
+    }
+
+    $event = new FileUploadSanitizeNameEvent($name, $allowed_extensions);
+    $this->eventDispatcher->dispatch($event);
+
+    return implode('/', $segments) . '/' . $event->getFilename();
   }
 
 }
