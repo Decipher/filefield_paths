@@ -58,27 +58,29 @@ Administration > Structure > Content types > Article > Manage fields > Image
 
 ### Temporary file location
 
-Unprocessed files will be uploaded prior to being processed by File (Field)
-Paths, and if `public://` is used, it could lead to private files being
-temporarily exposed publicly.
+File (Field) Paths uploads each file to a temporary location first and moves it
+to its final path once the entity is saved and the token values are known. If
+that location is under `public://`, a file bound for the private file system can
+be read by anyone who knows its URL until the entity is saved.
 
-It is recommended to use the temporary file system (`temporary://`) whenever
-possible, especially for files that do not require previewing before form
-submission.
+A new install uses `temporary://filefield_paths`. Keep it. Files there have no
+public URL, and image previews still work: image styles are built for staged
+files on demand.
 
-Alternatively, if your server configuration permits, the
+If `temporary://` does not suit your server, use the
 [private file system](https://www.drupal.org/docs/8/core/modules/file/overview#s-managing-file-locations-and-access)
-(`private://`) is preferred for situations where file previews — such as
-image previews — are needed before the form is submitted, as it provides
-secure and appropriate access for this functionality.
+instead. One such case is several web servers without a shared temporary
+directory:
 
-1. Use
-[File module overview > Private file system settings](https://www.drupal.org/docs/8/core/modules/file/overview#s-private-file-system-settings)
-to define a Private file path in settings.php
-1. Under "File (Field) Paths settings" 
-`/admin/config/media/file-system/filefield-pathscan`, 
-set "Temporary file location" to use the private file path:
-    `private://filefield_paths`
+1. Set a private file path in `settings.php`, as described under
+   [Private file system settings](https://www.drupal.org/docs/8/core/modules/file/overview#s-private-file-system-settings).
+   With several web servers, that path must be on storage they all share.
+2. On "File (Field) Paths settings"
+   (`/admin/config/media/file-system/filefield-paths`), set "Temporary file
+   location" to `private://filefield_paths`.
+
+The status report warns when the temporary file location points at `public://`
+while a safer scheme is available.
 
 
 ## Features
