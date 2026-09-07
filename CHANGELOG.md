@@ -5,7 +5,7 @@ This file records the changes in each release of File (Field) Paths.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Releases follow the Drupal.org `8.x-1.x` contrib versioning scheme.
 
-## Unreleased
+## 8.x-1.0-rc2 - 2026-09-07
 
 ### Added
 
@@ -28,6 +28,13 @@ Releases follow the Drupal.org `8.x-1.x` contrib versioning scheme.
   `DeprecationHelper`, keeping Drupal 10 support.
 - Adopted drupal_extension_scaffold v4.17.0 for the development environment
   and CI.
+- [#3619767](https://www.drupal.org/i/3619767): Rewrote the README section on
+  the temporary file location: the correct settings path, the `temporary://`
+  default, and when to use `private://` instead.
+- The "Temporary file location" description on the settings form and the field
+  settings form now says the same as the README. It no longer recommends
+  `private://` for image previews, which work under `temporary://` since
+  [#3121826](https://www.drupal.org/i/3121826).
 
 ### Fixed
 
