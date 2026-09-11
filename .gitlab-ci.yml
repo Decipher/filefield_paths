@@ -30,3 +30,16 @@ variables:
   _PHPUNIT_CONCURRENT: 0
   _CSPELL_WORDS: 'cloudflared, cleanstring, ctools, dpagini, ffpu, multiext, oleh, origname, pagini, vehera, voleger, тест'
   OPT_IN_TEST_PREVIOUS_MAJOR: '1'
+
+# The module requires PHP 8.2. Test Drupal 10 on PHP 8.2, not on 8.1.
+# CORE_PREVIOUS_PHP_MIN is a CI/CD settings variable. A settings variable
+# wins over any value in this file, so set the PHP version on the job.
+composer (previous major):
+  variables:
+    PHP_VERSION: '8.2'
+
+# Drupal 10's test bootstrap changes directory into web/. PHPUnit 9 then
+# reads the configuration file again from there, so a relative path fails.
+phpunit (previous major):
+  variables:
+    _PHPUNIT_EXTRA: '--no-coverage --configuration=$CI_PROJECT_DIR/phpunit.gitlab-ci.xml'
