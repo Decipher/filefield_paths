@@ -26,5 +26,7 @@ include:
 variables:
   SKIP_ESLINT: '1'
   _PHPUNIT_EXTRA: '--no-coverage --configuration=phpunit.gitlab-ci.xml'
+  # gitlab_templates 1.17.0 made run-tests.sh the default. Keep the phpunit binary.
+  _PHPUNIT_CONCURRENT: 0
   _CSPELL_WORDS: 'cloudflared, cleanstring, ctools, dpagini, ffpu, multiext, oleh, origname, pagini, vehera, voleger, тест'
   OPT_IN_TEST_PREVIOUS_MAJOR: '1'
