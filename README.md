@@ -31,7 +31,7 @@ Submit bug reports and feature suggestions, or track changes in the
 
 ## Requirements
 
-This module requires the following modules:
+This module requires PHP 8.2 or later and the following modules:
 
 - [Pathauto](https://www.drupal.org/project/pathauto)
 - [Redirect](https://www.drupal.org/project/redirect)
