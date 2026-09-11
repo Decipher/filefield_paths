@@ -5,6 +5,16 @@ This file records the changes in each release of File (Field) Paths.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Releases follow the Drupal.org `8.x-1.x` contrib versioning scheme.
 
+## Unreleased
+
+### Changed
+
+- [#3622262](https://www.drupal.org/i/3622262): Declared PHP 8.2 as the
+  minimum version. `8.x-1.0-rc2` already needed it, because it declares five
+  classes `readonly`, but it did not say so and failed with a parse error on
+  PHP 8.1. Composer and Drupal now refuse PHP 8.1. Sites on PHP 8.1 should
+  pin `8.x-1.0-rc1`, because Composer there still resolves to `8.x-1.0-rc2`.
+
 ## 8.x-1.0-rc2 - 2026-09-07
 
 ### Added

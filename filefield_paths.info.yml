@@ -3,6 +3,7 @@ description: 'Adds improved Token based file sorting and renaming functionalitie
 package: Fields
 configure: filefield_paths.admin_settings
 core_version_requirement: ^10.3 || ^11
+php: 8.2
 type: module
 dependencies:
   - drupal:file
