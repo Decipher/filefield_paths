@@ -33,6 +33,12 @@ release is dated by its Drupal.org release node.
   empty, when cron deletes an upload that was never saved. A site with no staging
   location configured, or with a bare scheme root such as `private://`,
   stages under that root.
+- [#3494240](https://www.drupal.org/i/3494240): Stopped creating a redirect
+  on an entity's first save, and when a file leaves the staging location on a
+  later save. Nothing could link to either path, and with "Create Redirect"
+  on every new upload left a redirect behind. A bare scheme root such as
+  `public://` is not treated as a staging location, because it would match
+  every file on the scheme.
 
 ## 8.x-1.0-rc2 - 2026-09-07
 
