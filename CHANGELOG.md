@@ -602,8 +602,6 @@ release is dated by its Drupal.org release node.
 
 ### Added
 
-- [#578442](https://www.drupal.org/i/578442): Added Features support for the
-  field settings.
 - [#756898](https://www.drupal.org/i/756898): Added a Swedish translation,
   later moved to localize.drupal.org.
 
@@ -626,6 +624,8 @@ release is dated by its Drupal.org release node.
   `_pathauto_include()` function.
 - [#635854](https://www.drupal.org/i/635854): Fixed nodes linking to the
   original file path until they were saved a second time.
+- [#578442](https://www.drupal.org/i/578442): Kept the "File path" setting
+  across a Features export and import.
 - [#288416](https://www.drupal.org/i/288416): Fixed "The selected file
   /var/www could not be copied."
 
@@ -734,8 +734,6 @@ release is dated by its Drupal.org release node.
 - Added API hooks so sub-modules can add support for other field types.
 - [#373735](https://www.drupal.org/i/373735): Replaced encoded unprocessed
   URLs, such as those written by FCKeditor.
-- [#331488](https://www.drupal.org/i/331488): Added error checking when no
-  file field was added or updated.
 - [#324736](https://www.drupal.org/i/324736): Added a workaround for token
   values that arrive as an array.
 - Improved support for FileField tokens and for unprocessed URL replacement.
@@ -752,6 +750,8 @@ release is dated by its Drupal.org release node.
 - [#398754](https://www.drupal.org/i/398754): Fixed the wrong file name, and
   deleted new files, when transliteration was applied to the file path.
 - [#366997](https://www.drupal.org/i/366997): Fixed several PHP notices.
+- [#331488](https://www.drupal.org/i/331488): Fixed array warnings when no
+  file field was added or updated.
 - [#363105](https://www.drupal.org/i/363105): Fixed an insert query whose
   column count did not match.
 - [#360303](https://www.drupal.org/i/360303): Made the strings translatable.
@@ -834,8 +834,6 @@ release is dated by its Drupal.org release node.
 - Added API hooks so sub-modules can add support for other field types.
 - [#373735](https://www.drupal.org/i/373735): Replaced encoded unprocessed
   URLs, such as those written by FCKeditor.
-- [#331488](https://www.drupal.org/i/331488): Added error checking when no
-  file field was added or updated.
 - Improved support for FileField tokens and for unprocessed URL replacement.
 
 ### Changed
@@ -850,6 +848,8 @@ release is dated by its Drupal.org release node.
 - [#390654](https://www.drupal.org/i/390654): Fixed directories with
   ImageField on Drupal 5.
 - [#366997](https://www.drupal.org/i/366997): Fixed several PHP notices.
+- [#331488](https://www.drupal.org/i/331488): Fixed array warnings when no
+  file field was added or updated.
 - [#363105](https://www.drupal.org/i/363105): Fixed an insert query whose
   column count did not match.
 - [#360303](https://www.drupal.org/i/360303): Made the strings translatable.
