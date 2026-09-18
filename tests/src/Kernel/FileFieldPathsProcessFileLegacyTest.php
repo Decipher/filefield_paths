@@ -158,6 +158,7 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
    */
   protected function constructService(?FileSystemInterface $fileSystem = NULL, ?FileRepositoryInterface $fileRepository = NULL): FileFieldPathsProcessFileLegacy {
     return new FileFieldPathsProcessFileLegacy(
+      $this->container->get('config.factory'),
       $fileSystem ?? $this->container->get('file_system'),
       $fileRepository ?? $this->container->get('file.repository'),
       $this->container->get('stream_wrapper_manager'),
