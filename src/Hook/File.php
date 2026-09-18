@@ -39,13 +39,14 @@ final class File {
   // @phpstan-ignore-next-line
   #[Hook('file_presave')]
   public function filePresave(FileInterface $file): void {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
-    // Store the original filename in the database.
+    // Store the original filename in the database. A file entity without the
+    // origname field, for example on a site whose field storage was not
+    // installed, is left alone.
     if (
-      isset($file->origname, $file->filename) &&
-      (is_array($file->origname) || $file->origname->isEmpty()) &&
-      (!is_array($file->filename) && !$file->filename->isEmpty())
+      $file->hasField('origname') && $file->hasField('filename') &&
+      $file->get('origname')->isEmpty() && !$file->get('filename')->isEmpty()
     ) {
-      $file->origname = $file->filename;
+      $file->set('origname', $file->get('filename')->value);
     }
   }
 
