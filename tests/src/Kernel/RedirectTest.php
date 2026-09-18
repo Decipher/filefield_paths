@@ -151,4 +151,76 @@ class RedirectTest extends KernelTestBase {
     $this->assertStringContainsString('/system/files/new/destination.txt', $redirect->getRedirectUrl()->toUriString());
   }
 
+  /**
+   * A private:// source is stored as the path a request for it carries.
+   *
+   * The private wrapper only exposes its download route as an absolute URL.
+   * The redirect module matches a request for /system/files/... against the
+   * stored source path, so an absolute URL stored as the source could never
+   * match. It was stored as one, encoded into a single junk path segment.
+   */
+  public function testCreateRedirectForPrivateSchemeSourceUsesSiteRelativePath(): void {
+    /** @var \Drupal\filefield_paths\RedirectInterface $redirect_service */
+    $redirect_service = $this->container->get('filefield_paths.redirect');
+
+    $redirect_service->createRedirect('private://old/source.txt', 'private://new/destination.txt', new Language(['id' => 'en']));
+
+    $redirects = $this->container->get('entity_type.manager')->getStorage('redirect')->loadMultiple();
+    $this->assertCount(1, $redirects);
+    /** @var \Drupal\redirect\Entity\Redirect $redirect */
+    $redirect = reset($redirects);
+    $this->assertSame('/system/files/old/source.txt', $redirect->getSourcePathWithQuery());
+  }
+
+  /**
+   * A private:// source keeps the encoding of the request path.
+   *
+   * The redirect module matches a private file request on the raw request
+   * path, without decoding it, so the stored source must match that form.
+   */
+  public function testCreateRedirectForPrivateSchemeSourceKeepsTheEncoding(): void {
+    /** @var \Drupal\filefield_paths\RedirectInterface $redirect_service */
+    $redirect_service = $this->container->get('filefield_paths.redirect');
+
+    $redirect_service->createRedirect('private://old/source name.txt', 'private://new/destination.txt', new Language(['id' => 'en']));
+
+    $redirects = $this->container->get('entity_type.manager')->getStorage('redirect')->loadMultiple();
+    $this->assertCount(1, $redirects);
+    /** @var \Drupal\redirect\Entity\Redirect $redirect */
+    $redirect = reset($redirects);
+    $this->assertSame('/system/files/old/source%20name.txt', $redirect->getSourcePathWithQuery());
+  }
+
+  /**
+   * A temporary:// source keeps the file as a query parameter.
+   *
+   * The temporary wrapper serves files through /system/temporary?file=...,
+   * so the source needs the query as well as the path.
+   */
+  public function testCreateRedirectForTemporarySchemeSourceKeepsTheQuery(): void {
+    /** @var \Drupal\filefield_paths\RedirectInterface $redirect_service */
+    $redirect_service = $this->container->get('filefield_paths.redirect');
+
+    $redirect_service->createRedirect('temporary://old/source.txt', 'public://new/destination.txt', new Language(['id' => 'en']));
+
+    $redirects = $this->container->get('entity_type.manager')->getStorage('redirect')->loadMultiple();
+    $this->assertCount(1, $redirects);
+    /** @var \Drupal\redirect\Entity\Redirect $redirect */
+    $redirect = reset($redirects);
+    $this->assertSame('/system/temporary?file=old/source.txt', $redirect->getSourcePathWithQuery());
+  }
+
+  /**
+   * A source on a scheme with no stream wrapper creates nothing.
+   */
+  public function testCreateRedirectSkipsAnUnknownScheme(): void {
+    /** @var \Drupal\filefield_paths\RedirectInterface $redirect_service */
+    $redirect_service = $this->container->get('filefield_paths.redirect');
+
+    $redirect_service->createRedirect('nowhere://old/source.txt', 'public://new/destination.txt', new Language(['id' => 'en']));
+
+    $redirects = $this->container->get('entity_type.manager')->getStorage('redirect')->loadMultiple();
+    $this->assertCount(0, $redirects);
+  }
+
 }

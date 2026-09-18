@@ -18,6 +18,15 @@ release is dated by its Drupal.org release node.
   PHP 8.1. Composer and Drupal now refuse PHP 8.1. Sites on PHP 8.1 should
   pin `8.x-1.0-rc1`, because Composer there still resolves to `8.x-1.0-rc2`.
 
+### Fixed
+
+- Redirects for a file moved from `private://`, `temporary://` or another
+  non-public scheme now store the source as the site-relative path a request
+  for the old location carries, with the query for `temporary://`. The source
+  was the wrapper's absolute URL encoded into one path segment, a row that
+  could never match. A file on a private field that moved after a title
+  change with active updating on left one behind.
+
 ## 8.x-1.0-rc2 - 2026-09-07
 
 ### Added
