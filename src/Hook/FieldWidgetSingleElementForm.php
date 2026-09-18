@@ -9,6 +9,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\filefield_paths\StagingLocation;
 use Drupal\filefield_paths\Utility\FieldItem;
 use Symfony\Component\DependencyInjection\Attribute\AutowireServiceClosure;
 
@@ -46,7 +47,7 @@ final readonly class FieldWidgetSingleElementForm {
       // style preview URL is built from that path. A browser or a CDN then
       // shows the first image in place of the second.
       // See https://www.drupal.org/i/3277844.
-      $element['#upload_location'] = sprintf('%s/ffp-%s', rtrim((string) $temp_location, '/'), Crypt::randomBytesBase64(8));
+      $element['#upload_location'] = StagingLocation::directory($temp_location) . StagingLocation::PREFIX . Crypt::randomBytesBase64(8);
     }
   }
 

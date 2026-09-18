@@ -50,6 +50,10 @@ class StagingDirectoryCleanupTest extends KernelTestBase {
     $this->installEntitySchema('entity_test');
     $this->installSchema('file', ['file_usage']);
     $this->installConfig(['filefield_paths']);
+    // Pin the staging location. The install default moved to
+    // temporary://filefield_paths in 8.x-1.0-rc2, and these tests put their
+    // files under public://filefield_paths.
+    $this->config('filefield_paths.settings')->set('temp_location', 'public://filefield_paths')->save();
   }
 
   /**
@@ -126,6 +130,33 @@ class StagingDirectoryCleanupTest extends KernelTestBase {
 
     $this->assertDirectoryDoesNotExist('public://custom-staging/ffp-abc123');
     $this->assertDirectoryExists('public://custom-staging');
+  }
+
+  /**
+   * A staging directory at a bare scheme root is removed too.
+   *
+   * The settings form accepts a bare scheme root. The directory then sits
+   * directly under that root and must still be recognised as staging.
+   */
+  public function testSchemeRootStagingDirectoryIsRemoved(): void {
+    $this->config('filefield_paths.settings')->set('temp_location', 'public://')->save();
+    $file = $this->createFile('public://ffp-abc123/example.txt');
+
+    $file->delete();
+
+    $this->assertDirectoryDoesNotExist('public://ffp-abc123');
+  }
+
+  /**
+   * With no location configured, the temporary root is the staging location.
+   */
+  public function testUnsetLocationFallsBackToTheTemporaryRoot(): void {
+    $this->config('filefield_paths.settings')->set('temp_location', '')->save();
+    $file = $this->createFile('temporary://ffp-abc123/example.txt');
+
+    $file->delete();
+
+    $this->assertDirectoryDoesNotExist('temporary://ffp-abc123');
   }
 
   /**

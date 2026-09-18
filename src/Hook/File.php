@@ -12,6 +12,7 @@ use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\file\FileInterface;
+use Drupal\filefield_paths\StagingLocation;
 
 /**
  * File relate hook implementations.
@@ -80,29 +81,31 @@ final class File {
     // made the directory, so it must also sit in a configured staging
     // location. rmdir() fails on a directory that still holds files.
     $directory = $this->fileSystem->dirname($file->getFileUri());
-    if (!preg_match('#^(.+)/ffp-[A-Za-z0-9_-]+$#', $directory, $matches)) {
-      return;
-    }
-    if (in_array($matches[1], $this->stagingLocations(), TRUE)) {
-      @$this->fileSystem->rmdir($directory);
+    foreach ($this->stagingLocations() as $location) {
+      if (StagingLocation::isStagingDirectory($directory, $location)) {
+        @$this->fileSystem->rmdir($directory);
+        return;
+      }
     }
   }
 
   /**
-   * Returns every configured staging location.
+   * Returns every staging location in use.
    *
    * @return string[]
-   *   The global location and every field level override, without a
-   *   trailing slash.
+   *   The global location, or the default when none is set, and every field
+   *   level override. Each ends in a slash.
    */
   private function stagingLocations(): array {
     $locations = [
-      (string) $this->configFactory->get('filefield_paths.settings')->get('temp_location'),
+      StagingLocation::directory($this->configFactory->get('filefield_paths.settings')->get('temp_location')),
     ];
     foreach ($this->entityTypeManager->getStorage('field_config')->loadMultiple() as $field) {
-      $locations[] = (string) $field->getThirdPartySetting('filefield_paths', 'temp_location');
+      $override = $field->getThirdPartySetting('filefield_paths', 'temp_location');
+      if (is_string($override) && $override !== '') {
+        $locations[] = StagingLocation::directory($override);
+      }
     }
-    $locations = array_map(static fn (string $location): string => rtrim($location, '/'), array_filter($locations));
     return array_values(array_unique($locations));
   }
 
