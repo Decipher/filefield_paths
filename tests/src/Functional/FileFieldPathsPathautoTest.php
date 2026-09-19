@@ -71,7 +71,11 @@ class FileFieldPathsPathautoTest extends FileFieldPathsTestBase {
     // Create a node with a test file.
     /** @var \Drupal\file\Entity\File $test_file */
     $test_file = $this->getTestFile('text');
-    $node_title = $this->randomString() . ' ' . $this->randomString();
+    // A title with characters for Pathauto to clean. A random string can hold
+    // a slash, which splits the path, or clean down to nothing, which leaves
+    // a file name of ".txt" that core's upload sanitising turns into "txt".
+    // Both make the expected path below wrong at random.
+    $node_title = 'Hello, World! ' . $this->randomMachineName();
     $edit['title[0][value]'] = $node_title;
 
     $edit['files[' . $field_name . '_0]'] = \Drupal::service('file_system')
