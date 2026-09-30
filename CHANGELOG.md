@@ -26,6 +26,13 @@ release is dated by its Drupal.org release node.
   was the wrapper's absolute URL encoded into one path segment, a row that
   could never match. A file on a private field that moved after a title
   change with active updating on left one behind.
+- [#3277844](https://www.drupal.org/i/3277844): Staged each upload in a
+  directory of its own, so two uploads of a file with the same name no longer
+  share a staged path and an image style preview URL. The image widget showed
+  the first file's thumbnail for the second. The directory is removed, once
+  empty, when cron deletes an upload that was never saved. A site with no staging
+  location configured, or with a bare scheme root such as `private://`,
+  stages under that root.
 
 ## 8.x-1.0-rc2 - 2026-09-07
 

@@ -45,7 +45,7 @@ class FieldWidgetSingleElementFormTest extends UnitTestCase {
     $element = ['#type' => 'managed_file'];
     $hook->formAlter($element, $this->createMock(FormStateInterface::class), ['items' => $items]);
 
-    $this->assertSame('private://custom', $element['#upload_location']);
+    $this->assertMatchesRegularExpression('#^private://custom/ffp-[A-Za-z0-9_-]+$#', $element['#upload_location']);
   }
 
   /**
@@ -62,7 +62,64 @@ class FieldWidgetSingleElementFormTest extends UnitTestCase {
     $element = ['#type' => 'managed_file'];
     $hook->formAlter($element, $this->createMock(FormStateInterface::class), ['items' => $items]);
 
-    $this->assertSame('temporary://filefield_paths', $element['#upload_location']);
+    $this->assertMatchesRegularExpression('#^temporary://filefield_paths/ffp-[A-Za-z0-9_-]+$#', $element['#upload_location']);
+  }
+
+  /**
+   * Tests that no configured location at all stages under temporary://.
+   *
+   * Core stages an upload with no destination at the temporary scheme root.
+   * A site whose settings lack the value, for example after a config import
+   * that did not carry it, must still be able to upload.
+   */
+  public function testFallsBackToTheTemporaryRootWhenNothingIsConfigured(): void {
+    $config = $this->createMock(ImmutableConfig::class);
+    $config->method('get')->with('temp_location')->willReturn(NULL);
+    $config_factory = $this->createMock(ConfigFactoryInterface::class);
+    $config_factory->method('get')->with('filefield_paths.settings')->willReturn($config);
+    $hook = new FieldWidgetSingleElementForm(static fn (): MockObject => $config_factory);
+
+    $items = $this->buildFileFieldItemList(['enabled' => TRUE]);
+    $element = ['#type' => 'managed_file'];
+    $hook->formAlter($element, $this->createMock(FormStateInterface::class), ['items' => $items]);
+
+    $this->assertMatchesRegularExpression('#^temporary://ffp-[A-Za-z0-9_-]+$#', $element['#upload_location']);
+  }
+
+  /**
+   * Tests that a bare scheme root stages directly under that root.
+   *
+   * The settings form accepts "private://" with no directory. Trimming the
+   * slashes off it would give "private:/ffp-...", which is not a URI.
+   */
+  public function testStagesUnderTheSchemeRoot(): void {
+    $hook = new FieldWidgetSingleElementForm(static fn () => throw new \LogicException('Config factory should not be called.'));
+
+    $items = $this->buildFileFieldItemList(['enabled' => TRUE, 'temp_location' => 'private://']);
+    $element = ['#type' => 'managed_file'];
+    $hook->formAlter($element, $this->createMock(FormStateInterface::class), ['items' => $items]);
+
+    $this->assertMatchesRegularExpression('#^private://ffp-[A-Za-z0-9_-]+$#', $element['#upload_location']);
+  }
+
+  /**
+   * Tests that every upload is staged in a directory of its own.
+   *
+   * Two uploads of a file with the same name must never share a staged path.
+   * A shared path gives both files the same image style preview URL.
+   *
+   * @see https://www.drupal.org/i/3277844
+   */
+  public function testEachUploadGetsItsOwnDirectory(): void {
+    $hook = new FieldWidgetSingleElementForm(static fn () => throw new \LogicException('Config factory should not be called.'));
+    $items = $this->buildFileFieldItemList(['enabled' => TRUE, 'temp_location' => 'private://custom']);
+
+    $first = ['#type' => 'managed_file'];
+    $hook->formAlter($first, $this->createMock(FormStateInterface::class), ['items' => $items]);
+    $second = ['#type' => 'managed_file'];
+    $hook->formAlter($second, $this->createMock(FormStateInterface::class), ['items' => $items]);
+
+    $this->assertNotSame($first['#upload_location'], $second['#upload_location']);
   }
 
   /**

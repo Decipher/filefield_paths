@@ -43,9 +43,9 @@
         "gnomovision",
         "hookspec",
         "icanon",
-        "itok",
         "initialisation",
         "initialised",
+        "itok",
         "jangregor",
         "jonhattan",
         "killall",
@@ -63,6 +63,7 @@
         "nohup",
         "normalise",
         "normalised",
+        "normalises",
         "noscript",
         "oleh",
         "onlyname",
@@ -83,6 +84,7 @@
         "prompty",
         "prophesize",
         "pushd",
+        "recognised",
         "rector",
         "renovatebot",
         "ruleset",
@@ -110,7 +112,7 @@
         "yoyodyne",
         "zizmor",
         "zizmorcore",
-        "тест"
+        "\u0442\u0435\u0441\u0442"
     ],
     "ignorePaths": [
         ".git/",
