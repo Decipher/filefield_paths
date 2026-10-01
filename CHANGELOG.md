@@ -8,37 +8,29 @@ Releases follow the Drupal.org contrib versioning scheme and are grouped by
 branch, newest first: `8.x-1.x`, then `7.x-1.x`, `6.x-1.x` and `5.x-1.x`. Each
 release is dated by its Drupal.org release node.
 
-## Unreleased
+## 8.x-1.0 - 2026-10-01
 
 ### Changed
 
 - [#3622262](https://www.drupal.org/i/3622262): Declared PHP 8.2 as the
-  minimum version. `8.x-1.0-rc2` already needed it, because it declares five
-  classes `readonly`, but it did not say so and failed with a parse error on
-  PHP 8.1. Composer and Drupal now refuse PHP 8.1. Sites on PHP 8.1 should
-  pin `8.x-1.0-rc1`, because Composer there still resolves to `8.x-1.0-rc2`.
+  minimum version. `8.x-1.0-rc2` already needed it for its `readonly` classes
+  but did not say so, and failed with a parse error on PHP 8.1. Sites on PHP
+  8.1 should pin `8.x-1.0-rc1`.
 
 ### Fixed
 
-- Redirects for a file moved from `private://`, `temporary://` or another
-  non-public scheme now store the source as the site-relative path a request
-  for the old location carries, with the query for `temporary://`. The source
-  was the wrapper's absolute URL encoded into one path segment, a row that
-  could never match. A file on a private field that moved after a title
-  change with active updating on left one behind.
 - [#3277844](https://www.drupal.org/i/3277844): Staged each upload in a
-  directory of its own, so two uploads of a file with the same name no longer
-  share a staged path and an image style preview URL. The image widget showed
-  the first file's thumbnail for the second. The directory is removed, once
-  empty, when cron deletes an upload that was never saved. A site with no staging
-  location configured, or with a bare scheme root such as `private://`,
-  stages under that root.
-- [#3494240](https://www.drupal.org/i/3494240): Stopped creating a redirect
-  on an entity's first save, and when a file leaves the staging location on a
-  later save. Nothing could link to either path, and with "Create Redirect"
-  on every new upload left a redirect behind. A bare scheme root such as
-  `public://` is not treated as a staging location, because it would match
-  every file on the scheme.
+  directory of its own, so two uploads with the same name no longer share a
+  staged path and an image style preview URL. The directory is removed when
+  cron deletes an upload that was never saved.
+- [#3494240](https://www.drupal.org/i/3494240): Stopped creating a redirect on
+  an entity's first save, and when a file leaves the staging location on a
+  later save, because nothing could link to either path.
+- Stored the redirect source for a file moved from `private://`,
+  `temporary://` or another non-public scheme as the site-relative path. The
+  wrapper's absolute URL went in before, a row that could never match.
+- `File::filePresave()` now reads `origname` and `filename` through the field
+  API, and leaves a file entity without the `origname` field alone.
 
 ## 8.x-1.0-rc2 - 2026-09-07
 
