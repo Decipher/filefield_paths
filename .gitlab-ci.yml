@@ -25,9 +25,14 @@ include:
 ################
 variables:
   SKIP_ESLINT: '1'
+  # The phpunit binary (_PHPUNIT_CONCURRENT: 0) loads phpunit.xml from the
+  # project root. That file is the scaffold config for local and GitHub runs.
+  # This flag points the binary at the DrupalCI config instead.
   _PHPUNIT_EXTRA: '--no-coverage --configuration=phpunit.gitlab-ci.xml'
-  # gitlab_templates 1.17.0 made run-tests.sh the default. Keep the phpunit binary.
-  _PHPUNIT_CONCURRENT: 0
+  # run-tests.sh (_PHPUNIT_CONCURRENT: 1, the default) uses core's phpunit
+  # config and needs no extra options. The '-' stops the template copying
+  # _PHPUNIT_EXTRA into this variable.
+  _RUNTESTS_EXTRA: '-'
   _CSPELL_WORDS: 'cloudflared, cleanstring, ctools, dpagini, ffpu, multiext, oleh, origname, pagini, vehera, voleger, тест'
   OPT_IN_TEST_PREVIOUS_MAJOR: '1'
 
