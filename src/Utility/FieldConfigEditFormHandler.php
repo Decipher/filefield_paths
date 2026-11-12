@@ -57,7 +57,7 @@ class FieldConfigEditFormHandler implements FieldConfigEditFormHandlerInterface 
     // batch right after submit handlers run and sends the response itself.
     // Calling batch_process() and sending a response here too would emit a
     // second, conflicting response.
-    if (!$updater->batchUpdate($entity)) {
+    if (!$updater->batchUpdate($entity, !empty($settings['retroactive_update_include_revisions']))) {
       // No paths to update.
       return;
     }

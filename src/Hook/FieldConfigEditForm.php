@@ -245,6 +245,19 @@ final class FieldConfigEditForm {
         '#weight'      => 12,
       ];
 
+      // Include revisions in the retroactive update.
+      $form['settings']['filefield_paths']['details']['retroactive_update_include_revisions'] = [
+        '#type'        => 'checkbox',
+        '#title'       => $this->t('Include revisions'),
+        '#description' => $this->t('Also move and rename files that only older revisions use. Without this, the retroactive update only processes the current revision of each entity.'),
+        '#weight'      => 12,
+        '#states'      => [
+          'visible' => [
+            ':input[name="third_party_settings[filefield_paths][retroactive_update]"]' => ['checked' => TRUE],
+          ],
+        ],
+      ];
+
       // Active updating.
       $form['settings']['filefield_paths']['details']['active_updating'] = [
         '#type'          => 'checkbox',

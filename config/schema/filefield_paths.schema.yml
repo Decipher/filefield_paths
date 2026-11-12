@@ -62,6 +62,9 @@ field.field.*.*.*.third_party.filefield_paths:
     retroactive_update:
       type: boolean
       label: 'Retroactive'
+    retroactive_update_include_revisions:
+      type: boolean
+      label: 'Retroactive update includes revisions'
     active_updating:
       type: boolean
       label: 'Active'
