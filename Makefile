@@ -2,6 +2,9 @@ SHELL=/bin/bash
 
 # Load variables from .env if present and export them to recipe shells. The
 # leading '-' on -include suppresses errors when the file does not exist.
+# Each .env variable that the shell sets to a non-empty value is made
+# 'override' first, so its .env assignment is ignored.
+$(foreach v,$(shell sed -n 's/^ *\([A-Za-z0-9_]*\)=.*/\1/p' .env 2>/dev/null),$(if $(value $v),$(eval override $v := $$(value $v))))
 -include .env
 export
 
@@ -11,67 +14,94 @@ ifdef TMPDIR
 export TMPDIR := $(abspath $(TMPDIR))
 endif
 
-WEBSERVER_HOST ?= localhost
-WEBSERVER_PORT ?= 8000
+# Resolve the site URL through the shared `eddy-info` resolver so `drush`
+# reports the same tunnel-aware URL as start, provision, login, and info
+# (see resolve_site_url()). Lazy `=` so the probe runs only when the recipes
+# that expand it are invoked.
+DRUSH = build/vendor/bin/drush -l "$(shell vendor/bin/eddy-info site-url)"
+# Recipes expand $(DRUSH) themselves. Exported, it would run the probe for
+# every recipe, including the one that installs the tooling.
+unexport DRUSH
 
-# When scripts/start-cloudflared.sh has written a TUNNEL_URL to .env,
-# point `make drush`/`make login` at the public tunnel instead of localhost.
-DRUSH_URI := $(if $(TUNNEL_URL),$(TUNNEL_URL),http://$(WEBSERVER_HOST):$(WEBSERVER_PORT))
+# Test environment exported to every recipe (see the blanket `export` above),
+# matching what the ahoy entrypoint exports for every command, so `make
+# test*` runs against the same base URL, database, and browser-output
+# directory as `ahoy test*`. The webserver host and port fall back to their
+# defaults only inside the URL: an exported default port would stop `start`
+# from discovering a free one.
+EXTENSION_NAME = $(shell basename -s .info.yml -- ./*.info.yml)
+SIMPLETEST_BASE_URL = http://$(or $(WEBSERVER_HOST),localhost):$(or $(WEBSERVER_PORT),8000)
+SIMPLETEST_DB = sqlite://localhost/drupal_test_$(EXTENSION_NAME).sqlite
+BROWSERTEST_OUTPUT_DIRECTORY = $(CURDIR)/.logs/browser_output
 
 define title
 	@echo -e "\n\033[36m$(1)\033[0m"
 endef
 
-.PHONY: assemble build debug debug-off debug-on delete describe destroy help info lint lint-fix login provision reset start stop test xdebug xdebug-off xdebug-on
-.PHONY: test-unit test-kernel test-functional
-.PHONY: test-functional-javascript selenium-start selenium-stop
-.PHONY: test-js
+TARGETS := assemble build debug debug-off debug-on delete describe destroy drush help info lint lint-fix login provision reset start stop test tooling xdebug xdebug-off xdebug-on
+TARGETS += test-unit test-kernel test-functional
+TARGETS += test-functional-javascript browser-start browser-stop
+TARGETS += test-javascript test-js
+.PHONY: $(TARGETS)
 
 help:
 	@echo "COMMANDS"
 	@echo "========"
-	@echo "build           - Build or rebuild the project."
-	@echo "assemble        - Assemble a codebase using project code and all required dependencies."
-	@echo "debug           - Enable PHP XDebug step-debugging for the development server."
-	@echo "drush           - Run Drush command."
-	@echo "info            - Print a read-only summary of the current environment (alias: describe)."
-	@echo "lint            - Check coding standards for violations."
-	@echo "lint-fix        - Fix violations in coding standards."
-	@echo "login           - Run Drush login command."
-	@echo "provision       - Provision application within assembled codebase."
-	@echo "reset           - Reset project to the default state (aliases: delete, destroy)."
-	@echo "start           - Start development environment."
-	@echo "stop            - Stop development environment."
+	@echo "build                      - Build or rebuild the project."
+	@echo "assemble                   - Assemble a codebase using project code and all required dependencies."
+	@echo "debug                      - Enable PHP XDebug step-debugging for the development server (aliases: debug-on, xdebug, xdebug-on)."
+	@echo "drush                      - Run Drush command."
+	@echo "info                       - Print a read-only summary of the current environment (alias: describe)."
+	@echo "lint                       - Check coding standards for violations."
+	@echo "lint-fix                   - Fix violations in coding standards."
+	@echo "login                      - Login to a website."
+	@echo "provision                  - Provision application within assembled codebase."
+	@echo "reset                      - Reset project to the default state (aliases: delete, destroy)."
+	@echo "start                      - Start development environment (aliases: debug-off, xdebug-off)."
+	@echo "stop                       - Stop development environment."
 	@echo "test                       - Run all tests."
 	@echo "test-functional            - Run functional tests."
 	@echo "test-functional-javascript - Run FunctionalJavascript tests."
 	@echo "test-kernel                - Run kernel tests."
 	@echo "test-unit                  - Run unit tests."
-	@echo "selenium-start             - Start Selenium container."
-	@echo "selenium-stop              - Stop Selenium container."
-	@echo "test-js                    - Run JavaScript unit tests."
+	@echo "browser-start              - Start the browser for FunctionalJavascript tests."
+	@echo "browser-stop               - Stop the browser."
+	@echo "test-javascript            - Run JavaScript unit tests (alias: test-js)."
 
-build: stop assemble start provision
+# Every target that runs a tooling command installs the tooling first, except
+# `reset`, which still cleans up when the install fails. Progress goes to
+# stderr, so a captured target output holds only the target's own.
+assemble build debug drush info login provision start stop: tooling
+test: tooling
+browser-start browser-stop test-functional-javascript: tooling
+
+tooling:
+	@./scripts/eddy-tooling >&2
+
+build:
+	$(MAKE) assemble
+	$(MAKE) start
+	$(MAKE) provision
 
 assemble:
-	./.devtools/assemble
+	vendor/bin/eddy-assemble
 
 start:
-	./.devtools/start
+	vendor/bin/eddy-start
 
 stop:
-	./.devtools/stop
+	vendor/bin/eddy-stop
 
 info:
-	@./.devtools/info
+	@vendor/bin/eddy-info
 
 # Enable PHP XDebug step-debugging by restarting the PHP server with
 # `-d xdebug.mode=debug -d xdebug.start_with_request=yes`. State is
 # probed by `info xdebug`, which inspects the running server's command
 # line. Run `make start` to disable.
 debug:
-	@[ "$$(./.devtools/info xdebug)" = "enabled" ] && echo "XDebug is already enabled. Run 'make start' to disable." || \
-		(XDEBUG=1 ./.devtools/start && sleep 1 && [ "$$(./.devtools/info xdebug)" = "enabled" ] && echo "Enabled XDebug. Run 'make start' to disable." || (echo "Failed to enable XDebug." && exit 1))
+	@[ "$$(vendor/bin/eddy-info xdebug)" = "enabled" ] && echo "XDebug is already enabled. Run 'make start' to disable." || \
+		(XDEBUG=1 vendor/bin/eddy-start && [ "$$(vendor/bin/eddy-info xdebug)" = "enabled" ] && echo "Enabled XDebug. Run 'make start' to disable." || (echo "Failed to enable XDebug." && exit 1))
 
 # Make has no native command aliases - the alias targets declare `debug` as
 # their sole prerequisite, so running e.g. `make xdebug` executes the `debug`
@@ -89,20 +119,14 @@ describe: info
 # Lando uses `destroy` and DDEV uses `delete` for what our `reset` does.
 delete destroy: reset
 
-# Allow running Drush commands with `make drush <command>`
-ifeq (drush,$(firstword $(MAKECMDGOALS)))
-  DRUSH_RUN_ARGS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
-  $(eval $(DRUSH_RUN_ARGS):;@:)
-endif
-
 drush:
-	build/vendor/bin/drush -l $(DRUSH_URI) $(DRUSH_RUN_ARGS)
+	$(DRUSH) $(RUN_ARGS)
 
 login:
-	build/vendor/bin/drush -l $(DRUSH_URI) uli
+	@vendor/bin/eddy-login
 
 provision:
-	./.devtools/provision
+	vendor/bin/eddy-provision
 
 lint:
 	$(call title,Running PHPCS)
@@ -129,58 +153,89 @@ lint-fix:
 	$(call title,Running ESLint)
 	pushd "build" >/dev/null || exit 1 && ([ ! -d node_modules ] || npm run lint-fix) && popd >/dev/null || exit 1
 
+# The test targets that pass their arguments to PHPUnit. The list is split
+# across the same DEV_* markers as `TARGETS` so a stripped feature leaves no
+# dangling entry.
+TEST_TARGETS := test
+TEST_TARGETS += test-unit test-kernel test-functional
+TEST_TARGETS += test-functional-javascript
+
+quote = '$(subst ','\'',$(1))'
+reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)))
+
+# `make drush` and the test targets pass their arguments to Drush or PHPUnit.
+# Make reads each argument as a goal, or as a variable when it holds `=`.
+RUN_ARGS :=
+ifneq (,$(filter $(firstword $(MAKECMDGOALS)),drush $(TEST_TARGETS)))
+  RUN_GOALS := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+  # MAKEOVERRIDES lists the variables in reverse order. A value that holds a
+  # space adds words that name no variable, so the origin check excludes them.
+  RUN_VARIABLES := $(foreach word,$(call reverse,$(MAKEOVERRIDES)),$(firstword $(subst =, ,$(word))))
+  # Only a variable named like an option is an argument, so `DEBUG=1` stays a
+  # make variable.
+  RUN_OPTIONS := $(foreach name,$(filter -%,$(RUN_VARIABLES)),$(if $(filter command line,$(origin $(name))),$(name)))
+  RUN_ARGS := $(foreach goal,$(RUN_GOALS),$(call quote,$(goal))) $(foreach name,$(RUN_OPTIONS),$(call quote,$(name)=$(value $(name))))
+  # Make runs every goal, so an argument that names a target would run it.
+  RUN_CONFLICTS := $(filter-out $(firstword $(MAKECMDGOALS)),$(filter $(TARGETS),$(RUN_GOALS)))
+  ifneq (,$(RUN_CONFLICTS))
+    $(error '$(firstword $(RUN_CONFLICTS))' is a target of this Makefile, so make would run it too. To pass it as an option value, join the option and the value with '=', such as '--filter=$(firstword $(RUN_CONFLICTS))')
+  endif
+  # The arguments have no rule, so make runs this empty recipe for them.
+  .DEFAULT: ; @:
+endif
+
 test:
+	$(MAKE) browser-start
 	$(call title,Running PHPUnit)
-	pushd "build" >/dev/null || exit 1 && BROWSERTEST_OUTPUT_DIRECTORY=/tmp php -d pcov.directory=.. vendor/bin/phpunit && popd >/dev/null || exit 1
+	export WEBDRIVER_PORT="$$(vendor/bin/eddy-info webdriver-port)" && \
+	pushd "build" >/dev/null || exit 1 && \
+	php -d pcov.directory=.. vendor/bin/phpunit $(RUN_ARGS) && \
+	popd >/dev/null || exit 1
 	$(call title,Running Jest)
 	pushd "build" >/dev/null || exit 1 && ([ ! -d node_modules ] || npm test) && popd >/dev/null || exit 1
 
 test-unit:
 	pushd "build" >/dev/null || exit 1 && \
-	php -d pcov.directory=.. vendor/bin/phpunit --testsuite unit && \
+	php -d pcov.directory=.. vendor/bin/phpunit --testsuite unit $(RUN_ARGS) && \
 	popd >/dev/null || exit 1
 
 test-kernel:
 	pushd "build" >/dev/null || exit 1 && \
-	php -d pcov.directory=.. vendor/bin/phpunit --testsuite kernel && \
+	php -d pcov.directory=.. vendor/bin/phpunit --testsuite kernel $(RUN_ARGS) && \
 	popd >/dev/null || exit 1
 
 test-functional:
 	pushd "build" >/dev/null || exit 1 && \
-	BROWSERTEST_OUTPUT_DIRECTORY=/tmp php -d pcov.directory=.. vendor/bin/phpunit --testsuite functional && \
+	php -d pcov.directory=.. vendor/bin/phpunit --testsuite functional $(RUN_ARGS) && \
 	popd >/dev/null || exit 1
 
-test-functional-javascript: selenium-start
+test-functional-javascript:
+	$(MAKE) browser-start
+	export WEBDRIVER_PORT="$$(vendor/bin/eddy-info webdriver-port)" && \
 	pushd "build" >/dev/null || exit 1 && \
-	BROWSERTEST_OUTPUT_DIRECTORY=/tmp php -d pcov.directory=.. vendor/bin/phpunit --testsuite functional-javascript && \
+	php -d pcov.directory=.. vendor/bin/phpunit --testsuite functional-javascript $(RUN_ARGS) && \
 	popd >/dev/null || exit 1
 
-selenium-start:
-	@if curl -s http://localhost:4444/status | grep -q '"ready": true'; then \
-		echo "Selenium container is already running."; \
-	else \
-		docker rm -f selenium 2>/dev/null || true; \
-		docker run -d --name selenium -p 4444:4444 selenium/standalone-chromium:latest; \
-		echo "Waiting for Selenium to be ready..."; \
-		for i in $$(seq 1 30); do curl -s http://localhost:4444/status | grep -q '"ready": true' && break; sleep 1; done; \
-		if ! curl -s http://localhost:4444/status | grep -q '"ready": true'; then \
-			echo "ERROR: Selenium failed to become ready after 30 seconds."; \
-			exit 1; \
-		fi; \
-	fi
+browser-start:
+	vendor/bin/eddy-browser-start
 
-selenium-stop:
-	docker rm -f selenium 2>/dev/null || true
+browser-stop:
+	vendor/bin/eddy-browser-stop
 
-test-js:
+test-javascript:
 	pushd "build" >/dev/null || exit 1 && \
 	([ ! -d node_modules ] || npm test) && \
 	popd >/dev/null || exit 1
 
+# Keep `make test-js` working for projects that already script that name.
+test-js: test-javascript
+
 reset:
-	killall -9 php >/dev/null 2>&1 || true
+	vendor/bin/eddy-stop > /dev/null 2>&1 || true
+	vendor/bin/eddy-browser-stop > /dev/null 2>&1 || true
 	chmod -Rf 777 build .logs > /dev/null 2>&1 || true
 	rm -Rf build > /dev/null 2>&1 || true
 	rm -Rf .logs > /dev/null 2>&1 || true
+	rm -Rf vendor > /dev/null 2>&1 || true
 
 .DEFAULT_GOAL := build

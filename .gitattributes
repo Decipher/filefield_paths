@@ -4,9 +4,7 @@ AGENTS.md          export-ignore
 CLAUDE.md          export-ignore
 .claude            export-ignore
 .ahoy.yml          export-ignore
-.circleci          export-ignore
 .cspell.json       export-ignore
-.devtools          export-ignore
 .editorconfig      export-ignore
 .eslintignore      export-ignore
 .eslintrc.json     export-ignore
@@ -32,4 +30,3 @@ rector.php         export-ignore
 renovate.json      export-ignore
 scripts            export-ignore
 tests              export-ignore
-

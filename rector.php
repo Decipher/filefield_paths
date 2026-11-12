@@ -35,15 +35,35 @@ use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchExprVariableR
 use Rector\Naming\Rector\Foreach_\RenameForeachValueVariableToMatchMethodCallReturnTypeRector;
 use Rector\Php55\Rector\String_\StringClassNameToClassConstantRector;
 use Rector\Php80\Rector\Switch_\ChangeSwitchToMatchRector;
+use Rector\Php83\Rector\ClassMethod\AddOverrideAttributeToOverriddenMethodsRector;
 use Rector\Privatization\Rector\ClassMethod\PrivatizeFinalClassMethodRector;
 use Rector\Privatization\Rector\MethodCall\PrivatizeLocalGetterToPropertyRector;
 use DrupalRector\Drupal11\Rector\Deprecation\ReplaceEntityOriginalPropertyRector;
 use Rector\Privatization\Rector\Property\PrivatizeFinalClassPropertyRector;
 use Rector\TypeDeclaration\Rector\StmtsAwareInterface\DeclareStrictTypesRector;
 
+// Rector and its embedded PHPStan cache reflection data that records
+// absolute paths into the PHPStan PHAR. The default cache directories are
+// shared by every project on the machine, so entries left by a build that no
+// longer exists break the next run. A cache inside the build is scoped to a
+// single codebase. PHPStan requires the directory to exist before it boots.
+$cache_dir = __DIR__ . '/.rector';
+// The option --clear-cache deletes the file cache directory, so the container
+// cache needs its own directory.
+$container_cache_dir = __DIR__ . '/.rector-container';
+foreach ([$cache_dir, $container_cache_dir] as $directory) {
+  if (!is_dir($directory)) {
+    mkdir($directory, 0755, TRUE);
+  }
+}
+
 return RectorConfig::configure()
   ->withSkip([
-    // Specific rules to skip based on project coding standards.
+    // Specific rules to skip based on project coding standards. Rector only
+    // registers `AddOverrideAttributeToOverriddenMethodsRector` on the version
+    // resolved for Drupal 10 builds and warns that the entry is unused on
+    // newer ones, so it stays listed to cover both.
+    AddOverrideAttributeToOverriddenMethodsRector::class,
     CatchExceptionNameMatchingTypeRector::class,
     ChangeSwitchToMatchRector::class,
     CompleteDynamicPropertiesRector::class,
@@ -91,8 +111,10 @@ return RectorConfig::configure()
     naming: TRUE,
   )
   // Drupal-specific deprecation fixes. The provider binds each set to a
-  // drupal/core version and only loads sets the installed core satisfies,
-  // avoiding hardcoded constants removed in newer rector/rector releases.
+  // `drupal/core` version and only the sets the installed core satisfies are
+  // loaded, so the rules follow the version the extension is being built
+  // against. Both calls are required: the provider supplies the sets,
+  // `withComposerBased()` enables the group.
   ->withSetProviders(DrupalSetProvider::class)
   ->withComposerBased(drupal: TRUE)
   // Additional rules.
@@ -101,11 +123,11 @@ return RectorConfig::configure()
   ])
   // Paths to the extension's source. Each top-level item of the extension is
   // symlinked individually into the build and Rector's finder does not follow
-  // symlinked directories, so the module children are matched directly (each is
-  // passed to the finder as its own root, which a symlinked root resolves).
+  // symlinked directories, so the extension's children are matched directly
+  // (each is passed to the finder as its own root, which a symlinked root
+  // resolves).
   ->withPaths([
     __DIR__ . '/web/modules/custom/*/*',
-    __DIR__ . '/web/themes/custom/*/*',
   ])
   // Configure Drupal autoloading.
   ->withAutoloadPaths((function (): array {
@@ -129,5 +151,7 @@ return RectorConfig::configure()
     'inc',
     'engine',
   ])
+  // Cache configuration.
+  ->withCache(cacheDirectory: $cache_dir, containerCacheDirectory: $container_cache_dir)
   // Import configuration.
   ->withImportNames(importNames: TRUE, importDocBlockNames: FALSE, importShortClasses: FALSE);
