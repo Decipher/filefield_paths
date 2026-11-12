@@ -7,8 +7,11 @@ namespace Drupal\filefield_paths\Batch;
 use Drupal\Component\Utility\DeprecationHelper;
 use Drupal\Core\Batch\BatchBuilder;
 use Drupal\Core\DependencyInjection\DependencySerializationTrait;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Entity\Query\QueryInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Messenger\MessengerTrait;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
@@ -48,22 +51,22 @@ class Updater implements BatchUpdaterInterface {
   /**
    * {@inheritdoc}
    */
-  public function batchUpdate(FieldConfigInterface $field_config): bool {
+  public function batchUpdate(FieldConfigInterface $field_config, bool $include_revisions = FALSE): bool {
     $entity_info = $this->entityTypeManager->getDefinition($field_config->getTargetEntityTypeId());
-    $query = $this->entityTypeManager->getStorage($field_config->getTargetEntityTypeId())->getQuery();
-    if ($bundle_field = $entity_info->getKey('bundle')) {
-      $query->condition($bundle_field, $field_config->getTargetBundle());
+    $result = $this->getQuery($field_config)->execute();
+
+    // Older revisions can reference files that the current revision no
+    // longer uses. Both lists are keyed by revision ID, so the difference
+    // holds the revisions that are not default revisions.
+    $revision_ids = [];
+    if ($include_revisions && $entity_info->isRevisionable()) {
+      $all_revisions = $this->getQuery($field_config)->allRevisions()->execute();
+      $revision_ids = array_keys(array_diff_key($all_revisions, $result));
     }
-    // Use a numeric comparison. The target_id column is an integer, and
-    // PostgreSQL rejects a comparison with an empty string.
-    $result = $query->accessCheck(FALSE)
-      ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT')
-      ->condition($field_config->getName() . '.target_id', 0, '>')
-      ->execute();
 
     // If there are no results, do not set a batch as there is nothing
     // to process.
-    if (empty($result)) {
+    if (empty($result) && empty($revision_ids)) {
       return FALSE;
     }
 
@@ -71,12 +74,42 @@ class Updater implements BatchUpdaterInterface {
     $batch = (new BatchBuilder())
       ->setTitle($this->t('Updating File (Field) Paths'))
       ->setFinishCallback([$this, 'batchFinished']);
-    $batch->addOperation(
-      [$this, 'batchProcess'],
-      [$result, $field_config]
-    );
+    if (!empty($result)) {
+      $batch->addOperation(
+        [$this, 'batchProcess'],
+        [$result, $field_config]
+      );
+    }
+    if (!empty($revision_ids)) {
+      $batch->addOperation(
+        [$this, 'batchProcessRevisions'],
+        [$revision_ids, $field_config]
+      );
+    }
     batch_set($batch->toArray());
     return TRUE;
+  }
+
+  /**
+   * Builds the query for entities whose file field is not empty.
+   *
+   * @param \Drupal\field\FieldConfigInterface $field_config
+   *   The file field for which to update paths.
+   *
+   * @return \Drupal\Core\Entity\Query\QueryInterface
+   *   The entity query.
+   */
+  protected function getQuery(FieldConfigInterface $field_config): QueryInterface {
+    $entity_info = $this->entityTypeManager->getDefinition($field_config->getTargetEntityTypeId());
+    $query = $this->entityTypeManager->getStorage($field_config->getTargetEntityTypeId())->getQuery();
+    if ($bundle_field = $entity_info->getKey('bundle')) {
+      $query->condition($bundle_field, $field_config->getTargetBundle());
+    }
+    // Use a numeric comparison. The target_id column is an integer, and
+    // PostgreSQL rejects a comparison with an empty string.
+    return $query->accessCheck(FALSE)
+      ->addTag('DANGEROUS_ACCESS_CHECK_OPT_OUT')
+      ->condition($field_config->getName() . '.target_id', 0, '>');
   }
 
   /**
@@ -91,7 +124,6 @@ class Updater implements BatchUpdaterInterface {
     /** @var \Drupal\Core\Entity\ContentEntityStorageBase $entity_storage */
     $entity_storage = $this->entityTypeManager
       ->getStorage($field_config->getTargetEntityTypeId());
-    $field_name = $field_config->getName();
 
     // Process nodes by groups of 5.
     $count = min(5, count($context['sandbox']['objects']));
@@ -99,48 +131,8 @@ class Updater implements BatchUpdaterInterface {
       // For each oid, load the object, update the files and save it.
       $oid = array_shift($context['sandbox']['objects']);
       $entity = $entity_storage->load($oid);
-
-      // Enable active updating if it isn't already enabled.
-      $active_updating = $field_config->getThirdPartySetting('filefield_paths', 'active_updating');
-      if (!$active_updating) {
-        $field_config->setThirdPartySetting('filefield_paths', 'active_updating', TRUE);
-        $field_config->save();
-      }
-
-      // Collect the file IDs to report on. This must happen AFTER
-      // $field_config->save() above: accessing $entity->get($field_name)
-      // lazily populates the entity's field definitions from the entity
-      // field manager, and doing so before the save would cache a stale
-      // definition without 'active_updating', causing the process callback
-      // to skip the file.
-      $file_ids = [];
-      foreach ($entity->get($field_name)->getValue() as $item) {
-        if (!empty($item['target_id'])) {
-          $file_ids[] = $item['target_id'];
-        }
-      }
-
-      $this->processOutcome->reset();
-      DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->setOriginal($entity), fn() => $entity->original = $entity);
-      filefield_paths_entity_update($entity);
-
-      // Restore active updating to it's previous state if necessary.
-      if (!$active_updating) {
-        $field_config->setThirdPartySetting('filefield_paths', 'active_updating', $active_updating);
-        $field_config->save();
-      }
-
-      // Tally the result the processor recorded for each file. Comparing
-      // the scheme before and after is not sufficient: a file that fails to
-      // move stays on its original scheme, which looks unchanged even when
-      // the source and destination schemes are the same.
-      $outcomes = $this->processOutcome->getOutcomes();
-      foreach ($file_ids as $file_id) {
-        // A file with no recorded result was never reached by the
-        // processor, so it did not get to its destination either.
-        $outcome = $outcomes[$file_id] ?? ProcessOutcomeInterface::SKIPPED;
-        $key = $outcome === ProcessOutcomeInterface::UPDATED ? 'updated' : 'skipped';
-        $context['results'][$key] = ($context['results'][$key] ?? 0) + 1;
+      if ($entity instanceof ContentEntityInterface) {
+        $this->processEntity($entity, $field_config, $context);
       }
 
       // Update our progress information.
@@ -151,6 +143,118 @@ class Updater implements BatchUpdaterInterface {
     // and provide an estimation of the completion level we reached.
     if ($context['sandbox']['progress'] !== $context['sandbox']['max']) {
       $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function batchProcessRevisions(array $revision_ids, FieldConfigInterface $field_config, array &$context): void {
+    if (!isset($context['sandbox']['progress'])) {
+      $context['sandbox']['progress'] = 0;
+      $context['sandbox']['max'] = count($revision_ids);
+      $context['sandbox']['objects'] = $revision_ids;
+    }
+    /** @var \Drupal\Core\Entity\RevisionableStorageInterface $entity_storage */
+    $entity_storage = $this->entityTypeManager
+      ->getStorage($field_config->getTargetEntityTypeId());
+
+    // Process revisions by groups of 5.
+    $count = min(5, count($context['sandbox']['objects']));
+    for ($i = 1; $i <= $count; $i++) {
+      $revision_id = array_shift($context['sandbox']['objects']);
+      $revision = $entity_storage->loadRevision($revision_id);
+      if ($revision instanceof ContentEntityInterface) {
+        $this->processEntity($revision, $field_config, $context);
+      }
+      $context['sandbox']['progress']++;
+    }
+
+    if ($context['sandbox']['progress'] !== $context['sandbox']['max']) {
+      $context['finished'] = $context['sandbox']['progress'] / $context['sandbox']['max'];
+    }
+  }
+
+  /**
+   * Updates the files of one entity or revision.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity or revision.
+   * @param \Drupal\field\FieldConfigInterface $field_config
+   *   The file field for which to update paths.
+   * @param array $context
+   *   The batch context.
+   */
+  protected function processEntity(ContentEntityInterface $entity, FieldConfigInterface $field_config, array &$context): void {
+    $field_name = $field_config->getName();
+
+    // Enable active updating if it isn't already enabled.
+    $active_updating = $field_config->getThirdPartySetting('filefield_paths', 'active_updating');
+    if (!$active_updating) {
+      $field_config->setThirdPartySetting('filefield_paths', 'active_updating', TRUE);
+      $field_config->save();
+    }
+
+    // Collect the file IDs to report on. This must happen AFTER
+    // $field_config->save() above: accessing $entity->get($field_name)
+    // lazily populates the entity's field definitions from the entity
+    // field manager, and doing so before the save would cache a stale
+    // definition without 'active_updating', causing the process callback
+    // to skip the file.
+    $file_ids = $this->getFileIds($entity->get($field_name));
+
+    $this->processOutcome->reset();
+    DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->setOriginal($entity), fn() => $entity->original = $entity);
+    filefield_paths_entity_update($entity);
+
+    // Restore active updating to it's previous state if necessary.
+    if (!$active_updating) {
+      $field_config->setThirdPartySetting('filefield_paths', 'active_updating', $active_updating);
+      $field_config->save();
+    }
+
+    $this->tallyOutcomes($file_ids, $context);
+  }
+
+  /**
+   * Returns the IDs of the files a field references.
+   *
+   * @param \Drupal\Core\Field\FieldItemListInterface $items
+   *   The file field items.
+   *
+   * @return string[]
+   *   The file IDs.
+   */
+  protected function getFileIds(FieldItemListInterface $items): array {
+    $file_ids = [];
+    foreach ($items->getValue() as $item) {
+      if (!empty($item['target_id'])) {
+        $file_ids[] = (string) $item['target_id'];
+      }
+    }
+    return $file_ids;
+  }
+
+  /**
+   * Adds the result recorded for each file to the batch results.
+   *
+   * @param string[] $file_ids
+   *   The IDs of the files that were processed.
+   * @param array $context
+   *   The batch context.
+   */
+  protected function tallyOutcomes(array $file_ids, array &$context): void {
+    // Tally the result the processor recorded for each file. Comparing
+    // the scheme before and after is not sufficient: a file that fails to
+    // move stays on its original scheme, which looks unchanged even when
+    // the source and destination schemes are the same.
+    $outcomes = $this->processOutcome->getOutcomes();
+    foreach ($file_ids as $file_id) {
+      // A file with no recorded result was never reached by the
+      // processor, so it did not get to its destination either.
+      $outcome = $outcomes[$file_id] ?? ProcessOutcomeInterface::SKIPPED;
+      $key = $outcome === ProcessOutcomeInterface::UPDATED ? 'updated' : 'skipped';
+      $context['results'][$key] = ($context['results'][$key] ?? 0) + 1;
     }
   }
 
