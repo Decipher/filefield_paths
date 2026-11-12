@@ -147,8 +147,9 @@ class PathProcessor implements PathProcessorInterface {
     // values.
     $value = preg_replace('/\/+/', '/', $value);
 
-    if (substr($value, -1) == '/') {
-      $value = substr($value, 0, -1);
+    // An empty last token leaves a trailing slash. Remove it.
+    if (str_ends_with($value, '/')) {
+      return substr($value, 0, -1);
     }
 
     return $value;

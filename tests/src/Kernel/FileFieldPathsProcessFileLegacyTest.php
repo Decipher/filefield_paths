@@ -147,6 +147,32 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
   }
 
   /**
+   * An empty last token in the path gives no double slash in the URI.
+   *
+   * Core normally removes the extra slash in normalizeUri(). It does not when
+   * a scheme is in the file_sa_core_2023_005_schemes setting.
+   *
+   * @see https://www.drupal.org/i/3207007
+   */
+  public function testEmptyLastTokenGivesNoDoubleSlash(): void {
+    $this->setSetting('file_sa_core_2023_005_schemes', ['public']);
+    $file = $this->createFile('public://empty-token/example.txt');
+
+    $entity = EntityTest::create(['field_file' => [['target_id' => $file->id()]]]);
+    $field = $entity->get('field_file');
+    \assert($field instanceof FileFieldItemList);
+
+    $settings = [
+      'file_path' => ['value' => 'new-dir/[entity_test:missing]', 'options' => ['transliterate' => FALSE]],
+      'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
+    ];
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
+
+    $file = File::load($file->id());
+    $this->assertSame('public://new-dir/example.txt', $file->getFileUri());
+  }
+
+  /**
    * Returns the hook service under test.
    */
   protected function getService(): FileFieldPathsProcessFileLegacy {
