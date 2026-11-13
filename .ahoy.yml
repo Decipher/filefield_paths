@@ -83,8 +83,6 @@ commands:
   test:
     usage: Run all tests.
     cmd: |
-      ahoy browser-start || exit 1
-      export WEBDRIVER_PORT="$(vendor/bin/eddy-info webdriver-port)"
       pushd "build" >/dev/null || exit 1
       ahoy title "Running PHPUnit"
       php -d pcov.directory=.. vendor/bin/phpunit "$@"
@@ -112,15 +110,6 @@ commands:
       php -d pcov.directory=.. vendor/bin/phpunit --testsuite functional "$@"
       popd >/dev/null || exit 1
 
-  test-functional-javascript:
-    usage: Run FunctionalJavascript tests.
-    cmd: |
-      ahoy browser-start || exit 1
-      export WEBDRIVER_PORT="$(vendor/bin/eddy-info webdriver-port)"
-      pushd "build" >/dev/null || exit 1
-      php -d pcov.directory=.. vendor/bin/phpunit --testsuite functional-javascript "$@"
-      popd >/dev/null || exit 1
-
   test-javascript:
     usage: Run JavaScript unit tests.
     aliases: [test-js]
@@ -129,20 +118,11 @@ commands:
       [ ! -d node_modules ] || npm test
       popd >/dev/null || exit 1
 
-  browser-start:
-    usage: Start the browser for FunctionalJavascript tests.
-    cmd: vendor/bin/eddy-browser-start
-
-  browser-stop:
-    usage: Stop the browser.
-    cmd: vendor/bin/eddy-browser-stop
-
   reset:
     usage: Reset project to the default state.
     aliases: [delete, destroy]
     cmd: |
       vendor/bin/eddy-stop > /dev/null 2>&1 || true
-      vendor/bin/eddy-browser-stop > /dev/null 2>&1 || true
       chmod -Rf 777 build .logs > /dev/null 2>&1 || true
       rm -Rf build > /dev/null 2>&1 || true
       rm -Rf .logs > /dev/null 2>&1 || true

@@ -152,12 +152,6 @@ jobs:
             drupal-version: 11@beta
             stability: canary
 
-    services:
-      chrome:
-        image: selenium/standalone-chromium:latest@sha256:b211549a4c35f11826bc1a7559b9f23ff055198517f8cb7d49ef74df01c5e38d
-        ports:
-          - 4444:4444
-
     name: ${{ matrix.name }}
 
     env:
@@ -250,7 +244,6 @@ jobs:
         env:
           BROWSERTEST_OUTPUT_DIRECTORY: ../.logs/browser_output
           SIMPLETEST_DB: sqlite://tmp/db.sqlite
-          WEBDRIVER_BACKEND: selenium
 
       - name: Upload browser output as an artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7

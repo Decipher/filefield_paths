@@ -40,7 +40,6 @@ endef
 
 TARGETS := assemble build debug debug-off debug-on delete describe destroy drush help info lint lint-fix login provision reset start stop test tooling xdebug xdebug-off xdebug-on
 TARGETS += test-unit test-kernel test-functional
-TARGETS += test-functional-javascript browser-start browser-stop
 TARGETS += test-javascript test-js
 .PHONY: $(TARGETS)
 
@@ -61,11 +60,8 @@ help:
 	@echo "stop                       - Stop development environment."
 	@echo "test                       - Run all tests."
 	@echo "test-functional            - Run functional tests."
-	@echo "test-functional-javascript - Run FunctionalJavascript tests."
 	@echo "test-kernel                - Run kernel tests."
 	@echo "test-unit                  - Run unit tests."
-	@echo "browser-start              - Start the browser for FunctionalJavascript tests."
-	@echo "browser-stop               - Stop the browser."
 	@echo "test-javascript            - Run JavaScript unit tests (alias: test-js)."
 
 # Every target that runs a tooling command installs the tooling first, except
@@ -73,7 +69,6 @@ help:
 # stderr, so a captured target output holds only the target's own.
 assemble build debug drush info login provision start stop: tooling
 test: tooling
-browser-start browser-stop test-functional-javascript: tooling
 
 tooling:
 	@./scripts/eddy-tooling >&2
@@ -158,7 +153,6 @@ lint-fix:
 # dangling entry.
 TEST_TARGETS := test
 TEST_TARGETS += test-unit test-kernel test-functional
-TEST_TARGETS += test-functional-javascript
 
 quote = '$(subst ','\'',$(1))'
 reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword $(1)))
@@ -185,9 +179,7 @@ ifneq (,$(filter $(firstword $(MAKECMDGOALS)),drush $(TEST_TARGETS)))
 endif
 
 test:
-	$(MAKE) browser-start
 	$(call title,Running PHPUnit)
-	export WEBDRIVER_PORT="$$(vendor/bin/eddy-info webdriver-port)" && \
 	pushd "build" >/dev/null || exit 1 && \
 	php -d pcov.directory=.. vendor/bin/phpunit $(RUN_ARGS) && \
 	popd >/dev/null || exit 1
@@ -209,19 +201,6 @@ test-functional:
 	php -d pcov.directory=.. vendor/bin/phpunit --testsuite functional $(RUN_ARGS) && \
 	popd >/dev/null || exit 1
 
-test-functional-javascript:
-	$(MAKE) browser-start
-	export WEBDRIVER_PORT="$$(vendor/bin/eddy-info webdriver-port)" && \
-	pushd "build" >/dev/null || exit 1 && \
-	php -d pcov.directory=.. vendor/bin/phpunit --testsuite functional-javascript $(RUN_ARGS) && \
-	popd >/dev/null || exit 1
-
-browser-start:
-	vendor/bin/eddy-browser-start
-
-browser-stop:
-	vendor/bin/eddy-browser-stop
-
 test-javascript:
 	pushd "build" >/dev/null || exit 1 && \
 	([ ! -d node_modules ] || npm test) && \
@@ -232,7 +211,6 @@ test-js: test-javascript
 
 reset:
 	vendor/bin/eddy-stop > /dev/null 2>&1 || true
-	vendor/bin/eddy-browser-stop > /dev/null 2>&1 || true
 	chmod -Rf 777 build .logs > /dev/null 2>&1 || true
 	rm -Rf build > /dev/null 2>&1 || true
 	rm -Rf .logs > /dev/null 2>&1 || true
