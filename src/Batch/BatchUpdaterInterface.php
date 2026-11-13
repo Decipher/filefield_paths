@@ -16,11 +16,14 @@ interface BatchUpdaterInterface {
    *
    * @param \Drupal\field\FieldConfigInterface $field_config
    *   The file field for which to update paths.
+   * @param bool $include_revisions
+   *   (optional) TRUE, the default, also updates the files of older
+   *   revisions. FALSE updates the current revision of each entity only.
    *
    * @return bool
    *   True if there were paths to update, false otherwise.
    */
-  public function batchUpdate(FieldConfigInterface $field_config): bool;
+  public function batchUpdate(FieldConfigInterface $field_config, bool $include_revisions = TRUE): bool;
 
   /**
    * Batch callback for File (Field) Paths retroactive updates.
@@ -35,6 +38,20 @@ interface BatchUpdaterInterface {
    * @internal
    */
   public function batchProcess(array $objects, FieldConfigInterface $field_config, array &$context): void;
+
+  /**
+   * Batch callback that updates the files of older revisions.
+   *
+   * @param int[] $revision_ids
+   *   A list of revision IDs. None of them is a default revision.
+   * @param \Drupal\field\FieldConfigInterface $field_config
+   *   The file field for which to update paths.
+   * @param array $context
+   *   The batch context.
+   *
+   * @internal
+   */
+  public function batchProcessRevisions(array $revision_ids, FieldConfigInterface $field_config, array &$context): void;
 
   /**
    * Batch finished callback: reports how many files moved or were skipped.

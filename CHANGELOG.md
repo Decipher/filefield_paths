@@ -12,6 +12,12 @@ release is dated by its Drupal.org release node.
 
 ### Fixed
 
+- [#1115740](https://www.drupal.org/i/1115740): Made the retroactive update
+  move and rename files that only older revisions use, not only the files of
+  the current revision. Each file goes where the newest revision that uses it
+  says, so a file the current revision uses is not moved twice. To update the
+  current revision only, tick "Skip older revisions", or run
+  `drush filefield_paths:update --skip-revisions`.
 - Stopped discarding the result of `BubbleableMetadata::merge()` when
   replacing tokens. The merge did nothing, and the Drupal 11 development
   branch marks the method's result as one not to discard, so PHP 8.5 warned
