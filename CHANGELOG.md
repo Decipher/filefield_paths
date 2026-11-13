@@ -8,6 +8,15 @@ Releases follow the Drupal.org contrib versioning scheme and are grouped by
 branch, newest first: `8.x-1.x`, then `7.x-1.x`, `6.x-1.x` and `5.x-1.x`. Each
 release is dated by its Drupal.org release node.
 
+## Unreleased
+
+### Fixed
+
+- Stopped discarding the result of `BubbleableMetadata::merge()` when
+  replacing tokens. The merge did nothing, and the Drupal 11 development
+  branch marks the method's result as one not to discard, so PHP 8.5 warned
+  each time a file path was generated.
+
 ## 8.x-1.0 - 2026-10-01
 
 ### Changed

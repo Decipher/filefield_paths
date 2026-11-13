@@ -6,6 +6,7 @@ namespace Drupal\Tests\filefield_paths\Kernel;
 
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\Group;
+use Drupal\Core\Render\RenderContext;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\filefield_paths\PathProcessorInterface;
 
@@ -128,6 +129,24 @@ class PathProcessorTest extends KernelTestBase {
   public function testDoubleSlashCollapse(): void {
     $result = $this->pathProcessor->processString('foo//bar', [], ['transliterate' => FALSE]);
     $this->assertSame('foo/bar', $result);
+  }
+
+  /**
+   * Token cacheability stays out of a render that is already running.
+   *
+   * Tokens are replaced in a render context of their own. A file path is
+   * stored, not rendered, so the metadata a token adds stays out of the page
+   * being rendered.
+   */
+  public function testTokenMetadataStaysOutOfTheOuterRender(): void {
+    $this->installConfig(['system']);
+    $context = new RenderContext();
+    $result = $this->container->get('renderer')->executeInRenderContext(
+      $context,
+      fn(): string => $this->pathProcessor->processString('[site:name]', [], ['transliterate' => FALSE]),
+    );
+    $this->assertNotSame('[site:name]', $result);
+    $this->assertTrue($context->isEmpty());
   }
 
 }
