@@ -54,7 +54,9 @@ class Updater implements BatchUpdaterInterface {
    */
   public function batchUpdate(FieldConfigInterface $field_config, bool $include_revisions = TRUE): bool {
     $entity_info = $this->entityTypeManager->getDefinition($field_config->getTargetEntityTypeId());
+    // This is not a count query, so it returns an array of IDs.
     $result = $this->getQuery($field_config)->execute();
+    $result = is_array($result) ? $result : [];
 
     // Older revisions can reference files that the current revision no
     // longer uses. Both lists are keyed by revision ID, so the difference
@@ -63,7 +65,7 @@ class Updater implements BatchUpdaterInterface {
     $revision_ids = [];
     $id_key = $entity_info->getKey('id');
     $revision_key = $entity_info->getKey('revision');
-    if ($include_revisions && $id_key && $revision_key && is_array($result)) {
+    if ($include_revisions && $id_key && $revision_key) {
       $all_revisions = $this->getQuery($field_config)
         ->allRevisions()
         ->sort($id_key)
@@ -76,7 +78,7 @@ class Updater implements BatchUpdaterInterface {
 
     // If there are no results, do not set a batch as there is nothing
     // to process.
-    if (empty($result) && empty($revision_ids)) {
+    if ($result === [] && $revision_ids === []) {
       return FALSE;
     }
 
@@ -84,13 +86,13 @@ class Updater implements BatchUpdaterInterface {
     $batch = (new BatchBuilder())
       ->setTitle($this->t('Updating File (Field) Paths'))
       ->setFinishCallback([$this, 'batchFinished']);
-    if (!empty($result)) {
+    if ($result !== []) {
       $batch->addOperation(
         [$this, 'batchProcess'],
         [$result, $field_config]
       );
     }
-    if (!empty($revision_ids)) {
+    if ($revision_ids !== []) {
       $batch->addOperation(
         [$this, 'batchProcessRevisions'],
         [$revision_ids, $field_config]
@@ -272,7 +274,7 @@ class Updater implements BatchUpdaterInterface {
     $field = $revision->get($field_name);
     $field->filter(static fn($item): bool => !in_array((string) $item->target_id, $done, TRUE));
     $file_ids = $this->getFileIds($field);
-    if (empty($file_ids)) {
+    if ($file_ids === []) {
       return;
     }
     $context['sandbox']['done'] = array_merge($done, $file_ids);
