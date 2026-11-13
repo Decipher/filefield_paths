@@ -130,7 +130,7 @@ class RetroactiveUpdateRevisionsTest extends KernelTestBase {
     $node = Node::create([
       'type' => 'article',
       'title' => $title,
-      'field_file' => array_map(static fn(FileInterface $file) => ['target_id' => $file->id()], $files),
+      'field_file' => array_map(static fn(FileInterface $file): array => ['target_id' => $file->id()], $files),
     ]);
     $node->save();
     return $node;
@@ -149,7 +149,7 @@ class RetroactiveUpdateRevisionsTest extends KernelTestBase {
   private function addRevision(NodeInterface $node, string $title, array $files): void {
     $node->setNewRevision(TRUE);
     $node->setTitle($title);
-    $node->set('field_file', array_map(static fn(FileInterface $file) => ['target_id' => $file->id()], $files));
+    $node->set('field_file', array_map(static fn(FileInterface $file): array => ['target_id' => $file->id()], $files));
     $node->save();
   }
 
