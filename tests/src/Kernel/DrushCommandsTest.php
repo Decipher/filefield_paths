@@ -11,6 +11,8 @@ use Drupal\KernelTests\KernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
 use Drupal\filefield_paths\Drush\Commands\Commands;
+use Composer\InstalledVersions;
+use Drush\Exceptions\UserAbortException;
 
 /**
  * Tests the Drush integration.
@@ -153,6 +155,45 @@ class DrushCommandsTest extends KernelTestBase {
   public function testProcessFieldWithNonExistentField(): void {
     $this->callProtected('processField', ['entity_test', 'entity_test', 'non_existent_field']);
     $this->addToAssertionCount(1);
+  }
+
+  /**
+   * Tests the entity type prompt stops when there is nothing to choose.
+   */
+  public function testAskEntityTypeWithNoEntityTypes(): void {
+    $this->expectException(UserAbortException::class);
+    $this->expectExceptionMessage('No entity types found for user selection.');
+    $this->loadDrushTranslation();
+    $this->callProtected('askEntityType', [[]]);
+  }
+
+  /**
+   * Tests the bundle prompt stops when the entity type has only its label.
+   */
+  public function testAskBundleWithNoBundles(): void {
+    $this->expectException(UserAbortException::class);
+    $this->expectExceptionMessage('No bundles found for user selection.');
+    $this->loadDrushTranslation();
+    $this->callProtected('askBundle', [['node' => ['#label' => 'Content']], 'node']);
+  }
+
+  /**
+   * Tests the field prompt stops when the bundle has only its label.
+   */
+  public function testAskFieldWithNoFields(): void {
+    $this->expectException(UserAbortException::class);
+    $this->expectExceptionMessage('No fields found for user selection.');
+    $this->loadDrushTranslation();
+    $this->callProtected('askField', [['node' => ['article' => ['#label' => 'Article']]], 'node', 'article']);
+  }
+
+  /**
+   * Loads Drush's dt() function, which only Drush's own bootstrap loads.
+   */
+  protected function loadDrushTranslation(): void {
+    if (!function_exists('dt')) {
+      require_once InstalledVersions::getInstallPath('drush/drush') . '/includes/output.inc';
+    }
   }
 
   /**
