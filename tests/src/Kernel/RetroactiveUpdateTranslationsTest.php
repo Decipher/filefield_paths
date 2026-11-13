@@ -141,7 +141,7 @@ class RetroactiveUpdateTranslationsTest extends KernelTestBase {
    *   The field values.
    */
   private function items(array $files): array {
-    return array_map(static fn(FileInterface $file) => ['target_id' => $file->id()], $files);
+    return array_map(static fn(FileInterface $file): array => ['target_id' => $file->id()], $files);
   }
 
   /**
