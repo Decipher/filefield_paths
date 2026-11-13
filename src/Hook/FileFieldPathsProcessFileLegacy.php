@@ -103,6 +103,13 @@ final readonly class FileFieldPathsProcessFileLegacy {
         $entity->getEntityTypeId() => $entity,
       ];
 
+      // Replace tokens in the language of this translation, as Pathauto does.
+      // Without a language, tokens such as [node:body] use the default
+      // translation.
+      $langcode = $entity->language()->getId();
+      $settings['file_name']['options']['langcode'] = $langcode;
+      $settings['file_path']['options']['langcode'] = $langcode;
+
       // Process filename.
       $settings['file_name']['options']['context'] = 'file_name';
       $name = $file->getFilename();

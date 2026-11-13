@@ -56,7 +56,9 @@ function hook_filefield_paths_field_settings(array $form): array {
  * @param \Drupal\Core\Field\FieldItemListInterface $field
  *   File field item.
  * @param array $settings
- *   Contains filefield_paths field settings.
+ *   Contains filefield_paths field settings. The file_path and file_name
+ *   options also hold 'langcode', the language of the translation that is
+ *   processed, for token replacement.
  *
  * @see filefield_paths_filefield_paths_process_file()
  */
