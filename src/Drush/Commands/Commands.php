@@ -200,7 +200,7 @@ final class Commands extends DrushCommands {
     foreach ($info as $entity_type_id => $entity_type_info) {
       $choices[$entity_type_id] = $entity_type_info['#label'];
     }
-    if (empty($choices)) {
+    if ($choices === []) {
       throw new UserAbortException(dt('No entity types found for user selection.'));
     }
     if (count($choices) !== 1) {
@@ -240,7 +240,7 @@ final class Commands extends DrushCommands {
       }
       $choices[$bundle] = $bundle_info['#label'];
     }
-    if (empty($choices)) {
+    if ($choices === []) {
       throw new UserAbortException(dt('No bundles found for user selection.'));
     }
     if (count($choices) !== 1) {
@@ -284,7 +284,7 @@ final class Commands extends DrushCommands {
       }
       $choices[$field] = $field_label;
     }
-    if (empty($choices)) {
+    if ($choices === []) {
       throw new UserAbortException(dt('No fields found for user selection.'));
     }
     if (count($choices) !== 1) {

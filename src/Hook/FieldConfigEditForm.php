@@ -285,6 +285,10 @@ final class FieldConfigEditForm {
     }
     $form_object = $form_state->getFormObject();
     assert($form_object instanceof CoreFieldConfigEditForm);
+    // Core added this method to the form in Drupal 11.2. Older core has no
+    // AJAX callback on the form, so this callback is never set and this never
+    // runs.
+    // @phpstan-ignore method.notFound
     return $form_object->ajaxSubmit($form, $form_state);
   }
 

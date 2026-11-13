@@ -76,8 +76,9 @@ final readonly class FileUrlHooks {
    * @return array<string, mixed>|null
    *   A non-empty headers array to grant access, or NULL for no opinion.
    */
+  // @phpstan-ignore-next-line
   #[Hook('file_download')]
-  public function fileDownload(string $uri): array|null {
+  public function fileDownload(string $uri): array|null {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
     if (StreamWrapperManager::getScheme($uri) !== 'temporary') {
       return NULL;
     }
