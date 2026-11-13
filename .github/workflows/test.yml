@@ -127,8 +127,11 @@ jobs:
 
       matrix:
         include:
+          # The tooling needs PHP 8.3, but the module supports PHP 8.2. This
+          # leg builds with 8.3, then runs the site and the tests on 8.2.
           - name: test-php-min-d10-stable
             php-version: 8.3
+            test-php-version: 8.2
             drupal-version: 10
 
           - name: test-php-max-d10-stable
@@ -186,6 +189,10 @@ jobs:
           extensions: gd, sqlite, pdo_sqlite
           coverage: pcov
 
+      # The tooling runs on this PHP, even after a leg switches to its test PHP.
+      - name: Record the tooling PHP
+        run: echo "TOOLING_PHP=$(readlink -f "$(command -v php)")" >> "$GITHUB_ENV"
+
       # Disable Symfony deprecations helper for PHP 8.4+ until every tested
       # Drupal version fully supports newer PHP versions.
       # @see https://www.drupal.org/project/drupal/issues/1267246
@@ -217,18 +224,34 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Composer resolves the build for the test PHP, so every package in it
+      # supports that version.
+      - name: Resolve the build for the test PHP
+        if: ${{ matrix.test-php-version }}
+        run: composer config --file=composer.dev.json platform.php "${{ matrix.test-php-version }}"
+
       - name: Assemble the codebase
         run: vendor/bin/eddy-assemble
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Switch to the test PHP
+        if: ${{ matrix.test-php-version }}
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # v2
+        with:
+          php-version: ${{ matrix.test-php-version }}
+          extensions: gd, sqlite, pdo_sqlite
+          coverage: pcov
+
+      # The server and Drush run on the PHP that is current, which is the test
+      # PHP on a leg that has one.
       - name: Start built-in PHP server
-        run: vendor/bin/eddy-start
+        run: '"$TOOLING_PHP" vendor/bin/eddy-start'
         env:
           WEBSERVER_HOST: 0.0.0.0
 
       - name: Provision site
-        run: vendor/bin/eddy-provision
+        run: '"$TOOLING_PHP" vendor/bin/eddy-provision'
 
       - name: Run JavaScript tests
         if: ${{ env.CI_IS_JEST_RUNNER == 'true' && hashFiles('build/node_modules/.package-lock.json') != '' }}
