@@ -224,6 +224,13 @@ class Updater implements BatchUpdaterInterface {
     $this->setOriginal($entity);
     filefield_paths_entity_update($entity);
 
+    // Update the existing translations too.
+    foreach (array_keys($entity->getTranslationLanguages(FALSE)) as $langcode) {
+      $translation = $entity->getTranslation($langcode);
+      $this->setOriginal($translation);
+      filefield_paths_entity_update($translation);
+    }
+
     // Restore active updating to it's previous state if necessary.
     if (!$active_updating) {
       $field_config->setThirdPartySetting('filefield_paths', 'active_updating', $active_updating);
