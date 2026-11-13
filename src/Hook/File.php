@@ -73,8 +73,9 @@ final class File {
   /**
    * Implements hook_file_delete().
    */
+  // @phpstan-ignore-next-line
   #[Hook('file_delete')]
-  public function fileDelete(FileInterface $file): void {
+  public function fileDelete(FileInterface $file): void {// phpcs:ignore Squiz.WhiteSpace.FunctionSpacing.Before
     // Each upload is staged in a directory of its own, inside a staging
     // location. When the file is deleted before it was saved to an entity,
     // remove the directory too. The name alone does not prove this module

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\filefield_paths;
 
 use Drupal\Component\Transliteration\TransliterationInterface;
-use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\RenderContext;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Utility\Token;
@@ -47,21 +46,15 @@ class PathProcessor implements PathProcessorInterface {
    * {@inheritdoc}
    */
   public function processString(string $value, array $data, array $settings = []): string {
-    $context = new RenderContext();
+    // Replace tokens in a render context of their own. A token can add
+    // cacheability metadata, which would otherwise leak into a page that is
+    // being rendered. A file path is stored, not rendered, so nothing needs
+    // that metadata. It is dropped with the context.
     $that = $this;
-    $result = $this->renderer->executeInRenderContext(
-      $context,
+    return $this->renderer->executeInRenderContext(
+      new RenderContext(),
       static fn(): string => $that->doProcessString($value, $data, $settings),
     );
-
-    // Handle any bubbled cacheability metadata.
-    if (!$context->isEmpty()) {
-      $bubbleable_metadata = $context->pop();
-      BubbleableMetadata::createFromObject($result)
-        ->merge($bubbleable_metadata);
-    }
-
-    return $result;
   }
 
   /**
