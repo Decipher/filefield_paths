@@ -17,13 +17,13 @@ interface BatchUpdaterInterface {
    * @param \Drupal\field\FieldConfigInterface $field_config
    *   The file field for which to update paths.
    * @param bool $include_revisions
-   *   TRUE to also update the files of older revisions. FALSE updates the
-   *   current revision of each entity only.
+   *   (optional) TRUE, the default, also updates the files of older
+   *   revisions. FALSE updates the current revision of each entity only.
    *
    * @return bool
    *   True if there were paths to update, false otherwise.
    */
-  public function batchUpdate(FieldConfigInterface $field_config, bool $include_revisions = FALSE): bool;
+  public function batchUpdate(FieldConfigInterface $field_config, bool $include_revisions = TRUE): bool;
 
   /**
    * Batch callback for File (Field) Paths retroactive updates.

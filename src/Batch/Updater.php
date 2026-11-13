@@ -19,6 +19,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\field\FieldConfigInterface;
 use Drupal\filefield_paths\ProcessOutcomeInterface;
+use Drupal\filefield_paths\Utility\FieldItem;
 
 /**
  * File (Field) Paths Batch Updater service.
@@ -51,17 +52,26 @@ class Updater implements BatchUpdaterInterface {
   /**
    * {@inheritdoc}
    */
-  public function batchUpdate(FieldConfigInterface $field_config, bool $include_revisions = FALSE): bool {
+  public function batchUpdate(FieldConfigInterface $field_config, bool $include_revisions = TRUE): bool {
     $entity_info = $this->entityTypeManager->getDefinition($field_config->getTargetEntityTypeId());
     $result = $this->getQuery($field_config)->execute();
 
     // Older revisions can reference files that the current revision no
     // longer uses. Both lists are keyed by revision ID, so the difference
-    // holds the revisions that are not default revisions.
+    // holds the revisions that are not default revisions. Each entity's
+    // revisions come together, newest first.
     $revision_ids = [];
-    if ($include_revisions && $entity_info->isRevisionable()) {
-      $all_revisions = $this->getQuery($field_config)->allRevisions()->execute();
-      $revision_ids = array_keys(array_diff_key($all_revisions, $result));
+    $id_key = $entity_info->getKey('id');
+    $revision_key = $entity_info->getKey('revision');
+    if ($include_revisions && $id_key && $revision_key && is_array($result)) {
+      $all_revisions = $this->getQuery($field_config)
+        ->allRevisions()
+        ->sort($id_key)
+        ->sort($revision_key, 'DESC')
+        ->execute();
+      if (is_array($all_revisions)) {
+        $revision_ids = array_keys(array_diff_key($all_revisions, $result));
+      }
     }
 
     // If there are no results, do not set a batch as there is nothing
@@ -165,7 +175,7 @@ class Updater implements BatchUpdaterInterface {
       $revision_id = array_shift($context['sandbox']['objects']);
       $revision = $entity_storage->loadRevision($revision_id);
       if ($revision instanceof ContentEntityInterface) {
-        $this->processEntity($revision, $field_config, $context);
+        $this->processRevision($revision, $field_config, $context);
       }
       $context['sandbox']['progress']++;
     }
@@ -188,6 +198,13 @@ class Updater implements BatchUpdaterInterface {
   protected function processEntity(ContentEntityInterface $entity, FieldConfigInterface $field_config, array &$context): void {
     $field_name = $field_config->getName();
 
+    // Skip a field that File (Field) Paths is off for, as a normal save does.
+    // This reads the field config, not the entity's field. See below for why
+    // the entity's field must not be read yet.
+    if (!$field_config->getThirdPartySetting('filefield_paths', 'enabled', FALSE)) {
+      return;
+    }
+
     // Enable active updating if it isn't already enabled.
     $active_updating = $field_config->getThirdPartySetting('filefield_paths', 'active_updating');
     if (!$active_updating) {
@@ -204,7 +221,7 @@ class Updater implements BatchUpdaterInterface {
     $file_ids = $this->getFileIds($entity->get($field_name));
 
     $this->processOutcome->reset();
-    DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn() => $entity->setOriginal($entity), fn() => $entity->original = $entity);
+    $this->setOriginal($entity);
     filefield_paths_entity_update($entity);
 
     // Restore active updating to it's previous state if necessary.
@@ -214,6 +231,74 @@ class Updater implements BatchUpdaterInterface {
     }
 
     $this->tallyOutcomes($file_ids, $context);
+  }
+
+  /**
+   * Updates the files that only an older revision references.
+   *
+   * A file goes where the newest revision that references it says. The
+   * default revision's files were done by batchProcess(), and the newer
+   * revisions of the same entity come first. So this skips any file that is
+   * already done.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $revision
+   *   The revision. It is not a default revision.
+   * @param \Drupal\field\FieldConfigInterface $field_config
+   *   The file field for which to update paths.
+   * @param array $context
+   *   The batch context.
+   */
+  protected function processRevision(ContentEntityInterface $revision, FieldConfigInterface $field_config, array &$context): void {
+    $field_name = $field_config->getName();
+
+    // Skip a field that File (Field) Paths is off for, as a normal save does.
+    if (!FieldItem::hasConfigurationEnabled($revision->get($field_name))) {
+      return;
+    }
+
+    // Start a new list of done files for each entity.
+    if (($context['sandbox']['entity_id'] ?? NULL) !== $revision->id()) {
+      $context['sandbox']['entity_id'] = $revision->id();
+      $default = $this->entityTypeManager
+        ->getStorage($field_config->getTargetEntityTypeId())
+        ->load($revision->id());
+      $context['sandbox']['done'] = $default instanceof ContentEntityInterface ? $this->getFileIds($default->get($field_name)) : [];
+    }
+
+    // Remove the done files from a copy of the revision. The copy is never
+    // saved, so the stored revision does not change.
+    $done = $context['sandbox']['done'];
+    $revision = clone $revision;
+    $field = $revision->get($field_name);
+    $field->filter(static fn($item): bool => !in_array((string) $item->target_id, $done, TRUE));
+    $file_ids = $this->getFileIds($field);
+    if (empty($file_ids)) {
+      return;
+    }
+    $context['sandbox']['done'] = array_merge($done, $file_ids);
+
+    // Process this field only. Other fields of an old revision may hold files
+    // that newer revisions still use. A retroactive update moves files that
+    // are already attached, so it acts as if active updating is on.
+    $settings = FieldItem::getConfiguration($field);
+    $settings['active_updating'] = TRUE;
+    $this->processOutcome->reset();
+    $this->setOriginal($revision);
+    $this->moduleHandler->invokeAll('filefield_paths_process_file', [$revision, $field, &$settings]);
+
+    $this->tallyOutcomes($file_ids, $context);
+  }
+
+  /**
+   * Makes an entity its own original, as if it was saved unchanged.
+   *
+   * The file processor then treats the entity as an update, not an insert.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity or revision.
+   */
+  protected function setOriginal(ContentEntityInterface $entity): void {
+    DeprecationHelper::backwardsCompatibleCall(\Drupal::VERSION, '11.2.0', fn(): ContentEntityInterface => $entity->setOriginal($entity), fn(): ContentEntityInterface => $entity->original = $entity);
   }
 
   /**
