@@ -114,6 +114,16 @@ class FieldConfigEditFormTest extends KernelTestBase {
     // of the stored setting.
     $this->assertTrue($details['redirect']['#disabled']);
 
+    // The skip revisions option shows only with retroactive update. It is
+    // off when the setting is missing, so older revisions are included.
+    // See https://www.drupal.org/i/1115740.
+    $this->assertSame('checkbox', $details['retroactive_update_skip_revisions']['#type']);
+    $this->assertFalse($details['retroactive_update_skip_revisions']['#default_value']);
+    $this->assertSame(
+      ['checked' => TRUE],
+      $details['retroactive_update_skip_revisions']['#states']['visible'][':input[name="third_party_settings[filefield_paths][retroactive_update]"]'],
+    );
+
     $this->assertSame([[FieldConfigEditForm::class, 'submit']], $form['actions']['submit']['#submit']);
 
     // The AJAX callback is swapped for the batch-aware one.
