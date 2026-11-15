@@ -224,13 +224,6 @@ class Updater implements BatchUpdaterInterface {
     $this->setOriginal($entity);
     filefield_paths_entity_update($entity);
 
-    // Update the existing translations too.
-    foreach (array_keys($entity->getTranslationLanguages(FALSE)) as $langcode) {
-      $translation = $entity->getTranslation($langcode);
-      $this->setOriginal($translation);
-      filefield_paths_entity_update($translation);
-    }
-
     // Restore active updating to it's previous state if necessary.
     if (!$active_updating) {
       $field_config->setThirdPartySetting('filefield_paths', 'active_updating', $active_updating);
@@ -238,14 +231,21 @@ class Updater implements BatchUpdaterInterface {
     }
 
     $this->tallyOutcomes($file_ids, $context);
+
+    // Each translation can reference its own files. Update the files that
+    // the default translation did not have.
+    foreach (array_keys($entity->getTranslationLanguages(FALSE)) as $langcode) {
+      $this->processRemainingFiles($entity->getTranslation($langcode), $field_config, $file_ids, $context);
+    }
   }
 
   /**
    * Updates the files that only an older revision references.
    *
    * A file goes where the newest revision that references it says. The files
-   * of the current revisions were done by batchProcess(), and the newer
-   * revisions come first. So this skips any file that is already done.
+   * of the current revisions, in every translation, were done by
+   * batchProcess(), and the newer revisions come first. So this skips any
+   * file that is already done. Each translation of the revision is processed.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $revision
    *   The revision. It is not a default revision.
@@ -255,42 +255,68 @@ class Updater implements BatchUpdaterInterface {
    *   The batch context.
    */
   protected function processRevision(ContentEntityInterface $revision, FieldConfigInterface $field_config, array &$context): void {
-    $field_name = $field_config->getName();
-
-    // Skip a field that File (Field) Paths is off for, as a normal save does.
-    if (!FieldItem::hasConfigurationEnabled($revision->get($field_name))) {
+    if (!FieldItem::hasConfigurationEnabled($revision->get($field_config->getName()))) {
       return;
     }
 
-    // A file that a current revision uses is done. batchProcess() moved it
-    // where that revision says.
     $done = $context['sandbox']['done'] ?? [];
-    foreach ($this->getFileIds($revision->get($field_name)) as $file_id) {
+
+    // A file that a current revision uses, in any translation, is done.
+    // batchProcess() moved it where that revision says.
+    foreach ($this->getTranslationFileIds($revision, $field_config) as $file_id) {
       if (!in_array($file_id, $done, TRUE) && $this->isUsedByCurrentRevision($field_config, $file_id)) {
         $done[] = $file_id;
       }
     }
 
-    // Remove the done files from a copy of the field. The revision keeps all
-    // its items, so the tokens read the revision's own item at each delta.
-    // The copies are never saved, so the stored revision does not change.
-    $revision = clone $revision;
-    $field = clone $revision->get($field_name);
+    foreach (array_keys($revision->getTranslationLanguages()) as $langcode) {
+      $this->processRemainingFiles($revision->getTranslation($langcode), $field_config, $done, $context);
+    }
+    $context['sandbox']['done'] = $done;
+  }
+
+  /**
+   * Updates the files of one field that are not done yet.
+   *
+   * The entity is not saved. Only the file field of this field config is
+   * processed.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity, revision or translation.
+   * @param \Drupal\field\FieldConfigInterface $field_config
+   *   The file field for which to update paths.
+   * @param string[] $done
+   *   The IDs of the files that are done. The files of this entity are added.
+   * @param array $context
+   *   The batch context.
+   */
+  protected function processRemainingFiles(ContentEntityInterface $entity, FieldConfigInterface $field_config, array &$done, array &$context): void {
+    // Remove the done files from a copy of the field. The entity keeps all
+    // its items, so the tokens read the entity's own item at each delta.
+    // The copies are never saved, so the stored entity does not change.
+    $entity = clone $entity;
+    $field = clone $entity->get($field_config->getName());
+
+    // Skip a field that File (Field) Paths is off for, as a normal save does.
+    if (!FieldItem::hasConfigurationEnabled($field)) {
+      return;
+    }
     $field->filter(static fn($item): bool => !in_array((string) $item->target_id, $done, TRUE));
     $file_ids = $this->getFileIds($field);
-    $context['sandbox']['done'] = array_merge($done, $file_ids);
     if ($file_ids === []) {
       return;
     }
+    $done = array_merge($done, $file_ids);
 
-    // Process this field only. Other fields of an old revision may hold files
-    // that newer revisions still use. A retroactive update moves files that
-    // are already attached, so it acts as if active updating is on.
+    // Process this field only. Other fields can hold files that the newer
+    // revisions or other translations still use. A retroactive update moves
+    // files that are already attached, so it acts as if active updating is
+    // on.
     $settings = FieldItem::getConfiguration($field);
     $settings['active_updating'] = TRUE;
     $this->processOutcome->reset();
-    $this->setOriginal($revision);
-    $this->moduleHandler->invokeAll('filefield_paths_process_file', [$revision, $field, &$settings]);
+    $this->setOriginal($entity);
+    $this->moduleHandler->invokeAll('filefield_paths_process_file', [$entity, $field, &$settings]);
 
     $this->tallyOutcomes($file_ids, $context);
   }
@@ -311,6 +337,25 @@ class Updater implements BatchUpdaterInterface {
       ->condition($field_config->getName() . '.target_id', $file_id)
       ->count()
       ->execute();
+  }
+
+  /**
+   * Returns the IDs of the files that any translation of an entity uses.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity or revision.
+   * @param \Drupal\field\FieldConfigInterface $field_config
+   *   The file field.
+   *
+   * @return string[]
+   *   The file IDs.
+   */
+  protected function getTranslationFileIds(ContentEntityInterface $entity, FieldConfigInterface $field_config): array {
+    $file_ids = [];
+    foreach (array_keys($entity->getTranslationLanguages()) as $langcode) {
+      $file_ids[] = $this->getFileIds($entity->getTranslation($langcode)->get($field_config->getName()));
+    }
+    return array_values(array_unique(array_merge(...$file_ids)));
   }
 
   /**
