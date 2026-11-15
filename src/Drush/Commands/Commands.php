@@ -24,7 +24,7 @@ final class Commands extends DrushCommands {
 
   private const ALL_OPTION = 'all';
 
-  private const REVISIONS_OPTION = 'include-revisions';
+  private const SKIP_REVISIONS_OPTION = 'skip-revisions';
 
   /**
    * Constructs a new instance of the class.
@@ -80,21 +80,21 @@ final class Commands extends DrushCommands {
   #[Argument(name: 'bundle_name', description: 'Bundle name. (e.g. article, page, user, etc.)')]
   #[Argument(name: 'field_name', description: 'Field name. (e.g. field_image, field_file, etc.)')]
   #[Option(name: self::ALL_OPTION, description: 'Retroactively update all File (Field) Paths.')]
-  #[Option(name: self::REVISIONS_OPTION, description: 'Also update the files of older revisions.')]
+  #[Option(name: self::SKIP_REVISIONS_OPTION, description: 'Only update the current revision of each entity. Files that only older revisions use stay where they are.')]
   #[Usage(name: 'drush ffpu', description: 'Retroactively updates the File (Field) Paths of the instances chosen via an interactive menu.')]
   #[Usage(name: 'drush ffpu node article field_image', description: 'Retroactively updates the File (Field) Paths of the instances chosen via an interactive menu.')]
   #[Usage(name: 'drush ffpu --all', description: 'Retroactively updates the File (Field) Paths of all instances of the Article content types Image field.')]
-  #[Usage(name: 'drush ffpu --all --include-revisions', description: 'Retroactively updates the File (Field) Paths of all instances, including the files of older revisions.')]
+  #[Usage(name: 'drush ffpu --all --skip-revisions', description: 'Retroactively updates the File (Field) Paths of all instances, for the current revision of each entity only.')]
   public function updateFileFieldPaths(
     ?string $entity_type = NULL,
     ?string $bundle_name = NULL,
     ?string $field_name = NULL,
-    ?array $options = [self::ALL_OPTION => FALSE, self::REVISIONS_OPTION => FALSE],
+    ?array $options = [self::ALL_OPTION => FALSE, self::SKIP_REVISIONS_OPTION => FALSE],
   ): void {
     // Build array of information of all entity types, bundle names
     // and field names.
     $info = $this->buildInfo();
-    $include_revisions = !empty($options[self::REVISIONS_OPTION]);
+    $include_revisions = empty($options[self::SKIP_REVISIONS_OPTION]);
 
     // Get entity type.
     if (
@@ -169,9 +169,10 @@ final class Commands extends DrushCommands {
    * @param \Drupal\Core\Field\FieldDefinitionInterface[] $instances
    *   Field instances collection to update.
    * @param bool $include_revisions
-   *   TRUE to also update the files of older revisions.
+   *   (optional) TRUE, the default, also updates the files of older
+   *   revisions.
    */
-  protected function ffpUpdate(array $instances, bool $include_revisions = FALSE): void {
+  protected function ffpUpdate(array $instances, bool $include_revisions = TRUE): void {
     foreach ($instances as $field_config) {
       if ($field_config instanceof FieldConfigInterface && $this->updater->batchUpdate($field_config, $include_revisions)) {
         $batch =& batch_get();
@@ -315,9 +316,10 @@ final class Commands extends DrushCommands {
    *   associative array where keys are bundle names, and each value is a list
    *   of fields within that bundle.
    * @param bool $include_revisions
-   *   TRUE to also update the files of older revisions.
+   *   (optional) TRUE, the default, also updates the files of older
+   *   revisions.
    */
-  protected function processAllEntityTypes(array $info, bool $include_revisions = FALSE): void {
+  protected function processAllEntityTypes(array $info, bool $include_revisions = TRUE): void {
     $instances = [];
     foreach ($info as $entity_type_id => $bundles) {
       foreach ($bundles as $bundle => $field_list) {
@@ -352,9 +354,10 @@ final class Commands extends DrushCommands {
    * @param string $entity_type
    *   The type of entity whose bundles are to be processed.
    * @param bool $include_revisions
-   *   TRUE to also update the files of older revisions.
+   *   (optional) TRUE, the default, also updates the files of older
+   *   revisions.
    */
-  protected function processAllEntityBundles(array $info, string $entity_type, bool $include_revisions = FALSE): void {
+  protected function processAllEntityBundles(array $info, string $entity_type, bool $include_revisions = TRUE): void {
     $instances = [];
     foreach ($info[$entity_type] as $bundle => $field_list) {
       if (str_starts_with((string) $bundle, '#')) {
@@ -389,9 +392,10 @@ final class Commands extends DrushCommands {
    * @param string $bundle_name
    *   The name of the bundle within the entity type to process fields for.
    * @param bool $include_revisions
-   *   TRUE to also update the files of older revisions.
+   *   (optional) TRUE, the default, also updates the files of older
+   *   revisions.
    */
-  protected function processAllBundleFields(array $info, string $entity_type, string $bundle_name, bool $include_revisions = FALSE): void {
+  protected function processAllBundleFields(array $info, string $entity_type, string $bundle_name, bool $include_revisions = TRUE): void {
     $instances = [];
     foreach (array_keys($info[$entity_type][$bundle_name]) as $field) {
       if (str_starts_with((string) $field, '#')) {
@@ -416,9 +420,10 @@ final class Commands extends DrushCommands {
    * @param string $field_name
    *   The name of the field to process.
    * @param bool $include_revisions
-   *   TRUE to also update the files of older revisions.
+   *   (optional) TRUE, the default, also updates the files of older
+   *   revisions.
    */
-  protected function processField(string $entity_type, string $bundle_name, string $field_name, bool $include_revisions = FALSE): void {
+  protected function processField(string $entity_type, string $bundle_name, string $field_name, bool $include_revisions = TRUE): void {
     // Invoke Retroactive update.
     $field_instance = $this->entityFieldManager->getFieldDefinitions($entity_type, $bundle_name)[$field_name] ?? NULL;
     if ($field_instance) {
