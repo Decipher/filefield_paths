@@ -10,6 +10,8 @@ use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\FieldConfigInterface;
+use Drupal\filefield_paths\Batch\Updater;
 use Drupal\filefield_paths\Drush\Commands\Commands;
 use Composer\InstalledVersions;
 use Drush\Exceptions\UserAbortException;
@@ -194,6 +196,33 @@ class DrushCommandsTest extends KernelTestBase {
     if (!function_exists('dt')) {
       require_once InstalledVersions::getInstallPath('drush/drush') . '/includes/output.inc';
     }
+  }
+
+  /**
+   * Tests that older revisions are included unless --skip-revisions is set.
+   *
+   * @see https://www.drupal.org/i/1115740
+   */
+  public function testSkipRevisionsOption(): void {
+    $calls = [];
+    $updater = $this->createMock(Updater::class);
+    $updater->method('batchUpdate')
+      ->willReturnCallback(static function (FieldConfigInterface $field_config, bool $include_revisions) use (&$calls): bool {
+        $calls[] = $include_revisions;
+        return FALSE;
+      });
+    $commands = new Commands(
+      $updater,
+      $this->container->get('entity_field.manager'),
+      $this->container->get('entity_type.manager'),
+      $this->container->get('entity_type.bundle.info'),
+    );
+
+    $commands->updateFileFieldPaths('entity_test', 'entity_test', 'field_file', ['all' => FALSE, 'skip-revisions' => FALSE]);
+    $commands->updateFileFieldPaths('entity_test', 'entity_test', 'field_file', ['all' => FALSE, 'skip-revisions' => TRUE]);
+    $commands->updateFileFieldPaths(NULL, NULL, NULL, ['all' => TRUE, 'skip-revisions' => TRUE]);
+
+    $this->assertSame([TRUE, FALSE, FALSE], $calls);
   }
 
   /**

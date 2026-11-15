@@ -92,6 +92,7 @@ parameters:
       messages:
         - '#Access to an undefined property Drupal\\Core\\Entity\\ContentEntityInterface::\$original#'
         - '#Call to an undefined method Drupal\\Core\\Entity\\ContentEntityInterface::getOriginal\(\)#'
+        - '#Call to an undefined method Drupal\\Core\\Entity\\ContentEntityInterface::setOriginal\(\)#'
         - '#Call to an undefined method Drupal\\block_content\\Entity\\BlockContent::setOriginal\(\)#'
       reportUnmatched: false
 

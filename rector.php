@@ -93,10 +93,14 @@ return RectorConfig::configure()
     ArrayToFirstClassCallableRector::class => ['*/src/Batch/Updater.php'],
   ])
   // The pre-11.2 half of DeprecationHelper::backwardsCompatibleCall() has to
-  // read $entity->original. getOriginal() does not exist before 11.2 and the
-  // module supports ^10.3, so rewriting it is a fatal error there.
+  // read or set $entity->original. getOriginal() and setOriginal() do not
+  // exist before 11.2 and the module supports ^10.3, so rewriting it is a
+  // fatal error there.
   ->withSkip([
-    ReplaceEntityOriginalPropertyRector::class => ['*/src/Hook/FileFieldPathsProcessFileLegacy.php'],
+    ReplaceEntityOriginalPropertyRector::class => [
+      '*/src/Batch/Updater.php',
+      '*/src/Hook/FileFieldPathsProcessFileLegacy.php',
+    ],
   ])
   // PHP version upgrade sets - modernizes syntax to PHP 8.2.
   // Includes all rules from PHP 5.3 through 8.2.
