@@ -27,6 +27,8 @@ interface PathProcessorInterface {
    *     using Pathauto's Alias cleaner service.
    *   - slashes: A boolean flag indicating that any slashes should be removed
    *     from the string.
+   *   - langcode: (optional) The language code to replace tokens in. Tokens
+   *     that look up a translation, such as [node:body], use it.
    *
    * @return string
    *   The cleaned string, in which tokens are replaced and other alterations

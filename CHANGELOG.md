@@ -18,6 +18,13 @@ release is dated by its Drupal.org release node.
   says, so a file the current revision uses is not moved twice. To update the
   current revision only, tick "Skip older revisions", or run
   `drush filefield_paths:update --skip-revisions`.
+- [#3149644](https://www.drupal.org/i/3149644): Made the retroactive update
+  move and rename the files of every translation, not only the files of the
+  default language. Each file goes to the path of the translation that uses
+  it. A file that two translations share moves once. The translations of older
+  revisions are processed too, unless "Skip older revisions" is ticked. Tokens
+  are replaced in the language of the translation, so `[node:body]` gives the
+  translated body. This applies to a normal save of a translation too.
 - Stopped discarding the result of `BubbleableMetadata::merge()` when
   replacing tokens. The merge did nothing, and the Drupal 11 development
   branch marks the method's result as one not to discard, so PHP 8.5 warned
