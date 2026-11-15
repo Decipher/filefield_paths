@@ -101,6 +101,10 @@ while a safer scheme is available.
       module.
   - Convert unicode characters into US-ASCII with the Transliteration module.
 - Retroactive updates - rename and/or move previously uploaded files.
+  - Files that only older revisions use are updated too. Each file goes where
+    the newest revision that uses it says. Tick "Skip older revisions", or run
+    `drush ffpu --skip-revisions`, to update the current revision of each
+    entity only.
 - Active updating - actively rename and/or move previously uploaded files.
 - Create redirect - automatically create a redirect when moving uploaded files,
   using the Redirect module.
