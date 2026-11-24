@@ -55,6 +55,10 @@ function filefield_paths_install(): void {
     ->update('file_managed')
     ->expression('origname', 'filename')
     ->execute();
+
+  // Installing a module does not clear cached token info. Clear it so the
+  // module's tokens are valid straight away.
+  \Drupal::token()->resetInfo();
 }
 
 /**
