@@ -219,6 +219,23 @@ class FileFieldPathsProcessFileLegacyTest extends KernelTestBase {
   }
 
   /**
+   * A field item referencing a non-existent file is silently skipped.
+   */
+  public function testNonExistentFileSkipped(): void {
+    $entity = EntityTest::create(['field_file' => [['target_id' => 99999]]]);
+    $field = $entity->get('field_file');
+    \assert($field instanceof FileFieldItemList);
+
+    $settings = [
+      'file_path' => ['value' => 'new-dir', 'options' => ['transliterate' => FALSE]],
+      'file_name' => ['value' => '', 'options' => ['transliterate' => FALSE]],
+    ];
+
+    $this->getService()->fileFieldPathsProcessFile($entity, $field, $settings);
+    $this->addToAssertionCount(1);
+  }
+
+  /**
    * A move exception is caught, logged, and the file stays in place.
    */
   public function testMoveException(): void {

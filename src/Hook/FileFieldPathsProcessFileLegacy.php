@@ -14,6 +14,7 @@ use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 use Drupal\Core\StreamWrapper\StreamWrapperManagerInterface;
+use Drupal\file\FileInterface;
 use Drupal\file\FileRepositoryInterface;
 use Drupal\file\Plugin\Field\FieldType\FileFieldItemList;
 use Drupal\filefield_paths\PathProcessorInterface;
@@ -66,8 +67,11 @@ final readonly class FileFieldPathsProcessFileLegacy {
 
     $destination_scheme_name = $field_storage->getSetting('uri_scheme');
 
-    /** @var \Drupal\file\Entity\File $file */
-    foreach ($field->referencedEntities() as $file) {
+    foreach ($field as $delta => $field_item) {
+      $file = $field_item->entity;
+      if (!$file instanceof FileInterface) {
+        continue;
+      }
       $source_scheme_name = $this->streamWrapperManager::getScheme($file->getFileUri());
       if (empty($wrappers[$destination_scheme_name]) || empty($readable_wrappers[$source_scheme_name])) {
         // Unexpected source or destination scheme.
@@ -98,8 +102,9 @@ final readonly class FileFieldPathsProcessFileLegacy {
       }
 
       $token_data = [
-        'file' => $file,
+        'file'                      => $file,
         $entity->getEntityTypeId() => $entity,
+        'delta'                     => $delta,
       ];
 
       // Process filename.
