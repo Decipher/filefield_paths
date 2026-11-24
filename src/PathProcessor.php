@@ -75,6 +75,8 @@ class PathProcessor implements PathProcessorInterface {
    *     using Pathauto's Alias cleaner service.
    *   - slashes: A boolean flag indicating that any slashes should be removed
    *     from the string.
+   *   - langcode: (optional) The language code to replace tokens in. Tokens
+   *     that look up a translation, such as [node:body], use it.
    *
    * @return string
    *   The cleaned string, in which tokens are replaced and other alterations
@@ -88,18 +90,22 @@ class PathProcessor implements PathProcessorInterface {
     $pathauto = (isset($settings['pathauto']) && $settings['pathauto']) &&
       ($this->aliasCleaner instanceof AliasCleanerInterface);
     $remove_slashes = !empty($settings['slashes']);
+    $token_options = ['clear' => TRUE];
+    if (!empty($settings['langcode'])) {
+      $token_options['langcode'] = $settings['langcode'];
+    }
 
     // If '/' is to be removed from tokens, token replacement needs to happen
     // after splitting the paths to subdirectories. Otherwise,
     // tokens containing '/' will be part of the final path.
     if (!$remove_slashes) {
-      $value = $this->token->replace($value, $data, ['clear' => TRUE]);
+      $value = $this->token->replace($value, $data, $token_options);
     }
     $paths = explode('/', $value);
 
     foreach ($paths as $i => &$path) {
       if ($remove_slashes) {
-        $path = $this->token->replace($path, $data, ['clear' => TRUE]);
+        $path = $this->token->replace($path, $data, $token_options);
       }
       if ($pathauto) {
         if (('file_name' === $settings['context']) && (count($paths) === $i + 1)) {
