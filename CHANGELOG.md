@@ -16,6 +16,10 @@ release is dated by its Drupal.org release node.
   each file left in place when an entity is saved again with "Active updating"
   off. The setting asks for that, so it is not a problem. `8.x-1.0` logged one
   entry per file on every save.
+- [#3015137](https://www.drupal.org/i/3015137): Pointed the field item at the
+  moved file, so modules acting later in the same save, such as Focal Point,
+  read the file's new path. On the first save they read a path that no longer
+  existed.
 - Stopped discarding the result of `BubbleableMetadata::merge()` when
   replacing tokens. The merge did nothing, and the Drupal 11 development
   branch marks the method's result as one not to discard, so PHP 8.5 warned
