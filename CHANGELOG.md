@@ -16,6 +16,10 @@ release is dated by its Drupal.org release node.
   each file left in place when an entity is saved again with "Active updating"
   off. The setting asks for that, so it is not a problem. `8.x-1.0` logged one
   entry per file on every save.
+- [#1211546](https://www.drupal.org/i/1211546): Cleared cached token info when
+  the module is installed. Saving a field's File path or File name with the
+  module's own tokens, such as `[file:ffp-name-only-original]`, failed with
+  "is using the following invalid tokens" until caches were cleared by hand.
 - Stopped discarding the result of `BubbleableMetadata::merge()` when
   replacing tokens. The merge did nothing, and the Drupal 11 development
   branch marks the method's result as one not to discard, so PHP 8.5 warned
