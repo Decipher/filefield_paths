@@ -10,12 +10,15 @@ release is dated by its Drupal.org release node.
 
 ## Unreleased
 
+### Added
+
+- [#2072237](https://www.drupal.org/i/2072237): Added a site-wide "Enable File
+  (Field) Paths" setting, and a `filefield_paths_settings` entity property that
+  turns processing off or overrides it for one save, such as a migration. The
+  status report warns while it is off site-wide.
+
 ### Fixed
 
-- [#3628407](https://www.drupal.org/i/3628407): Stopped logging a notice for
-  each file left in place when an entity is saved again with "Active updating"
-  off. The setting asks for that, so it is not a problem. `8.x-1.0` logged one
-  entry per file on every save.
 - Stopped discarding the result of `BubbleableMetadata::merge()` when
   replacing tokens. The merge did nothing, and the Drupal 11 development
   branch marks the method's result as one not to discard, so PHP 8.5 warned

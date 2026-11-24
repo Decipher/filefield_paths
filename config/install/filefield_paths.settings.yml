@@ -1,2 +1,2 @@
-temp_location: 'temporary://filefield_paths'
 enabled: true
+temp_location: 'temporary://filefield_paths'
