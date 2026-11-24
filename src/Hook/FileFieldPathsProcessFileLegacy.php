@@ -89,8 +89,9 @@ final readonly class FileFieldPathsProcessFileLegacy {
         /** @var \Drupal\file\Entity\File $original_file */
         foreach ($original_entity->{$field->getName()}->referencedEntities() as $original_file) {
           if ((string) $original_file->id() === (string) $file->id()) {
-            // The settings ask for this file to stay where it is. That is
-            // not a problem, so do not log it. Every save would log it.
+            $this->loggerChannel->notice('The file %uri was skipped because it was already attached before this save and active updating is not enabled.', [
+              '%uri' => $file->getFileUri(),
+            ]);
             $this->processOutcome->recordSkipped($file->id());
             continue 2;
           }

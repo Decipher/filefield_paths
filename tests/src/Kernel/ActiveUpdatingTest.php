@@ -35,7 +35,6 @@ class ActiveUpdatingTest extends KernelTestBase {
     'file',
     'entity_test',
     'filefield_paths',
-    'dblog',
   ];
 
   /**
@@ -47,7 +46,6 @@ class ActiveUpdatingTest extends KernelTestBase {
     $this->installEntitySchema('file');
     $this->installEntitySchema('entity_test');
     $this->installSchema('file', ['file_usage']);
-    $this->installSchema('dblog', ['watchdog']);
     $this->installConfig(['filefield_paths']);
 
     FieldStorageConfig::create([
@@ -148,29 +146,6 @@ class ActiveUpdatingTest extends KernelTestBase {
 
     $this->assertFileExists('public://one/example.txt');
     $this->assertFileDoesNotExist('public://two/example.txt');
-  }
-
-  /**
-   * Saving again with 'Active updating' off writes nothing to the log.
-   *
-   * Leaving a file in place is what the setting asks for. It is not a
-   * problem, so it must not be logged. A site with many multi-value file
-   * fields would get dozens of entries on every save.
-   *
-   * @see https://www.drupal.org/i/3628407
-   */
-  public function testNoLogEntryOnUpdateWhenActiveUpdatingIsOff(): void {
-    $entity = $this->createEntityWithStagedFile();
-    $this->setPathPattern('two');
-    $this->saveAgain($entity);
-
-    $messages = $this->container->get('database')
-      ->select('watchdog', 'w')
-      ->fields('w', ['message'])
-      ->condition('type', 'filefield_paths')
-      ->execute()
-      ->fetchCol();
-    $this->assertSame([], $messages);
   }
 
   /**

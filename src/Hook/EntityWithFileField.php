@@ -2,8 +2,15 @@
 
 declare(strict_types=1);
 
+/**
+ * @file
+ * Hook implementation that processes an entity's file fields on save.
+ */
+
 namespace Drupal\filefield_paths\Hook;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
@@ -21,10 +28,14 @@ final readonly class EntityWithFileField {
    *
    * @param \Closure $moduleHandlerClosure
    *   The module handler closure.
+   * @param \Closure $configFactoryClosure
+   *   The config factory closure.
    */
   public function __construct(
     #[AutowireServiceClosure(ModuleHandlerInterface::class)]
     private \Closure $moduleHandlerClosure,
+    #[AutowireServiceClosure(ConfigFactoryInterface::class)]
+    private \Closure $configFactoryClosure,
   ) {}
 
   /**
@@ -36,17 +47,59 @@ final readonly class EntityWithFileField {
     if (!$entity instanceof ContentEntityInterface) {
       return;
     }
-    $module_handler = $this->getModuleHandler();
-    foreach ($entity->getFields() as $field) {
-      if (FieldItem::hasConfigurationEnabled($field)) {
-        $settings = FieldItem::getConfiguration($field);
-        // Invoke hook_filefield_paths_process_file().
-        $module_handler->invokeAll(
-          'filefield_paths_process_file',
-          [$entity, $field, &$settings]
-        );
-      }
+    // Lets calling code skip (or otherwise tweak) processing for a single
+    // save without touching field config, which would invalidate caches.
+    // See filefield_paths.api.php for the accepted shapes of this property.
+    // The override is used up here, so a later save of the same object does
+    // not get it too.
+    $override = $this->getOverride($entity);
+    unset($entity->filefield_paths_settings);
+    if (!($this->getSettings()->get('enabled') ?? TRUE)) {
+      return;
     }
+    $module_handler = $this->getModuleHandler();
+    $fields = $entity->getFields();
+    // The property is untyped, so guard against a caller setting something
+    // other than an array.
+    if (!is_array($override)) {
+      $override = [];
+    }
+    // Anything that isn't a field name applies to every field; a field name
+    // key scopes the override to that field only and wins if both are set.
+    $flat_override = array_diff_key($override, $fields);
+    foreach ($fields as $field_name => $field) {
+      if (!FieldItem::hasConfigurationEnabled($field)) {
+        continue;
+      }
+      $settings = $flat_override + FieldItem::getConfiguration($field);
+      if (is_array($override[$field_name] ?? NULL)) {
+        $settings = $override[$field_name] + $settings;
+      }
+      if (empty($settings['enabled'])) {
+        continue;
+      }
+      // Invoke hook_filefield_paths_process_file().
+      $module_handler->invokeAll(
+        'filefield_paths_process_file',
+        [$entity, $field, &$settings]
+      );
+    }
+  }
+
+  /**
+   * Gets the per-save override set on an entity.
+   *
+   * The property is not a field, so its value can be anything. The return
+   * type says so, which stops static analysis treating it as a field.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   The entity being saved.
+   *
+   * @return mixed
+   *   The override, or an empty array when none is set.
+   */
+  private function getOverride(ContentEntityInterface $entity): mixed {
+    return $entity->filefield_paths_settings ?? [];
   }
 
   /**
@@ -57,6 +110,16 @@ final readonly class EntityWithFileField {
    */
   private function getModuleHandler(): ModuleHandlerInterface {
     return ($this->moduleHandlerClosure)();
+  }
+
+  /**
+   * Retrieves the configuration settings for filefield_paths.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   The configuration settings object.
+   */
+  private function getSettings(): ImmutableConfig {
+    return ($this->configFactoryClosure)()->get('filefield_paths.settings');
   }
 
 }

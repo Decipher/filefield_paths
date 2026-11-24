@@ -136,6 +136,16 @@ while a safer scheme is available.
    servers so that you can make sure not to introduce any linking issues.
 
 
+**Q: How do I disable File (Field) Paths?**
+
+**A:** At three levels: uncheck "Enable File (Field) Paths?" on a field's settings
+   form to disable it for that field, uncheck "Enable File (Field) Paths" on the
+   module's settings form to disable it site-wide, or set the
+   `filefield_paths_settings` property on an entity before saving it to disable
+   (or otherwise override) processing for that one save only, without changing
+   any configuration. See `filefield_paths.api.php` for the per-save override's
+   full API.
+
 
 ## Maintainers
 
