@@ -16,6 +16,10 @@ release is dated by its Drupal.org release node.
   each file left in place when an entity is saved again with "Active updating"
   off. The setting asks for that, so it is not a problem. `8.x-1.0` logged one
   entry per file on every save.
+- [#3207007](https://www.drupal.org/i/3207007): Removed the trailing slash
+  left in a processed path when its last token is empty. Core removes the
+  extra slash from the file URI in most cases, but not for a scheme listed in
+  the `file_sa_core_2023_005_schemes` setting, which got a double slash.
 - Stopped discarding the result of `BubbleableMetadata::merge()` when
   replacing tokens. The merge did nothing, and the Drupal 11 development
   branch marks the method's result as one not to discard, so PHP 8.5 warned

@@ -145,7 +145,14 @@ class PathProcessor implements PathProcessorInterface {
 
     // Ensure that there are no double-slash sequences due to empty token
     // values.
-    return preg_replace('/\/+/', '/', $value);
+    $value = preg_replace('/\/+/', '/', $value);
+
+    // An empty last token leaves a trailing slash. Remove it.
+    if (str_ends_with($value, '/')) {
+      return substr($value, 0, -1);
+    }
+
+    return $value;
   }
 
 }

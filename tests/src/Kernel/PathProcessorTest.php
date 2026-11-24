@@ -149,4 +149,14 @@ class PathProcessorTest extends KernelTestBase {
     $this->assertTrue($context->isEmpty());
   }
 
+  /**
+   * An empty last token leaves no trailing slash.
+   *
+   * @see https://www.drupal.org/i/3207007
+   */
+  public function testEmptyLastTokenLeavesNoTrailingSlash(): void {
+    $result = $this->pathProcessor->processString('foo/[node:title]', [], ['transliterate' => FALSE]);
+    $this->assertSame('foo', $result);
+  }
+
 }
